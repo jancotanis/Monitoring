@@ -24,7 +24,8 @@ Connection to Zammad is available
 ```
 ZAMMAN_HOST=https://helpdesk.xxxx.nl/
 ZAMMAD_OAUTH_TOKEN=834hdfskgsj54rghkbvfiurve984
-ZAMMAD_CREATOR
+ZAMMAD_GROUP=Monitoring
+ZAMMAD_CUSTOMER=john.doe@acme.com
 ```
 
 ## Application configuration
@@ -54,11 +55,11 @@ Keys
 |--|--|--|
 |id|Unique id of the entry|string|
 |description|Customer description of the setting, this is unique and used to find configuration for SAAS cleint|string|
-|source|Debugging aid, source where entry is created from|array|
+|source|Debugging: source where entry is created from|array|
 |sla|not used|array|
 |monitor_endpoints|Monitor issues with sophos endpoints|true/false|
 |monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
 |monitor_backup|Monitor issues with VEEAM backups|true/false|
 |create_ticket|reate ticket within Zammad in case of monitored incidents|true/false|
 |sophos_alerts|Alerts that have been created a ticket for|
-|Endpoints||
+|Endpoints|Debugging: Number of sophos endpoints found|
