@@ -1,0 +1,53 @@
+require 'minitest/autorun'
+require 'minitest/spec'
+require_relative "MonitoringConfig"
+TenantMock = Struct.new(:id, :description, :endpoints, :is_trial?)
+
+describe '#1 config' do
+	before do
+		@cfg = MonitoringConfig.new
+	end
+
+	it "#1.1 load" do
+		begin
+			@cfg.load_config( "Test", [] )
+			company = 'VDH Company B.V.'
+			assert value(@cfg.by_description( company ).description).must_equal company, "1.1.1 load []; not adding"
+			company = 'Test Company'
+			assert_nil @cfg.by_description( company ), "1.2 load []; no test company"
+			@cfg = MonitoringConfig.new
+			@cfg.load_config( "Test", [TenantMock.new("0", company, [], false)] )
+			assert value(@cfg.by_description( company ).description).must_equal company, "1.1.3 load []; adding test comp"
+			@cfg.delete_entry @cfg.by_description( company )
+			assert_nil @cfg.by_description( company ), "1.4 cfg delete entry"
+			@cfg.save_config
+		end
+	end
+	it "#1.2 find by name" do
+		begin
+			company = 'VDH Company B.V.'
+			@cfg = MonitoringConfig.new
+			@cfg.load_config( "Test", [] )
+			assert value(@cfg.by_description( company ).description).must_equal company, "1.2.1 check find by company"
+		end
+	end
+end
+
+describe '#2 utils' do
+	it '#2.1 FileUtils' do
+		begin
+			assert value(FileUtil.daily_file_name( "error.log" )).must_equal 'error-'+FileUtil.timestamp+'.log', "2.1.1 daily name"
+		end
+	end
+	it '#2.2 Struct' do
+		begin
+			TestStruct = Struct.new( :raw_data )
+			string = '{"id":"id-0", "desc":{"someKey":"someValue","anotherKey":"value"},"main_item":{"stats":{"a":8,"b":12,"c":10}}}'
+			t = TestStruct.new( JSON.parse( string ) )
+			assert value( t.property( "key" ) ).must_equal "", "2.2.1 property not exist"
+			assert value( t.property( "id" ) ).must_equal 'id-0', "2.2.1 property "
+			assert value( t.property( "desc.someKey" ) ).must_equal 'someValue', "2.2.1 nested property"
+			assert value( t.property( "main_item.stats.a" ) ).must_equal "8", "2.2.1 nested property"
+		end
+	end
+end
