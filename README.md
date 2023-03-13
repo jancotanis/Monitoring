@@ -1,7 +1,8 @@
 # Monitoring
 Monitoring scripts for saas solutions
 
-## Configuration
+
+## System Configuration
 Use environment variables to setup various SAAS connection parameters
 
 ### Sophos
@@ -26,3 +27,38 @@ ZAMMAD_OAUTH_TOKEN=834hdfskgsj54rghkbvfiurve984
 ZAMMAD_CREATOR
 ```
 
+## Application configuration
+Applciation configuration is stored in `monitoring.cfg`. This is a yaml formatted 
+file with the following structure.
+
+Example 
+```
+---
+- !ruby/struct:ConfigData
+  id: 6551ef50-2917-469d-b4ae-2fddc37d5688
+  description: Name of the client
+  source:
+  - Sophos
+  sla: []
+  monitor_endpoints: false
+  monitor_connectivity: false
+  monitor_backup: false
+  create_ticket: false
+  sophos_alerts: []
+  endpoints: 5
+```
+
+Keys
+
+|Key|Description|value|
+|--|--|--|
+|id|Unique id of the entry|string|
+|description|Customer description of the setting, this is unique and used to find configuration for SAAS cleint|string|
+|source|Debugging aid, source where entry is created from|array|
+|sla|not used|array|
+|monitor_endpoints|Monitor issues with sophos endpoints|true/false|
+|monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
+|monitor_backup|Monitor issues with VEEAM backups|true/false|
+|create_ticket|reate ticket within Zammad in case of monitored incidents|true/false|
+|sophos_alerts|Alerts that have been created a ticket for|
+|Endpoints||
