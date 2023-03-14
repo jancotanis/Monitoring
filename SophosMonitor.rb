@@ -6,7 +6,8 @@ require_relative 'SophosAPI'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
-class SophosIncident
+
+class SophosIncident < MonitoringIncident
 	def source
 		"Unknown"
 	end
