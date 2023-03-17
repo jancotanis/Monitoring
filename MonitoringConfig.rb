@@ -58,6 +58,7 @@ attr_reader :config
 			if cfg
 				if by_id( t.id )
 					# overwrite original item
+puts "Rename tenant"
 					cfg = by_id( t.id )
 				else
 					# not renamed, add it
@@ -73,6 +74,29 @@ attr_reader :config
 		# update config
 		save_config
 		@config
+	end
+	
+	def report
+		keys = ["Sophos","Veeam"]
+		puts "| Company | #{keys.join( ' | ' )} |"
+		puts "|:--|#{':--: | ' * keys.count}"
+		@config.each do |cfg|
+			v = {}
+			keys.each do |key|
+				if cfg.source.include? key
+					sla = (cfg.sla.grep /#{key}/).first
+					if sla.empty?
+						sla = "*todo*"
+					else
+						sla["#{key}-"] = ""
+					end
+					v[key] = sla
+				else
+					v[key] = "-"
+				end
+			end
+			puts "|#{cfg.description}|#{v[keys[0]]}|#{v[keys[1]]}|"
+		end
 	end
 end
 
