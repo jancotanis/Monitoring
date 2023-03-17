@@ -21,13 +21,12 @@ class BackupIncident < MonitoringIncident
 end
 
 class VeeamMonitor
-	attr_reader :config, :all_alerts, :device_error_count
+	attr_reader :config, :all_alerts
 	TENANTS_CACHE = "veeam-tenants.yml"
 
 	def initialize( report, config ) 
 		@all_alerts = {}
 		@report = report
-		@device_error_count = 0
 		@client = Veeam::Client.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'] )
 
 		@alerts = @client.alerts
@@ -38,7 +37,6 @@ class VeeamMonitor
 	end
 	
 	def run all_alerts
-		@device_error_count = 0
 		collect_data()
 		@tenants.each do |customer|
 			cfg = @config.by_description(customer.description)
@@ -51,7 +49,6 @@ class VeeamMonitor
 					customer.endpoints.values.each do |ep|
 						if ep.alerts.count > 0
 							@report.puts "- Endpount #{ep}"
-							@device_error_count += 1
 							ep.alerts.each do |a|
 								# group alerts by customer
 								if !a.severity.eql? "Resolved"

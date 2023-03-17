@@ -36,14 +36,13 @@ class ConnectivityIncident < SophosIncident
 end
 
 class SophosMonitor
-	attr_reader :config, :all_alerts, :device_error_count
+	attr_reader :config, :all_alerts
 	TENANTS_CACHE = "sophos-tenants.yml"
 
 	def initialize( report, config ) 
 		@products = {}
 		@all_alerts = {}
 		@report = report
-		@device_error_count = 0
 		@client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'] )
 		load_tenants
 		@config = config
@@ -51,7 +50,6 @@ class SophosMonitor
 	end
 	
 	def run all_alerts
-		@device_error_count = 0
 		collect_data()
 		@tenants.each do |customer|
 			cfg = @config.by_description(customer.description)
@@ -63,14 +61,12 @@ class SophosMonitor
 
 					# group alerts by customer
 					count = handle_endpoint_alerts( customer_alerts ) if cfg.monitor_endpoints
-					@device_error_count += count
 
 					# include connectivity issues in case of decive issues
 					connection_errors = 0
 					if cfg.monitor_connectivity || ( count > 0 )
 						r = handle_connectivity_alerts( customer_alerts ) 
 						connection_errors = r[0]
-						@device_error_count += r[1]
 					end
 					customer_alerts.devices.each do |device_id, incidents|
 						endpoint = customer.endpoints[device_id]
