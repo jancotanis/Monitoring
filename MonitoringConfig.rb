@@ -3,7 +3,7 @@ require_relative 'utils'
 
 MONITORING_CFG = "monitoring.cfg"
 
-ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :create_ticket, :sophos_alerts, :endpoints ) do
+ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :create_ticket, :reported_alerts, :endpoints ) do
     def initialize(*)
         super
 		self.source					||= []
@@ -12,7 +12,7 @@ ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, 
 		self.monitor_connectivity	||= false
 		self.monitor_backup			||= false
 		self.create_ticket			||= false
-		self.sophos_alerts			||= []
+		self.reported_alerts		||= []
     end
 	
 	def monitoring?
@@ -77,25 +77,32 @@ puts "Rename tenant"
 	end
 	
 	def report
-		keys = ["Sophos","Veeam"]
-		puts "| Company | #{keys.join( ' | ' )} |"
-		puts "|:--|#{':--: | ' * keys.count}"
-		@config.each do |cfg|
-			v = {}
-			keys.each do |key|
-				if cfg.source.include? key
-					sla = (cfg.sla.grep /#{key}/).first
-					if sla.empty?
-						sla = "*todo*"
+		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam" ]
+		report_file = "configuration.md"
+		File.open( report_file, "w") do |report|
+			report.puts "| Company | #{keys.join( ' | ' )} |"
+			report.puts "|:--|#{':--: | ' * keys.count}"
+			@config.each do |cfg|
+				v = {}
+
+				keys.each do |key|
+					if cfg.source.include? key
+						sla = (cfg.sla.grep /#{key}/).first
+						if !sla || sla.empty?
+							sla = "*todo*"
+						else
+							sla["#{key}-"] = ""
+						end
+						v[key] = sla
 					else
-						sla["#{key}-"] = ""
+						v[key] = "-"
 					end
-					v[key] = sla
-				else
-					v[key] = "-"
 				end
+#				report.puts "|#{cfg.description}|#{v[keys[0]]}|#{v[keys[1]]}|#{v[keys[2]]}|"
+				s =  keys.map{|k| "#{v[k]}|"}.join
+				report.puts "|#{cfg.description}|#{s}|"
 			end
-			puts "|#{cfg.description}|#{v[keys[0]]}|#{v[keys[1]]}|"
+			puts "#{report_file} written"
 		end
 	end
 end
