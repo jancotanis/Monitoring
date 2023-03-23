@@ -58,7 +58,7 @@ attr_accessor :customer #hidden field
 	end
 	
 	def remove_reported_incidents( alerts )
-		orig = []
+		orig = alerts
 		devices.each do |device_id, incidents|
 			orig += incidents.values.map{ |i| i.alert.id }
 			incidents.each do |type,incident|
@@ -70,6 +70,6 @@ attr_accessor :customer #hidden field
 			# remove if all incidents have been removed
 			devices.delete(  device_id ) if ( incidents.count == 0 )
 		end
-		orig
+		orig.uniq
 	end
 end
