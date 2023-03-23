@@ -5,6 +5,13 @@ Monitoring scripts for saas solutions
 ## System Configuration
 Use environment variables to setup various SAAS connection parameters
 
+### Skykick
+Connection to Skykick partner portal https://backup.skykick.com/partner/cloud-backup/manager#/
+````
+SKYKICK_CLIENT_ID=834hdfs-kgsj54rg-hkbvfiu-rve984
+SKYKICK_CLIENT_SECRET=834hdfskgsj54rghkbvfiurve984
+````
+
 ### Sophos
 Connection to Sophos partner portal
 ````
@@ -55,11 +62,23 @@ Keys
 |--|--|--|
 |id|Unique id of the entry|string|
 |description|Customer description of the setting, this is unique and used to find configuration for SAAS cleint|string|
-|source|Debugging: source where entry is created from|array|
-|sla|not used|array|
+|source|Debugging: source where entry originates from|array|
+|sla|Used to report kind of SLA in place with customer|array|
 |monitor_endpoints|Monitor issues with sophos endpoints|true/false|
 |monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
 |monitor_backup|Monitor issues with VEEAM backups|true/false|
 |create_ticket|reate ticket within Zammad in case of monitored incidents|true/false|
-|sophos_alerts|Alerts that have been created a ticket for|
+|reported_alerts|Alerts that have been created a ticket for|
 |Endpoints|Debugging: Number of sophos endpoints found|
+
+## Script run options
+Script can be run with ruby interpreter.
+````
+ruby Monitoring.rb
+````
+Some additional options apply
+|Parameter|Description|
+|--|--|
+|-s --sla|Report SLA options |
+|-? -h --help|Explanation of script options|
+
