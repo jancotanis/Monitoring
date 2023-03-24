@@ -62,7 +62,7 @@ class VeeamMonitor
 			end
 		end
 
-		FileUtil.write_file( 'veeam-alerts.json', @alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name('veeam-alerts.json'), @alerts.to_json )
 		all_alerts
 	end
 

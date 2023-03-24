@@ -64,7 +64,7 @@ class SophosMonitor
 
 					# include connectivity issues in case of decive issues
 					connection_errors = 0
-					if cfg.monitor_connectivity || ( count > 0 )
+					if cfg.monitor_connectivity || ( count && count > 0 )
 						r = handle_connectivity_alerts( customer_alerts ) 
 						connection_errors = r[0]
 					end
@@ -80,6 +80,7 @@ class SophosMonitor
 			end
 		end
 		save_tenants
+		FileUtil.write_file( FileUtil.daily_file_name('sophos-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 	def handle_unique_alerts( customer, &block )

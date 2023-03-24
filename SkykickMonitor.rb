@@ -5,6 +5,7 @@ require_relative 'utils'
 require_relative 'SkykickAPI'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
+require_relative 'lib/skykick/endpoints'
 
 
 class BackupIncident < MonitoringIncident
@@ -114,19 +115,3 @@ puts customer.description
 	end
 
 end
-=begin
-require "dotenv"
-require_relative "utils"
-require_relative "MonitoringConfig"
-require_relative 'MonitoringModel'
-
-Dotenv.load
-config = MonitoringConfig.new
-customer_alerts  = {}
-File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
-
-	skm = SkykickMonitor.new( report, config )
-	skm.run customer_alerts
-end
-config.save_config
-=end

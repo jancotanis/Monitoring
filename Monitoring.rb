@@ -44,8 +44,6 @@ rescue
 	exit -1
 end
 
-exit 0
-
 customer_alerts  = {}
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
