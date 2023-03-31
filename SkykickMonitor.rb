@@ -30,7 +30,6 @@ class SkykickMonitor
 		@report = report
 		@client = Skykick::Client.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'] )
 
-		@alerts = {}
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
 		@config = config
@@ -63,21 +62,19 @@ class SkykickMonitor
 			end
 		end
 
-		FileUtil.write_file( FileUtil.daily_file_name('skykick-alerts.json'), @alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name('skykick-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 
 private
 	def collect_data
 		@tenants.each do |customer|
-puts customer.description
 			customer.clear_endpoint_alerts(  )
 			cfg = @config.by_description(customer.description)
 			if cfg.monitor_backup
 				customer_alerts = collect_alerts( customer )
 				# add active alerts to customer record
 				if ( customer_alerts.count > 0 )
-					puts "Customer #{customer.description}"
 
 					customer.alerts = customer_alerts
 					customer_alerts.values.each do |a|
