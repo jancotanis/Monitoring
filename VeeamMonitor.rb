@@ -75,8 +75,6 @@ private
 				customer_alerts = collect_alerts( customer )
 				# add active alerts to customer record
 				if ( customer_alerts.count > 0 )
-					puts "Customer #{customer.description}"
-
 					customer.alerts = customer_alerts
 					customer_alerts.values.each do |a|
 						if !a.severity.eql? "Resolved"
