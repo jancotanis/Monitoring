@@ -84,14 +84,13 @@ puts "Rename tenant"
 			report.puts "|:--|#{':--: | ' * keys.count}"
 			@config.each do |cfg|
 				v = {}
-
 				keys.each do |key|
 					if cfg.source.include? key
 						sla = (cfg.sla.grep /#{key}/).first
 						if !sla || sla.empty?
 							sla = "*todo*"
 						else
-							v[key] = ""
+							sla = sla.gsub( key + "-", "" )
 						end
 						v[key] = sla
 					else
