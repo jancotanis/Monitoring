@@ -30,7 +30,8 @@ module Veeam
 		builder.request :authorization, 'Bearer', @bearer_id if @bearer_id
 		if @logger
 		  builder.response :logger, @logger, { headers: true, bodies: true } do |l|
-		    l.filter(/(client_secret\=)(.+?)(\&)/, '\1[REMOVED]\2')
+			# filter header content
+			l.filter(/(Authorization\: \"\w+)([^&]+)(\")/, '\1[REMOVED]\3')
 		  end
 		end
       end

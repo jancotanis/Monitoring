@@ -19,13 +19,13 @@ module Skykick
 	  @logger = logger
       @conn = create_connection()
 	  @conn.basic_auth(client_id, client_secret)
-@subscription_id = client_secret
+	  @subscription_id = client_secret
       response = @conn.post('/auth/token') do |req|
-        req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+		req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
 		req.headers['Ocp-Apim-Subscription-Key'] = @subscription_id
-       body = {
-		  grant_type: 'client_credentials',
-		  scope: 'Partner'
+		body = {
+			grant_type: 'client_credentials',
+			scope: 'Partner'
         }
 		req.body = URI.encode_www_form( body )
       end
@@ -43,9 +43,15 @@ module Skykick
         builder.use Faraday::Response::RaiseError
         builder.adapter Faraday.default_adapter
 		builder.request :authorization, 'Bearer', @bearer_id if @bearer_id
+        builder.headers['Ocp-Apim-Subscription-Key'] = @subscription_id if @subscription_id
 		if @logger
 		  builder.response :logger, @logger, { headers: true, bodies: true } do |l|
-		    l.filter(/(client_secret\=)(.+?)(\&)/, '\1[REMOVED]\2')
+			# filter header content
+			l.filter(/(Authorization\: \"\w+)([^&]+)(\")/, '\1[REMOVED]\3')
+			l.filter(/(client-secret\:)([^&]+)/, '\1[REMOVED]')
+		    l.filter(/(Ocp-Apim-Subscription-Key\: \")(.+?)(\")/, '\1[REMOVED]\3')
+			# filter json content
+		    l.filter(/(\"access_token\"\:\")(.+?)(\".*)/, '\1[REMOVED]\3')
 		  end
 		end
       end

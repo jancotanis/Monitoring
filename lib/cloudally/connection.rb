@@ -48,9 +48,11 @@ module CloudAlly
         builder.headers['client-secret'] = @client_secret
 		if @logger
 		  builder.response :logger, @logger, { headers: true, bodies: true } do |l|
+			# filter json content
 		    l.filter(/(\"password\"\:\")(.+?)(\".*)/, '\1[REMOVED]\3')
+		    l.filter(/(\"accessToken\"\:\")(.+?)(\".*)/, '\1[REMOVED]\3')
+			# filter header content
 			l.filter(/(client-secret\:)([^&]+)/, '\1[REMOVED]')
-			l.filter(/(Authorization\:)([^&]+)/, '\1[REMOVED]')
 		  end
 		end
       end
