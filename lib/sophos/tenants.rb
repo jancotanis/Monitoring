@@ -24,7 +24,7 @@ module Sophos
 		name
 	end
 
-	# def clear_endpoint_alerts
+	def clear_endpoint_alerts
 		if self.endpoints
 			endpoints.each do |k,v|
 				v.clear_alerts
