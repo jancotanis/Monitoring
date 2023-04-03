@@ -2,7 +2,7 @@ require 'json'
 require_relative 'api_base'
 
 module Veeam
-  TenantData  = Struct.new( :id, :name, :showas, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
+  TenantData  = Struct.new( :id, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
 		super
 		self.endpoints ||= {}
@@ -15,7 +15,7 @@ module Veeam
 
 	def description
 		# it looks like new tenants are created as COAS Business Systems and showAs is the actual name.
-		showas
+		name
 	end
 
 	def clear_endpoint_alerts
@@ -36,7 +36,7 @@ module Veeam
 			data = JSON.parse( response.body )
 			#:id, :name, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts
 			data["data"].each do |item|
-				t = TenantData.new( item["instanceUid"], item["name"], item["name"], nil, item["status"], item["subscriptionPlanUid"], item )
+				t = TenantData.new( item["instanceUid"], item["name"], nil, item["status"], item["subscriptionPlanUid"], item )
 				@tenants[ t.id ] = t
 			end
 =begin

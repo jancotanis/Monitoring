@@ -19,9 +19,6 @@ module CloudAlly
 	def description
 		name
 	end
-	def showas
-		name
-	end
 
 	def clear_endpoint_alerts
 		if self.endpoints

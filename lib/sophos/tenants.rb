@@ -8,7 +8,7 @@ CACHE_EXT = "-data.yml"
 
 module Sophos
 	# billing type - term, trial, usage
-  TenantData  = Struct.new( :id, :name, :showas, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
+  TenantData  = Struct.new( :id, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
 		super
 		self.endpoints ||= {}
@@ -21,10 +21,10 @@ module Sophos
 
 	def description
 		# it looks like new tenants are created as COAS Business Systems and showAs is the actual name.
-		showas
+		name
 	end
 
-	def clear_endpoint_alerts
+	# def clear_endpoint_alerts
 		if self.endpoints
 			endpoints.each do |k,v|
 				v.clear_alerts
@@ -46,9 +46,7 @@ module Sophos
 				end
 				data = JSON.parse( response.body )
 				data["items"].each do |item|
-					name = item["name"]
-					name = item["name"]+"/"+item["showAs"] unless item["name"].eql?(item["showAs"])
-					t = TenantData.new( item["id"], item["name"], item["showAs"], item["apiHost"], item["status"], item["billingType"], item )
+					t = TenantData.new( item["id"], item["showAs"], item["apiHost"], item["status"], item["billingType"], item )
 					@tenants[ t.id ] = t
 					endpoints = YAML.load_file( cache_file( t ) ) if File.file?( cache_file( t ) )
 					if !endpoints
