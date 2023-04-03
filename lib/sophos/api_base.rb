@@ -5,6 +5,6 @@ class ApiBase
   end
 
   def authorize( conn )
-	conn.request :authorization, 'Bearer', @client.connection.bearer_id
+#	conn.request :authorization, 'Bearer', @client.connection.bearer_id
   end
 end
