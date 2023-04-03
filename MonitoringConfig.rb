@@ -91,16 +91,15 @@ puts "Rename tenant"
 						if !sla || sla.empty?
 							sla = "*todo*"
 						else
-							sla["#{key}-"] = ""
+							v[key] = ""
 						end
 						v[key] = sla
 					else
 						v[key] = "-"
 					end
 				end
-#				report.puts "|#{cfg.description}|#{v[keys[0]]}|#{v[keys[1]]}|#{v[keys[2]]}|"
 				s =  keys.map{|k| "#{v[k]}|"}.join
-				report.puts "|#{cfg.description}|#{s}|"
+				report.puts "|#{cfg.description}|#{s}"
 			end
 			puts "#{report_file} written"
 		end
