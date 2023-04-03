@@ -39,11 +39,11 @@ class SophosMonitor
 	attr_reader :config, :all_alerts
 	TENANTS_CACHE = "sophos-tenants.yml"
 
-	def initialize( report, config ) 
+	def initialize( report, config, log  ) 
 		@products = {}
 		@all_alerts = {}
 		@report = report
-		@client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'] )
+		@client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
 		load_tenants
 		@config = config
 		@config.load_config( "Sophos", @tenants )
@@ -173,4 +173,3 @@ private
 	end
 
 end
-

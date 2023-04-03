@@ -24,10 +24,10 @@ class VeeamMonitor
 	attr_reader :config, :all_alerts
 	TENANTS_CACHE = "veeam-tenants.yml"
 
-	def initialize( report, config ) 
+	def initialize( report, config, log  ) 
 		@all_alerts = {}
 		@report = report
-		@client = Veeam::Client.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'] )
+		@client = Veeam::Client.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'], log )
 
 		@alerts = @client.alerts
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }

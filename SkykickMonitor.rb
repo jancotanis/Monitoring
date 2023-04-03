@@ -25,10 +25,10 @@ class SkykickMonitor
 	attr_reader :config, :all_alerts
 	TENANTS_CACHE = "skykick-tenants.yml"
 
-	def initialize( report, config ) 
+	def initialize( report, config, log  ) 
 		@all_alerts = {}
 		@report = report
-		@client = Skykick::Client.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'] )
+		@client = Skykick::Client.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'], log )
 
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
