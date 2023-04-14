@@ -14,10 +14,6 @@ class CloudBackupIncident < MonitoringIncident
 	def endpoint_to_s
 		"#{alert.endpoint_type} #{alert.endpoint_id}"
 	end
-	def to_s
-		"  #{time_to_s}: #{alert.severity} alert\n" \
-		"   Description: #{alert.description}\n"
-	end
 end
 
 class CloudAllyMonitor

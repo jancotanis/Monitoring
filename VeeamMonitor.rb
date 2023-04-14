@@ -14,10 +14,6 @@ class BackupIncident < MonitoringIncident
 	def endpoint_to_s
 		alert.property("object.type")+" "+alert.property("object.computerName")+" "+alert.property("object.objectName")
 	end
-	def to_s
-		"  #{time_to_s}: #{alert.severity} alert\n" \
-		"   Description: #{alert.description}\n"
-	end
 end
 
 class VeeamMonitor

@@ -13,6 +13,10 @@ MonitoringIncident = Struct.new( :device, :start_time, :end_time, :alert ) do
 	def endpoint_to_s
 		to_s
 	end
+	def to_s
+		"  #{time_to_s}: #{source} #{alert.severity} alert\n" \
+		"   Description: #{alert.description}\n"
+	end
 end
 
 CustomerAlerts = Struct.new( :name, :alerts, :devices ) do
@@ -25,7 +29,7 @@ attr_accessor :customer #hidden field
 		self.devices	||= Hash.new {|hsh, key| hsh[key] = {} }
     end
 	def source
-		
+		@source
 	end
 	def add_incident( device, alert, klass )
 		alert_type = alert.property("type")
