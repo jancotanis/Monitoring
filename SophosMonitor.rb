@@ -9,7 +9,7 @@ require_relative 'MonitoringModel'
 
 class SophosIncident < MonitoringIncident
 	def source
-		"Unknown"
+		"Sophos"
 	end
 end
 
@@ -18,8 +18,8 @@ class EndpointIncident < SophosIncident
 		alert.property("managedAgent.type")+" "+alert.property("managedAgent.name")
 	end
 	def to_s
-		person = "   User:        #{alert.property('person.name')}\n" if alert.property('person.name')
-		"  #{time_to_s}: #{alert.severity} alert\n" \
+		person = "   User:        #{alert.property('person.name')}\n" if !alert.property('person.name').empty?
+		"  #{time_to_s}: #{source} #{alert.severity} alert\n" \
 		"   Description: #{alert.description}\n" \
 		"   Endpoint:    #{alert.endpoint_type}\n" \
 		"#{person}" \
@@ -31,7 +31,7 @@ class ConnectivityIncident < SophosIncident
 		alert.endpoint_type
 	end
 	def to_s
-		"  #{time_to_s}: #{alert.severity} alert '#{alert.description}' for #{alert.endpoint_type}"  
+		"  #{time_to_s}: #{source} #{alert.severity} alert '#{alert.description}' for #{alert.endpoint_type}"  
 	end
 end
 
@@ -70,7 +70,7 @@ class SophosMonitor
 					end
 					customer_alerts.devices.each do |device_id, incidents|
 						endpoint = customer.endpoints[device_id]
-						@report.puts "- #{endpoint} (#{device_id})" #unless endpoint.empty?
+						@report.puts "- #{endpoint}"
 						incidents.each do |type,incident|
 							@report.puts incident.to_s
 						end
