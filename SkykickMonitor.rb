@@ -8,12 +8,12 @@ require_relative 'MonitoringModel'
 require_relative 'lib/skykick/endpoints'
 
 
-class BackupIncident < MonitoringIncident
+class SkykickBackupIncident < MonitoringIncident
 	def source
 		"Skykick"
 	end
 	def endpoint_to_s
-		"#{alert.endpoint_type} #{alert.endpoint_id}"
+		"#{alert.endpoint_type}"
 	end
 end
 
@@ -48,7 +48,7 @@ class SkykickMonitor
 							ep.alerts.each do |a|
 								# group alerts by customer
 								if !a.severity.eql? "Resolved"
-									customer_alerts.add_incident( a.endpoint_id, a, BackupIncident )
+									customer_alerts.add_incident( a.endpoint_id, a, SkykickBackupIncident )
 									@report.puts "  #{a.created} #{a.severity} #{a.description} "
 								end
 							end

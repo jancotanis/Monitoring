@@ -7,7 +7,7 @@ require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
 
-class BackupIncident < MonitoringIncident
+class VeeamBackupIncident < MonitoringIncident
 	def source
 		"Veeam"
 	end
@@ -48,7 +48,7 @@ class VeeamMonitor
 							ep.alerts.each do |a|
 								# group alerts by customer
 								if !a.severity.eql? "Resolved"
-									customer_alerts.add_incident( a.endpoint_id, a, BackupIncident )
+									customer_alerts.add_incident( a.endpoint_id, a, VeeamBackupIncident )
 									@report.puts "  #{a.created} #{a.severity} #{a.description} "
 								end
 							end
