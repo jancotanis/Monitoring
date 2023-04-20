@@ -12,7 +12,7 @@ class CloudBackupIncident < MonitoringIncident
 		"CloudAlly"
 	end
 	def endpoint_to_s
-		"#{alert.endpoint_type} #{alert.endpoint_id}"
+		"#{alert.endpoint_type}"
 	end
 end
 
