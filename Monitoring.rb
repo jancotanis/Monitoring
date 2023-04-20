@@ -39,25 +39,26 @@ end
 begin
 	o.parse!
 	arg = ARGV.pop
-rescue
-	puts o
-	exit -1
+#rescue
+#	puts o
+#	exit -1
 end
 
-customer_alerts  = {}
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
 		url:			ENV["ZAMMAN_HOST"],
 		oauth2_token:	ENV["ZAMMAD_OAUTH_TOKEN"]
 	)
-	sm = SophosMonitor.new( report, config, options[:log] )
-	customer_alerts = sm.run( customer_alerts )
-	vm = VeeamMonitor.new( report, config, options[:log] )
-	customer_alerts = vm.run( customer_alerts )
-	skm = SkykickMonitor.new( report, config, options[:log] )
-	customer_alerts = skm.run( customer_alerts )
-	cam = CloudAllyMonitor.new( report, config, options[:log] )
-	customer_alerts = cam.run( customer_alerts )
+	customer_alerts  = {}
+	monitors = [SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor]
+	monitors.each do |klass|
+		m = klass.new( report, config, options[:log] )
+		customer_alerts = m.run( customer_alerts )
+	rescue => e
+		puts "** Error running #{klass.name}"
+		puts e
+		puts e.response[:body] if e.response
+	end
 	# create ticket
 	customer_alerts.each do |id, cl|
 		# we have alerts
