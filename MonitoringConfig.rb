@@ -80,8 +80,8 @@ puts "Rename tenant"
 		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam" ]
 		report_file = "configuration.md"
 		File.open( report_file, "w") do |report|
-			report.puts "| Company | #{keys.join( ' | ' )} |"
-			report.puts "|:--|#{':--: | ' * keys.count}"
+			report.puts "| Company | Ticket | #{keys.join( ' | ' )} |"
+			report.puts "|:--|:--:|#{':--: | ' * keys.count}"
 			@config.each do |cfg|
 				v = {}
 				keys.each do |key|
@@ -98,7 +98,7 @@ puts "Rename tenant"
 					end
 				end
 				s =  keys.map{|k| "#{v[k]}|"}.join
-				report.puts "|#{cfg.description}|#{s}"
+				report.puts "|#{cfg.description}|#{cfg.create_ticket}|#{s}"
 			end
 			puts "#{report_file} written"
 		end
