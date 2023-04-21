@@ -1,5 +1,6 @@
 require "dotenv"
 require "optparse"
+require 'zammad_api'
 require_relative "utils"
 require_relative "MonitoringConfig"
 require_relative "SophosMonitor"
@@ -8,47 +9,31 @@ require_relative "SkykickMonitor"
 require_relative "CloudAllyMonitor"
 require_relative "MonitoringModel"
 
-Dotenv.load
+def get_options
+	options = {}
+	o=OptionParser.new do |opts|
+		opts.banner = "Usage: Monitor.rb [options]"
 
-# helpdesk  library api
-require 'zammad_api'
-
-puts "Monitor v0.9"
-
-config = MonitoringConfig.new
-options = {}
-o=OptionParser.new do |opts|
-	opts.banner = "Usage: Monitor.rb [options]"
-
-	opts.on("-s", "--sla", "Report customer SLAs") do |a|
-		config.report
-		exit -1
+		opts.on("-s", "--sla", "Report customer SLAs") do |a|
+			config.report
+			exit -1
+		end
+	#	opts.on("-r", "--reload", "Reload cached files") do |a|
+	#		options[:reload] = a
+	#	end
+		opts.on("-l", "--log", "Log http requests") do |log|
+			options[:log] = log
+		end
+		opts.on_tail("-h", "-?", "--help", opts.banner) do
+			puts opts
+			exit -1
+		end
 	end
-#	opts.on("-r", "--reload", "Reload cached files") do |a|
-#		options[:reload] = a
-#	end
-	opts.on("-l", "--log", "Log http requests") do |log|
-		options[:log] = log
-	end
-	opts.on_tail("-h", "-?", "--help", opts.banner) do
-		puts opts
-		exit -1
-	end
-end
-
-begin
 	o.parse!
-	arg = ARGV.pop
-#rescue
-#	puts o
-#	exit -1
+	options
 end
 
-File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
-	client = ZammadAPI::Client.new(
-		url:			ENV["ZAMMAN_HOST"],
-		oauth2_token:	ENV["ZAMMAD_OAUTH_TOKEN"]
-	)
+def run_monitors( report, config, options )
 	customer_alerts  = {}
 	monitors = [SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor]
 	monitors.each do |klass|
@@ -59,6 +44,23 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 		puts e
 		puts e.response[:body] if e.response
 	end
+	customer_alerts
+end
+
+puts "Monitor v0.9 - #{Time.now}"
+
+# use environment from .env if any
+Dotenv.load
+config = MonitoringConfig.new
+options = get_options
+
+File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
+	client = ZammadAPI::Client.new(
+		url:			ENV["ZAMMAN_HOST"],
+		oauth2_token:	ENV["ZAMMAD_OAUTH_TOKEN"]
+	)
+
+	customer_alerts  = run_monitors( report, config, options )
 	# create ticket
 	customer_alerts.each do |id, cl|
 		# we have alerts
