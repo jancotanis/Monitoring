@@ -6,11 +6,15 @@ require_relative 'VeeamAPI'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
+VEEAM = "Veeam"
 
 class VeeamBackupIncident < MonitoringIncident
-	def source
-		"Veeam"
+	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
+		super( VEEAM, device, start_time, end_time, alert )
 	end
+#	def source
+#		"Veeam"
+#	end
 	def endpoint_to_s
 		alert.property("object.type")+" "+alert.property("object.computerName")+" "+alert.property("object.objectName")
 	end
@@ -18,7 +22,6 @@ end
 
 class VeeamMonitor
 	attr_reader :config, :all_alerts
-	TENANTS_CACHE = "veeam-tenants.yml"
 
 	def initialize( report, config, log  ) 
 		@all_alerts = {}
@@ -29,7 +32,7 @@ class VeeamMonitor
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
 		@config = config
-		@config.load_config( "Veeam", @tenants )
+		@config.load_config( VEEAM, @tenants )
 	end
 	
 	def run all_alerts
@@ -58,7 +61,7 @@ class VeeamMonitor
 			end
 		end
 
-		FileUtil.write_file( FileUtil.daily_file_name('veeam-alerts.json'), @alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name(VEEAM.downcase+'-alerts.json'), @alerts.to_json )
 		all_alerts
 	end
 

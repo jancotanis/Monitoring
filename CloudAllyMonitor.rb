@@ -6,11 +6,14 @@ require_relative 'CloudAllyAPI'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
-
+CLOUDALLY = "CloudAlly"
 class CloudBackupIncident < MonitoringIncident
-	def source
-		"CloudAlly"
+	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
+		super( CLOUDALLY, device, start_time, end_time, alert )
 	end
+#	def source
+#		"CloudAlly"
+#	end
 	def endpoint_to_s
 		"#{alert.endpoint_type}"
 	end
@@ -18,7 +21,6 @@ end
 
 class CloudAllyMonitor
 	attr_reader :config, :all_alerts
-	TENANTS_CACHE = "cloudally-tenants.yml"
 
 	def initialize( report, config, log ) 
 		@all_alerts = {}
@@ -34,7 +36,7 @@ class CloudAllyMonitor
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
 		@config = config
-		@config.load_config( "CloudAlly", @tenants )
+		@config.load_config( CLOUDALLY, @tenants )
 	end
 	
 	def run all_alerts
@@ -63,7 +65,7 @@ class CloudAllyMonitor
 			end
 		end
 
-		FileUtil.write_file( FileUtil.daily_file_name('cloudally-alerts.json'), all_alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name(CLOUDALLY.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 

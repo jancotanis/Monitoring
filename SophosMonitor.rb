@@ -6,11 +6,14 @@ require_relative 'SophosAPI'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
-
+SOPHOS = "Sophos"
 class SophosIncident < MonitoringIncident
-	def source
-		"Sophos"
+	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
+		super( SOPHOS, device, start_time, end_time, alert )
 	end
+#	def source
+#		"Sophos"
+#	end
 end
 
 class EndpointIncident < SophosIncident
@@ -37,7 +40,7 @@ end
 
 class SophosMonitor
 	attr_reader :config, :all_alerts
-	TENANTS_CACHE = "sophos-tenants.yml"
+	TENANTS_CACHE = SOPHOS.downcase+"-tenants.yml"
 
 	def initialize( report, config, log  ) 
 		@products = {}
@@ -46,7 +49,7 @@ class SophosMonitor
 		@client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
 		load_tenants
 		@config = config
-		@config.load_config( "Sophos", @tenants )
+		@config.load_config( SOPHOS, @tenants )
 	end
 	
 	def run all_alerts
@@ -80,7 +83,7 @@ class SophosMonitor
 			end
 		end
 		save_tenants
-		FileUtil.write_file( FileUtil.daily_file_name('sophos-alerts.json'), all_alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name(SOPHOS.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 	def handle_unique_alerts( customer, &block )

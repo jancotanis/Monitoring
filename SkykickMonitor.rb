@@ -7,11 +7,14 @@ require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 require_relative 'lib/skykick/endpoints'
 
-
+SKYKICK = "Skykick"
 class SkykickBackupIncident < MonitoringIncident
-	def source
-		"Skykick"
+	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
+		super( SKYKICK, device, start_time, end_time, alert )
 	end
+#	def source
+#		"Skykick"
+#	end
 	def endpoint_to_s
 		"#{alert.endpoint_type}"
 	end
@@ -19,7 +22,6 @@ end
 
 class SkykickMonitor
 	attr_reader :config, :all_alerts
-	TENANTS_CACHE = "skykick-tenants.yml"
 
 	def initialize( report, config, log  ) 
 		@all_alerts = {}
@@ -29,7 +31,7 @@ class SkykickMonitor
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
 		@config = config
-		@config.load_config( "Skykick", @tenants )
+		@config.load_config( SKYKICK, @tenants )
 	end
 	
 	def run all_alerts
@@ -58,7 +60,7 @@ class SkykickMonitor
 			end
 		end
 
-		FileUtil.write_file( FileUtil.daily_file_name('skykick-alerts.json'), all_alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name( SKYKICK.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 

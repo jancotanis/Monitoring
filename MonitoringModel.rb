@@ -1,8 +1,5 @@
 
-MonitoringIncident = Struct.new( :device, :start_time, :end_time, :alert ) do
-	def source
-		"Unknown"
-	end
+MonitoringIncident = Struct.new( :source, :device, :start_time, :end_time, :alert ) do
 	def time_to_s
 		if start_time.eql? end_time
 			start_time.to_s
