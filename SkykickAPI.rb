@@ -22,8 +22,6 @@ module Skykick
 	# use userid and primary key for login information found in https://portal.skykick.com/partner/admin/user-profile
     def initialize( login, password, log=true )
 	  logger = Logger.new( FileUtil.daily_file_name( "skykick.log" ) ) if log
-	  login = ENV["SKYKICK_CLIENT_ID"]
-	  password = ENV["SKYKICK_CLIENT_SECRET"]
       @connection = Connection.new( login, password, logger )
       @tenants = Tenants.new( self )
       @alerts = Alerts.new( self )
