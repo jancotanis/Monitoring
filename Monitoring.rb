@@ -39,7 +39,7 @@ def run_monitors( report, config, options )
 	monitors.each do |klass|
 		m = klass.new( report, config, options[:log] )
 		customer_alerts = m.run( customer_alerts )
-	rescue => e
+	rescue Faraday::Error => e
 		puts "** Error running #{klass.name}"
 		puts e
 		puts e.response[:body] if e.response
