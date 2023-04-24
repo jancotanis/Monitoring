@@ -74,3 +74,27 @@ attr_accessor :customer #hidden field
 		orig.uniq
 	end
 end
+
+class AbstractMonitor
+	def initialize( report, config, log ) 
+		@report = report
+		@config = config
+		@log = log
+		@client = nil
+	end
+protected
+	def collect_alerts tenant
+		result = @client.alerts( tenant.id )
+		# resturn hash of alerts
+		result
+	end
+	def create_endpoint_from_alert( customer, alert )
+		device_id = alert.endpoint_id
+		endpoint = customer.endpoints[device_id]
+		if !endpoint
+			# create endpoint from alert
+			customer.endpoints[device_id] = endpoint = alert.create_endpoint()
+		end
+		endpoint
+	end
+end

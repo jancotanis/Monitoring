@@ -12,26 +12,22 @@ class VeeamBackupIncident < MonitoringIncident
 	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
 		super( VEEAM, device, start_time, end_time, alert )
 	end
-#	def source
-#		"Veeam"
-#	end
 	def endpoint_to_s
 		alert.property("object.type")+" "+alert.property("object.computerName")+" "+alert.property("object.objectName")
 	end
 end
 
-class VeeamMonitor
+class VeeamMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
-	def initialize( report, config, log  ) 
+	def initialize( report, config, log ) 
+		super( report, config, log )
 		@all_alerts = {}
-		@report = report
 		@client = Veeam::Client.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'], log )
 
 		@alerts = @client.alerts
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
-		@config = config
 		@config.load_config( VEEAM, @tenants )
 	end
 	
@@ -95,21 +91,6 @@ private
 			result[a.id] = a
 		end
 		result
-	end
-	def create_endpoint_from_alert( customer, alert )
-		device_id = alert.endpoint_id
-		endpoint = customer.endpoints[device_id]
-		if !endpoint
-			# create endpoint from alert
-			type = "?"
-			name = "?"
-			if alert
-				type = alert.property( "object.type" )
-				name = alert.property( "object.computerName" ) + "/" + alert.property( "object.objectName" )
-			end
-			customer.endpoints[device_id] = endpoint = Veeam::EndpointData.new( device_id, type, name )
-		end
-		endpoint
 	end
 
 end

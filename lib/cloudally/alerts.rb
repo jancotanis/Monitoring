@@ -1,5 +1,6 @@
 require 'json'
 require_relative 'api_base'
+require_relative 'endpoints.rb'
 
 module CloudAlly
   AlertData  = Struct.new( :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data ) do
@@ -7,6 +8,9 @@ module CloudAlly
 		# collect subsources
 		failedSubSources = raw_data["backupStatus"].select{ |src| "FAILED".eql? src["status"]}.map{|o| o["subSource"]}.join ' '
 		"#{property('entityName')}: #{failedSubSources}"
+	end
+	def create_endpoint
+		CloudAlly::EndpointData.new( endpoint_id, category, endpoint_type )
 	end
   end
 

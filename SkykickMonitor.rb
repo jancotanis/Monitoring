@@ -12,25 +12,21 @@ class SkykickBackupIncident < MonitoringIncident
 	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
 		super( SKYKICK, device, start_time, end_time, alert )
 	end
-#	def source
-#		"Skykick"
-#	end
 	def endpoint_to_s
 		"#{alert.endpoint_type}"
 	end
 end
 
-class SkykickMonitor
+class SkykickMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log  ) 
+		super( report, config, log )
 		@all_alerts = {}
-		@report = report
 		@client = Skykick::Client.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'], log )
 
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
-		@config = config
 		@config.load_config( SKYKICK, @tenants )
 	end
 	
@@ -88,25 +84,4 @@ private
 			sleep( 0.05 )
 		end
 	end
-	def collect_alerts tenant
-		result = @client.alerts( tenant.id )
-		# resturn hash of alerts
-		result
-	end
-	def create_endpoint_from_alert( customer, alert )
-		device_id = alert.endpoint_id
-		endpoint = customer.endpoints[device_id]
-		if !endpoint
-			# create endpoint from alert, assume mailbox is the endpoint
-			type = "?"
-			name = "?"
-			if alert
-				type = "BackupService"
-				name = alert.property( "BackupMailboxId" ).to_s
-			end
-			customer.endpoints[device_id] = endpoint = Skykick::EndpointData.new( device_id, type, name )
-		end
-		endpoint
-	end
-
 end

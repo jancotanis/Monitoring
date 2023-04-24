@@ -1,16 +1,22 @@
 require 'json'
 require_relative 'api_base'
+require_relative 'endpoints.rb'
 
 module Skykick
-  AlertData  = Struct.new( :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data )
+  AlertData  = Struct.new( :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data ) do
+	def create_endpoint
+		Skykick::EndpointData.new( endpoint_id, "BackupService", self.property( "BackupMailboxId" ).to_s )
+	end
+  end
 
   class Alerts < ApiBase
-    def alerts( customer_id )
-		@alerts={}
+    def alerts( customer_id=nil )
+		# trigger data
+		@alerts = {}
 		# Alerts api OData query parameters
 		# https://developers.skykick.com/docs/services/012b95c66d31407ba9d56b70731bb5de/operations/84426ef6a9af4ec282a0050b13e6763a
 		response = @client.create_connection().get( "/Alerts/#{customer_id}?$top=450" ) do |req|
-			authorize_request( req )
+
 		end
 		data = JSON.parse( response.body )
 		#:id, :description, :severity, :category, :product, :actions

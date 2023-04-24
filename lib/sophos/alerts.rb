@@ -1,8 +1,13 @@
 require 'json'
 require_relative 'api_base'
+require_relative 'endpoints.rb'
 
 module Sophos
-  AlertData  = Struct.new( :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data )
+  AlertData  = Struct.new( :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data ) do
+	def create_endpoint
+		Sophos::EndpointData.new( endpoint_id, self.property( "managedAgent.type" ) + "/" + self.property( "product" ), self.property( "managedAgent.name" ) )
+	end
+  end
 
   class Alerts < ApiBase
     def alerts( customer )

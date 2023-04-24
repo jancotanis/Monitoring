@@ -11,20 +11,17 @@ class CloudBackupIncident < MonitoringIncident
 	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
 		super( CLOUDALLY, device, start_time, end_time, alert )
 	end
-#	def source
-#		"CloudAlly"
-#	end
 	def endpoint_to_s
 		"#{alert.endpoint_type}"
 	end
 end
 
-class CloudAllyMonitor
+class CloudAllyMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log ) 
+		super( report, config, log )
 		@all_alerts = {}
-		@report = report
 		@client = CloudAlly::Client.new( 
 			ENV["CLOUDALLY_CLIENT_ID"],
 			ENV["CLOUDALLY_CLIENT_SECRET"],
@@ -35,7 +32,6 @@ class CloudAllyMonitor
 
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
-		@config = config
 		@config.load_config( CLOUDALLY, @tenants )
 	end
 	
@@ -94,19 +90,5 @@ private
 				end
 			end
 		end
-	end
-	def collect_alerts tenant
-		result = @client.alerts( tenant.id )
-		# resturn hash of alerts
-		result
-	end
-	def create_endpoint_from_alert( customer, alert )
-		device_id = alert.endpoint_id
-		endpoint = customer.endpoints[device_id]
-		if !endpoint
-			# create endpoint from alert, assume mailbox is the endpoint
-			customer.endpoints[device_id] = endpoint = CloudAlly::EndpointData.new( device_id, a.category, a.endpoint_type )
-		end
-		endpoint
 	end
 end

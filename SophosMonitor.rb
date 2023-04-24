@@ -11,9 +11,6 @@ class SophosIncident < MonitoringIncident
 	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
 		super( SOPHOS, device, start_time, end_time, alert )
 	end
-#	def source
-#		"Sophos"
-#	end
 end
 
 class EndpointIncident < SophosIncident
@@ -38,17 +35,16 @@ class ConnectivityIncident < SophosIncident
 	end
 end
 
-class SophosMonitor
+class SophosMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 	TENANTS_CACHE = SOPHOS.downcase+"-tenants.yml"
 
 	def initialize( report, config, log  ) 
+		super( report, config, log )
 		@products = {}
 		@all_alerts = {}
-		@report = report
 		@client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
 		load_tenants
-		@config = config
 		@config.load_config( SOPHOS, @tenants )
 	end
 	
@@ -153,21 +149,6 @@ private
 				@report.puts e
 			end
 		end
-	end
-	def create_endpoint_from_alert( customer, alert )
-		device_id = alert.endpoint_id
-		endpoint = customer.endpoints[device_id]
-		if !endpoint
-			# create endpoint from alert
-			type = "?"
-			name = "?"
-			if alert
-				type = alert.property( "managedAgent.type" ) + "/" + alert.property( "product" )
-				name = alert.property( "managedAgent.name" )
-			end
-			customer.endpoints[device_id] = endpoint = Sophos::EndpointData.new( device_id, type, name )
-		end
-		endpoint
 	end
 	def find_products( alerts )
 		alerts.values.each do |a|

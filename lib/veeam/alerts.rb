@@ -1,8 +1,13 @@
 require 'json'
 require_relative 'api_base'
+require_relative 'endpoints.rb'
 
 module Veeam
-  AlertData  = Struct.new( :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data )
+  AlertData  = Struct.new( :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data ) do
+	def create_endpoint
+		Veeam::EndpointData.new( endpoint_id, self.property( "object.type" ), self.property( "object.computerName" ) + "/" + self.property( "object.objectName" ) )
+	end
+  end
 
   class Alerts < ApiBase
     def alerts
