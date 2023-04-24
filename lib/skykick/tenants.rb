@@ -34,7 +34,7 @@ module Skykick
 		if !@tenants
 			@tenants = {}
 			response = @client.create_connection.get( "/Backup/?$top=250" ) do |req|
-				authorize_request( req )
+
 			end
 			data = JSON.parse( response.body )
 			data.each do |item|
