@@ -52,16 +52,17 @@ attr_reader :config
 	def load_config( source, tenants )
 		# add missing tenants config entries
 		tenants.each do |t|
-			#@config << ConfigData.new( t.id, t.description, [source], [], !t.is_trial? ) unless by_description( t.description )
 			cfg = ConfigData.new( t.id, t.description, [source] ) unless by_description( t.description )
-			# renamed?
+			# not found by descriptio
 			if cfg
+				# check if we have a record with same id
 				if by_id( t.id )
 					# overwrite original item
-puts "Rename tenant"
 					cfg = by_id( t.id )
+					puts "Rename tenant [#{cfg.description}] to [#{t.description}]"
 				else
 					# not renamed, add it
+					puts "Nieuwe tenant [#{t.description}]"
 					@config << cfg
 				end
 			else
