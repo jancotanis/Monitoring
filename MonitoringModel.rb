@@ -60,17 +60,19 @@ attr_accessor :customer #hidden field
 	
 	def remove_reported_incidents( alerts )
 		orig = alerts
+		count = 0
 		devices.each do |device_id, incidents|
 			orig += incidents.values.map{ |i| i.alert.id }
 			incidents.each do |type,incident|
 				if alerts.include?( incident.alert.id )
-					puts "- incident already reported: #{incident.alert.description}"
+					count += 1
 					incidents.delete( type )
 				end
 			end
 			# remove if all incidents have been removed
 			devices.delete(  device_id ) if ( incidents.count == 0 )
 		end
+		puts "- #{count} incident(s) already reported" if count > 0
 		orig.uniq
 	end
 end
