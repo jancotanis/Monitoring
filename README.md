@@ -25,6 +25,14 @@ Connection to VEEAM service provider console. This is vendor specific.
 VEEAM_API_HOST=https://portal.host.com
 VEEAM_API_KEY=834hdfskgsj54rghkbvfiurve984
 ````
+### Cloudally
+Connection to Skykick partner portal api https://api.cloudally.com/...
+````
+CLOUDALLY_CLIENT_ID=7685b144-fe1b-4795-b38f-9a7ec6c7a1f8
+CLOUDALLY_CLIENT_SECRET=BdaonZti8jn_i8jn
+CLOUDALLY_USER=john.doe@acme.com
+CLOUDALLY_PASSWORD=your_password_here
+````
 
 ### Helpdesk system
 Connection to Zammad, this is vendor specific.
