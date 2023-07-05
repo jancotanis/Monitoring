@@ -9,7 +9,7 @@ require_relative "SkykickMonitor"
 require_relative "CloudAllyMonitor"
 require_relative "MonitoringModel"
 
-def get_options
+def get_options config
 	options = {}
 	o=OptionParser.new do |opts|
 		opts.banner = "Usage: Monitor.rb [options]"
@@ -52,7 +52,7 @@ puts "Monitor v0.9 - #{Time.now}"
 # use environment from .env if any
 Dotenv.load
 config = MonitoringConfig.new
-options = get_options
+options = get_options config
 
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
@@ -68,6 +68,7 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 		cfg = config.by_description(cl.customer.description)
 		if cfg.create_ticket
 			# remove incidents reported last run(s)
+			puts cfg.description
 			cfg.reported_alerts = cl.remove_reported_incidents( cfg.reported_alerts || [] )
 			monitoring_report = cl.report
 			if monitoring_report
