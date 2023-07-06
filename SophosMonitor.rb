@@ -52,6 +52,7 @@ class SophosMonitor < AbstractMonitor
 		collect_data()
 		@tenants.each do |customer|
 			cfg = @config.by_description(customer.description)
+			cfg.endpoints = customer.endpoints.count
 			if cfg.monitoring?
 				all_alerts[customer.id] = customer_alerts = CustomerAlerts.new( customer.description, customer.alerts )
 				customer_alerts.customer = customer

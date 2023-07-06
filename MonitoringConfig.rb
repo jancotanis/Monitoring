@@ -70,7 +70,6 @@ attr_reader :config
 			end
 			cfg.description = t.description
 			cfg.source << source unless cfg.source.include? source
-			cfg.endpoints = t.endpoints.count if t.endpoints # endpoints can be nil incase no access/unmanaged
 		end
 		# update config
 		save_config
