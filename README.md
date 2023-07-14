@@ -3,7 +3,7 @@ Monitoring scripts for saas solutions
 
 
 ## System Configuration
-Use environment variables to setup various SAAS connection parameters
+Use environment variables to setup various SAAS connection parameters. These can also be put on the filesystem using a `.env` file. 
 
 ### Skykick
 Connection to Skykick partner portal https://backup.skykick.com/partner/cloud-backup/manager#/
@@ -44,10 +44,16 @@ ZAMMAD_CUSTOMER=john.doe@acme.com
 ```
 
 ## Application configuration
-Applciation configuration is stored in `monitoring.cfg`. This is a yaml formatted 
-file with the following structure.
+Application configuration is stored in `monitoring.cfg`. The document will be automatically extended based on the 
+entries within the various SAAS services. The entries will be merged based on the account description. 
+For each entry you may select if malware detection and/or backups needs to be checked. 
 
-Example 
+Currently malware is only supported for Sophos portal. This also scans for connection issues in VPN tunnels. 
+Backup checks are supported for VEEAM, Skykick and CloudAlly.
+
+
+This is a yaml formatted file with the following structure:
+
 ```
 ---
 - !ruby/struct:ConfigData
@@ -66,9 +72,6 @@ Example
    :
    :
 ```
-The document will be automatically extended based on the 
-entries within the various SAAS services based on the 
-description entries will be added or combined.
 
 Keys
 
@@ -94,5 +97,6 @@ Some additional options apply
 |Parameter|Description|
 |--|--|
 |-s --sla|Report SLA options |
+|-l --log|Log all http api requests, used for debugging connection issues|
 |-? -h --help|Explanation of script options|
 
