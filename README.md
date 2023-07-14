@@ -84,7 +84,7 @@ Keys
 |monitor_endpoints|Monitor issues with sophos endpoints|true/false|
 |monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
 |monitor_backup|Monitor issues with VEEAM backups|true/false|
-|create_ticket|reate ticket within Zammad in case of monitored incidents|true/false|
+|create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
 |reported_alerts|Alerts that have been created a ticket for|
 |endpoints|Debugging: Number of sophos endpoints found|
 
