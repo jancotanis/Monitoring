@@ -12,10 +12,6 @@ module Skykick
 		self.alerts ||= []
 	end
 	
-	def is_trial?
-		false
-	end
-
 	def description
 		name
 	end

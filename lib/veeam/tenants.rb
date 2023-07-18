@@ -9,10 +9,6 @@ module Veeam
 		self.alerts ||= []
 	end
 	
-	def is_trial?
-		"trial".eql?( billing_type )
-	end
-
 	def description
 		# it looks like new tenants are created as COAS Business Systems and showAs is the actual name.
 		name
