@@ -58,14 +58,16 @@ attr_accessor :customer #hidden field
 		rpt
 	end
 	
-	def remove_reported_incidents( alerts )
-		orig = alerts
+	def remove_reported_incidents( reported_alerts )
+		orig = reported_alerts
 		count = 0
 		devices.each do |device_id, incidents|
-			orig += incidents.values.map{ |i| i.alert.id }
+			orig += incidents.values.map{ |i| "#{i.source}-#{i.alert.id}" }
 			incidents.each do |type,incident|
-				if alerts.include?( incident.alert.id )
+				# backward compatibility, check for reported alerts without prefix
+				if reported_alerts.include?( "#{incident.source}-#{incident.alert.id}" ) || reported_alerts.include?( incident.alert.id )
 					count += 1
+					orig.delete( incident.alert.id )
 					incidents.delete( type )
 				end
 			end
