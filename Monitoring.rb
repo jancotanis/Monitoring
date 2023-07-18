@@ -7,6 +7,7 @@ require_relative "SophosMonitor"
 require_relative "VeeamMonitor"
 require_relative "SkykickMonitor"
 require_relative "CloudAllyMonitor"
+require_relative "ZabbixMonitor"
 require_relative "MonitoringModel"
 
 def get_options config
@@ -35,7 +36,7 @@ end
 
 def run_monitors( report, config, options )
 	customer_alerts  = {}
-	monitors = [SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor]
+	monitors = [SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor]
 	monitors.each do |klass|
 		m = klass.new( report, config, options[:log] )
 		customer_alerts = m.run( customer_alerts )
@@ -59,7 +60,6 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 		url:			ENV["ZAMMAN_HOST"],
 		oauth2_token:	ENV["ZAMMAD_OAUTH_TOKEN"]
 	)
-
 	customer_alerts  = run_monitors( report, config, options )
 	# create ticket
 	customer_alerts.each do |id, cl|

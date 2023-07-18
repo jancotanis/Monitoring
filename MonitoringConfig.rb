@@ -77,11 +77,11 @@ attr_reader :config
 	end
 	
 	def report
-		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam" ]
+		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam", "Zabbix" ]
 		report_file = "configuration.md"
 		File.open( report_file, "w") do |report|
-			report.puts "| Company | Ticket | #{keys.join( ' | ' )} |"
-			report.puts "|:--|:--:|#{':--: | ' * keys.count}"
+			report.puts "| Company | Ticket | Endpoints | Backup | #{keys.join( ' | ' )} |"
+			report.puts "|:--|:--:|:--:|:--:|#{':--: | ' * keys.count}"
 			@config.each do |cfg|
 				v = {}
 				keys.each do |key|
@@ -94,11 +94,15 @@ attr_reader :config
 						end
 						v[key] = sla
 					else
-						v[key] = "-"
+						v[key] = ""
 					end
 				end
 				s =  keys.map{|k| "#{v[k]}|"}.join
-				report.puts "|#{cfg.description}|#{cfg.create_ticket}|#{s}"
+				create_ticket = monitor_endpoints = monitor_backup = ""
+				create_ticket     = "on" if cfg.create_ticket
+				monitor_endpoints = "on" if cfg.monitor_endpoints
+				monitor_backup    = "on" if cfg.monitor_backup
+				report.puts "|#{cfg.description}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{s}"
 			end
 			puts "#{report_file} written"
 		end

@@ -81,7 +81,7 @@ Keys
 |description|Customer description of the setting, this is unique and used to find configuration for SAAS cleint|string|
 |source|Debugging: source where entry originates from|array|
 |sla|Used to report kind of SLA in place with customer. Entries in format <source>-<state>.|array|
-|monitor_endpoints|Monitor issues with sophos endpoints|true/false|
+|monitor_endpoints|Monitor issues with endpoints (Sophos and Zabbix)|true/false|
 |monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
 |monitor_backup|Monitor issues with VEEAM backups|true/false|
 |create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
