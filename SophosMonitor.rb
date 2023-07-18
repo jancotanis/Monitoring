@@ -122,6 +122,18 @@ class SophosMonitor < AbstractMonitor
 	def save_tenants
 		FileUtil.write_file( TENANTS_CACHE, YAML.dump( @tenants ) )
 	end
+
+	def report_endpoints
+		@tenants.each do |customer|
+			cfg = @config.by_description(customer.description)
+
+			if cfg.monitoring?
+				customer.endpoints.each do |e|
+					puts e.to_s
+				end
+			end
+		end
+	end
 private
 	def collect_data
 		@tenants.each do |customer|

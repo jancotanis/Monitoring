@@ -77,7 +77,6 @@ private
 							customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
 						end
 					end
-
 				end
 			end
 			# throuttle api
