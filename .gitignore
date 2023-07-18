@@ -10,6 +10,12 @@
 /test/version_tmp/
 /tmp/
 /data/
+*.log
+*.txt
+*.json
+*.yml
+configuration.*
+monitoring.cfg
 
 # Used by dotenv library to load environment variables.
 .env
