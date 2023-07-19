@@ -10,6 +10,20 @@ require_relative "CloudAllyMonitor"
 require_relative "ZabbixMonitor"
 require_relative "MonitoringModel"
 
+def file_age(name)
+  (Time.now - File.ctime(name))/(24*3600)
+end
+def garbage_collect days
+	days = 90 unless days
+	puts "- removing log files older #{days.to_i} days"
+	Dir.glob( ["*.json", "*.txt","*.yml", "*.log"] ).each do |filename|
+		if file_age(filename) > days
+			puts "  " + filename
+			File.delete( filename ) 
+		end
+	end
+end
+
 def get_options config
 	options = {}
 	o=OptionParser.new do |opts|
@@ -19,10 +33,14 @@ def get_options config
 			config.report
 			exit -1
 		end
+		opts.on("-g[N]", "--garbagecollect[=N]", Float, "Remove all files older than N days, default is 90 days") do |a|
+			garbage_collect a
+		end
 	#	opts.on("-r", "--reload", "Reload cached files") do |a|
 	#		options[:reload] = a
 	#	end
 		opts.on("-l", "--log", "Log http requests") do |log|
+			puts "- API logging turned on"
 			options[:log] = log
 		end
 		opts.on_tail("-h", "-?", "--help", opts.banner) do
@@ -48,7 +66,7 @@ def run_monitors( report, config, options )
 	customer_alerts
 end
 
-puts "Monitor v0.9 - #{Time.now}"
+puts "Monitor v1.0.0 - #{Time.now}"
 
 # use environment from .env if any
 Dotenv.load

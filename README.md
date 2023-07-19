@@ -84,27 +84,29 @@ This is a yaml formatted file with the following structure:
 Keys
 
 |Key|Description|value|
-|--|--|--|
+|:--|:--|:--|
 |id|Unique id of the entry|string|
 |description|Customer description of the setting, this is unique and used to find configuration for SAAS cleint|string|
 |source|Debugging: source where entry originates from|array|
-|sla|Used to report kind of SLA in place with customer. Entries in format <source>-<state>.|array|
+|sla|Used to report kind of SLA in place with customer. Entries in format `source-state`.|array|
 |monitor_endpoints|Monitor issues with endpoints (Sophos and Zabbix)|true/false|
 |monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
 |monitor_backup|Monitor issues with VEEAM backups|true/false|
 |create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
 |reported_alerts|Alerts that have been created a ticket for|
 |endpoints|Debugging: Number of sophos endpoints found|
+|reported_alerts|Ids of alerts that have been reported to the ticket system. This to prevent duplicate entries.|
 
 ## Script run options
 Script can be run with ruby interpreter.
 ````
-ruby Monitoring.rb
+ruby Monitoring.rb [options]
 ````
 Some additional options apply
 |Parameter|Description|
-|--|--|
+|:--|:--|
 |-s --sla|Report SLA options |
 |-l --log|Log all http api requests, used for debugging connection issues|
+|-g[N] --garbagecollect[=N]|Remove all log files aolder than N days where N is 90 days if not given|
 |-? -h --help|Explanation of script options|
 

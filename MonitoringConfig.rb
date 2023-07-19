@@ -104,7 +104,7 @@ attr_reader :config
 				monitor_backup    = "on" if cfg.monitor_backup
 				report.puts "|#{cfg.description}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{s}"
 			end
-			puts "#{report_file} written"
+			puts "- #{report_file} written"
 		end
 	end
 end
