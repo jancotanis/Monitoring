@@ -107,6 +107,6 @@ Some additional options apply
 |:--|:--|
 |-s --sla|Report SLA options |
 |-l --log|Log all http api requests, used for debugging connection issues|
-|-g[N] --garbagecollect[=N]|Remove all log files aolder than N days where N is 90 days if not given|
+|-g[N] --garbagecollect[=N]|Remove all log files older than N days where N is 90 days if not given|
 |-? -h --help|Explanation of script options|
 
