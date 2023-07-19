@@ -5,6 +5,15 @@ Monitoring scripts for saas solutions
 ## System Configuration
 Use environment variables to setup various SAAS connection parameters. These can also be put on the filesystem using a `.env` file. 
 
+### Cloudally
+Connection to Skykick partner portal api https://api.cloudally.com/...
+````
+CLOUDALLY_CLIENT_ID=7685b144-fe1b-4795-b38f-9a7ec6c7a1f8
+CLOUDALLY_CLIENT_SECRET=BdaonZti8jn_i8jn
+CLOUDALLY_USER=john.doe@acme.com
+CLOUDALLY_PASSWORD=your_password_here
+````
+
 ### Skykick
 Connection to Skykick partner portal https://backup.skykick.com/partner/cloud-backup/manager#/
 ````
@@ -25,13 +34,12 @@ Connection to VEEAM service provider console. This is vendor specific.
 VEEAM_API_HOST=https://portal.host.com
 VEEAM_API_KEY=834hdfskgsj54rghkbvfiurve984
 ````
-### Cloudally
-Connection to Skykick partner portal api https://api.cloudally.com/...
+
+### Zabbix
+Connection to ZAbbix servicer api. This is location specific.
 ````
-CLOUDALLY_CLIENT_ID=7685b144-fe1b-4795-b38f-9a7ec6c7a1f8
-CLOUDALLY_CLIENT_SECRET=BdaonZti8jn_i8jn
-CLOUDALLY_USER=john.doe@acme.com
-CLOUDALLY_PASSWORD=your_password_here
+ZABBIX_API_HOST=https://api.your-zabbix-host.com
+ZABBIX_API_KEY=d73e81e7e7e3b5f57f10539defe64c71fa
 ````
 
 ### Helpdesk system
