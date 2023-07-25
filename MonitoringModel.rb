@@ -72,7 +72,7 @@ attr_accessor :customer #hidden field
 				end
 			end
 			# remove if all incidents have been removed
-			devices.delete(  device_id ) if ( incidents.count == 0 )
+			devices.delete( device_id ) if ( incidents.count == 0 )
 		end
 		puts "- #{count} incident(s) already reported" if count > 0
 		orig.uniq
