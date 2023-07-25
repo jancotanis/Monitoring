@@ -21,14 +21,13 @@ class VeeamMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log ) 
-		super( report, config, log )
-		@all_alerts = {}
-		@client = Veeam::Client.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'], log )
+		client = Veeam::Client.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'], log )
+		super( VEEAM, client, report, config, log )
 
 		@alerts = @client.alerts
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
-		@config.load_config( VEEAM, @tenants )
+		@config.load_config( source, @tenants )
 	end
 	
 	def run all_alerts
@@ -56,8 +55,7 @@ class VeeamMonitor < AbstractMonitor
 				end
 			end
 		end
-
-		FileUtil.write_file( FileUtil.daily_file_name(VEEAM.downcase+'-alerts.json'), @alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name(source.downcase+'-alerts.json'), @alerts.to_json )
 		all_alerts
 	end
 

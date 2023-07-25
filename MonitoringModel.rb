@@ -80,11 +80,23 @@ attr_accessor :customer #hidden field
 end
 
 class AbstractMonitor
-	def initialize( report, config, log ) 
+	attr_reader :source
+
+	def initialize( source, client, report, config, log ) 
+		@source = source
+		@client = client
 		@report = report
 		@config = config
 		@log = log
-		@client = nil
+		@all_alerts = {}
+	end
+	
+	def run all_alerts
+		raise NotImplementedError.new("You must implement this method")
+	end
+
+	def report_tenants
+		FileUtil.write_file( "#{source.downcase}-tenants.json", @client.tenants.to_json )
 	end
 protected
 	def collect_alerts tenant

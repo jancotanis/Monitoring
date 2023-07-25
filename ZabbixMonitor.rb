@@ -23,16 +23,14 @@ end
 
 class ZabbixMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
-	TENANTS_CACHE = ZABBIX.downcase+"-tenants.yml"
 
 	def initialize( report, config, log  ) 
-		super( report, config, log )
-		@all_alerts = {}
-		@client = Zabbix::Client.new( ENV['ZABBIX_API_HOST'], ENV['ZABBIX_API_KEY'], log )
+		client = Zabbix::Client.new( ENV['ZABBIX_API_HOST'], ENV['ZABBIX_API_KEY'], log )
+		super( ZABBIX, client, report, config, log )
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
-		@config.load_config( ZABBIX, @tenants )
+		@config.load_config( source, @tenants )
 	end
-	
+
 	def run all_alerts
 		collect_data()
 		@tenants.each do |customer|
@@ -59,7 +57,7 @@ class ZabbixMonitor < AbstractMonitor
 				end
 			end
 		end
-		FileUtil.write_file( FileUtil.daily_file_name(ZABBIX.downcase+'-alerts.json'), all_alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name(source.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 private

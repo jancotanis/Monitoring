@@ -21,13 +21,12 @@ class SkykickMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log  ) 
-		super( report, config, log )
-		@all_alerts = {}
-		@client = Skykick::Client.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'], log )
+		client = Skykick::Client.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'], log )
+		super( SKYKICK, client, report, config, log )
 
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
-		@config.load_config( SKYKICK, @tenants )
+		@config.load_config( source, @tenants )
 	end
 	
 	def run all_alerts
@@ -56,7 +55,7 @@ class SkykickMonitor < AbstractMonitor
 			end
 		end
 
-		FileUtil.write_file( FileUtil.daily_file_name( SKYKICK.downcase+'-alerts.json'), all_alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name( source.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 

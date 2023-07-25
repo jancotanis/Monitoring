@@ -40,12 +40,11 @@ class SophosMonitor < AbstractMonitor
 	TENANTS_CACHE = SOPHOS.downcase+"-tenants.yml"
 
 	def initialize( report, config, log  ) 
-		super( report, config, log )
+		client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
+		super( SOPHOS, client, report, config, log )
 		@products = {}
-		@all_alerts = {}
-		@client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
 		load_tenants
-		@config.load_config( SOPHOS, @tenants )
+		@config.load_config( source, @tenants )
 	end
 	
 	def run all_alerts
@@ -80,7 +79,7 @@ class SophosMonitor < AbstractMonitor
 			end
 		end
 		save_tenants
-		FileUtil.write_file( FileUtil.daily_file_name(SOPHOS.downcase+'-alerts.json'), all_alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name(source.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 	def handle_unique_alerts( customer, &block )

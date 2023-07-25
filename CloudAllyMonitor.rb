@@ -20,21 +20,20 @@ class CloudAllyMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log ) 
-		super( report, config, log )
-		@all_alerts = {}
-		@client = CloudAlly::Client.new( 
+		client = CloudAlly::Client.new( 
 			ENV["CLOUDALLY_CLIENT_ID"],
 			ENV["CLOUDALLY_CLIENT_SECRET"],
 			ENV["CLOUDALLY_USER"],
 			ENV["CLOUDALLY_PASSWORD"],
 			log			
 		)
+		super( CLOUDALLY, client, report, config, log )
 
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 
-		@config.load_config( CLOUDALLY, @tenants )
+		@config.load_config( source, @tenants )
 	end
-	
+
 	def run all_alerts
 		collect_data()
 		@tenants.each do |customer|
@@ -61,7 +60,7 @@ class CloudAllyMonitor < AbstractMonitor
 			end
 		end
 
-		FileUtil.write_file( FileUtil.daily_file_name(CLOUDALLY.downcase+'-alerts.json'), all_alerts.to_json )
+		FileUtil.write_file( FileUtil.daily_file_name(source.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
 
