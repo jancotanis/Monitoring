@@ -33,6 +33,9 @@ def get_options config
 			config.report
 			exit -1
 		end
+		opts.on("-t", "--tenants", "Report all tenants to json") do |a|
+			options[:tenants] = a
+		end
 		opts.on("-g[N]", "--garbagecollect[=N]", Float, "Remove all files older than N days, default is 90 days") do |a|
 			garbage_collect a
 		end
@@ -52,11 +55,34 @@ def get_options config
 	options
 end
 
+def monitors_do report, config, options, &block
+	if !@monitors
+		@monitors = []
+		
+		[SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor] .each do |klass|
+			@monitors << klass.new( report, config, options[:log] )
+		rescue Faraday::Error => e
+			puts "** Error running #{klass.name}"
+			puts e
+			puts e.response[:body] if e.response
+		end
+	end
+	@monitors.each do |m|
+		block.call m
+	end
+end
+
+def report_tenants(report, config, options)
+	puts "- report tenants"
+	monitors_do(report, config, options) do |m|
+		m.report_tenants
+	end
+end
+
 def run_monitors( report, config, options )
 	customer_alerts  = {}
-	monitors = [SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor]
-	monitors.each do |klass|
-		m = klass.new( report, config, options[:log] )
+
+	monitors_do(report, config, options) do |m|
 		customer_alerts = m.run( customer_alerts )
 	rescue Faraday::Error => e
 		puts "** Error running #{klass.name}"
@@ -72,12 +98,12 @@ puts "Monitor v1.0.0 - #{Time.now}"
 Dotenv.load
 config = MonitoringConfig.new
 options = get_options config
-
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
 		url:			ENV["ZAMMAN_HOST"],
 		oauth2_token:	ENV["ZAMMAD_OAUTH_TOKEN"]
 	)
+	report_tenants( report, config, options ) if options[:tenants]
 	customer_alerts  = run_monitors( report, config, options )
 	# create ticket
 	customer_alerts.each do |id, cl|
