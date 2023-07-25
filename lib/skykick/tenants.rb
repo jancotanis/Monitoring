@@ -5,7 +5,7 @@ require_relative 'api_base'
 
 module Skykick
 	# billing type - term, trial, usage
-  TenantData  = Struct.new( :id, :name, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
+  TenantData  = Struct.new( :id, :name, :status, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
 		super
 		self.endpoints ||= {}
@@ -34,7 +34,7 @@ module Skykick
 			end
 			data = JSON.parse( response.body )
 			data.each do |item|
-				t = TenantData.new( item["id"], item["companyName"], item["orderState"], "", item )
+				t = TenantData.new( item["id"], item["companyName"], item["orderState"], item )
 				@tenants[ t.id ] = t
 			end
 		end

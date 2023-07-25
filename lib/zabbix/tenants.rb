@@ -3,7 +3,7 @@ require_relative 'api_base'
 
 module Zabbix
 
-  TenantData  = Struct.new( :id, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
+  TenantData  = Struct.new( :id, :name, :status, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
 		super
 		self.endpoints ||= {}
@@ -34,7 +34,7 @@ module Zabbix
 			data = JSON.parse( response.body )
 
 			data["result"].each do |item|
-				t = TenantData.new( item["groupid"], item["name"], nil, nil, nil, item )
+				t = TenantData.new( item["groupid"], item["name"], nil, item )
 				@tenants[ t.id ] = t
 				endpoints = @client.endpoints( t )
 				endpoints ||= {}

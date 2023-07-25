@@ -2,7 +2,7 @@ require 'json'
 require_relative 'api_base'
 
 module Veeam
-  TenantData  = Struct.new( :id, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
+  TenantData  = Struct.new( :id, :name, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
 		super
 		self.endpoints ||= {}
@@ -30,9 +30,9 @@ module Veeam
 			# https://portal.integra-bcs.nl/api/swagger/index.html
 			response = @client.create_connection().get( "/api/v3/organizations/companies?limit=100&offset=0" ) 
 			data = JSON.parse( response.body )
-			#:id, :name, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts
+			#:id, :name, :status, :billing_type, :raw_data, :endpoints, :alerts
 			data["data"].each do |item|
-				t = TenantData.new( item["instanceUid"], item["name"], nil, item["status"], item["subscriptionPlanUid"], item )
+				t = TenantData.new( item["instanceUid"], item["name"], item["status"], item["subscriptionPlanUid"], item )
 				@tenants[ t.id ] = t
 			end
 =begin
