@@ -50,7 +50,6 @@ module Sophos
 					@tenants[ t.id ] = t
 					endpoints = YAML.load_file( cache_file( t ) ) if File.file?( cache_file( t ) )
 					if !endpoints
-						puts "loading endpoints"
 						endpoints = @client.endpoints( t )
 						endpoints ||= {}
 						update_cache( t ) 
