@@ -10,7 +10,7 @@ module Zabbix
 	end
 	def severity
 		severity_text = [ "not classified", "information", "warning", "average", "high", "disaster"]
-		if severity_code.to_i > 0 && severity_code.to_i < severity_text.count
+		if ( severity_code.to_i >= 0 ) && ( severity_code.to_i < severity_text.count )
 			severity_text[ severity_code.to_i ]
 		else
 			severity_code
@@ -29,7 +29,7 @@ module Zabbix
 		end
 
 		data = JSON.parse( response.body )
-		#:id, :created, :description, :severity_code, :category, :product, :actions
+		#:id, :created, :description, :severity_code, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :event
 		data["result"].each do |item|
 			a = AlertData.new( item["eventid"], zabbix_clock( item["clock"] ), item["name"].strip, item["severity"], item["object"], "zabbix", nil, nil, item )
 			event = events_by_id( a.id ).first
