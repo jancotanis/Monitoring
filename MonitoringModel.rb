@@ -61,11 +61,13 @@ attr_accessor :customer #hidden field
 	def remove_reported_incidents( reported_alerts )
 		orig = reported_alerts
 		count = 0
+		source = ""
 		devices.each do |device_id, incidents|
 			orig += incidents.values.map{ |i| "#{i.source}-#{i.alert.id}" }
 			incidents.each do |type,incident|
 				# backward compatibility, check for reported alerts without prefix
 				if reported_alerts.include?( "#{incident.source}-#{incident.alert.id}" ) || reported_alerts.include?( incident.alert.id )
+					source = incident.source
 					count += 1
 					orig.delete( incident.alert.id )
 					incidents.delete( type )
@@ -74,7 +76,7 @@ attr_accessor :customer #hidden field
 			# remove if all incidents have been removed
 			devices.delete( device_id ) if ( incidents.count == 0 )
 		end
-		puts "- #{count} incident(s) already reported" if count > 0
+		puts "- #{count} #{source} incident(s) already reported" if count > 0
 		orig.uniq
 	end
 end
