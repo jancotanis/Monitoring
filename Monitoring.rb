@@ -106,13 +106,16 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	report_tenants( report, config, options ) if options[:tenants]
 	customer_alerts  = run_monitors( report, config, options )
 	# create ticket
-	customer_alerts.each do |id, cl|
+	last = ""
+	sorted = customer_alerts.values.sort_by{ |cl| cl.customer.description.upcase }
+	sorted.each do |cl|
 		# we have alerts
 
 		cfg = config.by_description(cl.customer.description)
 		if cfg.create_ticket
 			# remove incidents reported last run(s)
-			puts cfg.description
+			puts cfg.description unless last.eql? cfg.description
+			last = cfg.description
 			cfg.reported_alerts = cl.remove_reported_incidents( cfg.reported_alerts || [] )
 			monitoring_report = cl.report
 			if monitoring_report
