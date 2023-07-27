@@ -36,6 +36,10 @@ def get_options config
 		opts.on("-t", "--tenants", "Report all tenants to json") do |a|
 			options[:tenants] = a
 		end
+		opts.on("-c", "--compact", "Compact config file based on tenants") do |a|
+			puts "- compacting configuration is on"
+			options[:compact] = a
+		end
 		opts.on("-g[N]", "--garbagecollect[=N]", Float, "Remove all files older than N days, default is 90 days") do |a|
 			garbage_collect a
 		end
@@ -136,5 +140,6 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 		end
 	end
 	# update list of alerts
+	config.compact! if options[:compact]
 	config.save_config
 end

@@ -6,6 +6,7 @@ MONITORING_CFG = "monitoring.cfg"
 ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :create_ticket, :reported_alerts, :endpoints ) do
     def initialize(*)
         super
+		@touched = false
 		self.source					||= []
 		self.sla					||= []
 		self.monitor_endpoints		||= false
@@ -18,6 +19,16 @@ ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, 
 	def monitoring?
 		self.monitor_endpoints || self.monitor_connectivity || self.monitor_backup
 	end
+	
+	def touch
+		@touched = true
+	end
+	def untouch
+		@touched = false
+	end
+	def touched?
+		@touched
+	end
 end
 
 class MonitoringConfig
@@ -26,6 +37,7 @@ attr_reader :config
 	def initialize
 		if File.file?( MONITORING_CFG )
 			@config = YAML.load_file( MONITORING_CFG ) 
+			@config.each{ |c| c.untouch }
 		else
 			@config = []
 		end
@@ -33,16 +45,24 @@ attr_reader :config
 
 	def by_id idx
 		result = @config.select{ |cfg| cfg.id.eql?( idx ) }
-		result.first if result
+		first_result result
 	end
 	
 	def by_description desc
 		result = @config.select{ |cfg| cfg.description.upcase.eql?( desc.upcase ) }
-		result.first if result
+		first_result result
 	end
-
+	
 	def delete_entry entry
 		@config.delete entry
+	end
+	
+	def compact!
+		# remove all unused entries
+		@config.select { |cfg| !cfg.touched? }.each do |removed|
+			puts " * removed customer #{removed.description}"
+		end
+		@config = @config.reject { |cfg| !cfg.touched? }
 	end
 
 	def save_config
@@ -53,7 +73,7 @@ attr_reader :config
 		# add missing tenants config entries
 		tenants.each do |t|
 			cfg = ConfigData.new( t.id, t.description, [source] ) unless by_description( t.description )
-			# not found by descriptio
+			# not found by description
 			if cfg
 				# check if we have a record with same id
 				if by_id( t.id )
@@ -106,6 +126,11 @@ attr_reader :config
 			end
 			puts "- #{report_file} written"
 		end
+	end
+private
+	def first_result result
+		result.first.touch if result.first
+		result.first
 	end
 end
 
