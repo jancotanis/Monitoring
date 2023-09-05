@@ -7,6 +7,7 @@ require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
 SOPHOS = "Sophos"
+CONNECTIVITY = "connectivity"
 class SophosIncident < MonitoringIncident
 	def initialize( device=nil, start_time=nil, end_time=nil, alert=nil )
 		super( SOPHOS, device, start_time, end_time, alert )
@@ -92,7 +93,7 @@ class SophosMonitor < AbstractMonitor
 	def handle_connectivity_alerts( customer )
 		connection_errors = 0
 		endpoints = handle_unique_alerts( customer ) do |ep, a|
-			if "connectivity".eql?(a.category)
+			if CONNECTIVITY.eql?(a.category)
 				connection_errors  += 1
 				customer.add_incident( a.endpoint_id, a, ConnectivityIncident )
 			end
@@ -101,7 +102,7 @@ class SophosMonitor < AbstractMonitor
 	end
 	def handle_endpoint_alerts( customer )
 		endpoints = handle_unique_alerts( customer ) do |ep, a|
-			if !"connectivity".eql?( a.category )
+			if !CONNECTIVITY.eql?( a.category )
 				customer.add_incident( a.endpoint_id, a, EndpointIncident )
 			end
 		end
