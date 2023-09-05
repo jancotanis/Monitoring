@@ -66,7 +66,7 @@ def monitors_do report, config, options, &block
 		[SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor] .each do |klass|
 			@monitors << klass.new( report, config, options[:log] )
 		rescue Faraday::Error => e
-			puts "** Error running #{klass.name}"
+			puts "** Error instantiating #{klass.name}"
 			puts e
 			puts e.response[:body] if e.response
 		end
