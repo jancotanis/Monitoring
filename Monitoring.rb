@@ -31,7 +31,7 @@ def get_options config
 
 		opts.on("-s", "--sla", "Report customer SLAs") do |a|
 			config.report
-			exit -1
+			exit 0
 		end
 		opts.on("-t", "--tenants", "Report all tenants to json") do |a|
 			options[:tenants] = a
@@ -52,7 +52,7 @@ def get_options config
 		end
 		opts.on_tail("-h", "-?", "--help", opts.banner) do
 			puts opts
-			exit -1
+			exit 0
 		end
 	end
 	o.parse!
