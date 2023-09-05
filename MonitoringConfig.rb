@@ -33,6 +33,7 @@ end
 
 class MonitoringConfig
 attr_reader :config
+alias entries config
 
 	def initialize
 		if File.file?( MONITORING_CFG )
