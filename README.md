@@ -124,13 +124,13 @@ Some additional options apply
 |-g[N] --garbagecollect[=N]|Remove all log files older than N days where N is 90 days if not given|
 |-? -h --help|Explanation of script options|
 
-###Example
-Add weekly reminder for backup check. This is triggered next time the monitoring runs.
+### Examples
+Add weekly reminder for backup check for customer COAS. This is triggered next time the monitoring runs.
 ````
 ruby Monitoring.rb -n COAS,"Check week backup",W
 ````
 
-Add reminder to destroy backup tapes end of te year. This is triggered once.
+Add reminder to destroy backup tapes for COAS. This is triggered once on/after 31 December 2023 .
 ````
-ruby Monitoring.rb -n COAS,"Destroy backup tapes",O,2023-12-31
+ruby Monitoring.rb -n COAS,"Destroy old backup tapes",O,2023-12-31
 ````
