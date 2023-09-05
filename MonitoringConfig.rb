@@ -3,7 +3,7 @@ require_relative 'utils'
 
 MONITORING_CFG = "monitoring.cfg"
 
-ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :create_ticket, :reported_alerts, :endpoints ) do
+ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :create_ticket, :notifications, :reported_alerts, :endpoints ) do
     def initialize(*)
         super
 		@touched = false
@@ -14,6 +14,7 @@ ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, 
 		self.monitor_backup			||= false
 		self.create_ticket			||= false
 		self.reported_alerts		||= []
+		self.notifications			||= []
     end
 	
 	def monitoring?

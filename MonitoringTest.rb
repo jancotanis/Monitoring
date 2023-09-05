@@ -1,6 +1,9 @@
 require 'minitest/autorun'
 require 'minitest/spec'
+require "Date"
 require_relative "MonitoringConfig"
+require_relative "MonitoringSLA"
+
 TenantMock = Struct.new(:id, :description, :endpoints, :is_trial?)
 
 describe '#1 config' do
@@ -50,4 +53,40 @@ describe '#2 utils' do
 			assert value( t.property( "main_item.stats.a" ) ).must_equal "8", "2.2.1 nested property"
 		end
 	end
+end
+
+describe '#3 SLA periods' do
+	it '#3.1 weekly' do
+		begin
+			assert !WEEKLY.is_due?( Date.today )
+			assert !WEEKLY.is_due?( Date.today-1 )
+			assert WEEKLY.is_due?( Date.today-7 )
+			assert WEEKLY.is_due?( Date.today-100 )
+		end
+	end
+	it '#3.1 monthly' do
+		begin
+			assert !MONTHLY.is_due?( Date.today )
+			assert !MONTHLY.is_due?( Date.today - 1 )
+			assert MONTHLY.is_due?( Date.today - 30 )
+			assert MONTHLY.is_due?( Date.today - 100 )
+		end
+	end
+	it '#3.1 quarterly' do
+		begin
+			assert !QUARTERLY.is_due?( Date.today )
+			assert !QUARTERLY.is_due?( Date.today - 90 )
+			assert QUARTERLY.is_due?( Date.today - 91 )
+			assert QUARTERLY.is_due?( Date.today - 100 )
+		end
+	end
+	it '#3.1 yearly' do
+		begin
+			assert !YEARLY.is_due?( Date.today )
+			assert !YEARLY.is_due?( Date.today - 90 )
+			assert YEARLY.is_due?( Date.today - 365 )
+			assert YEARLY.is_due?( Date.today - 999 )
+		end
+	end
+
 end

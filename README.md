@@ -74,6 +74,11 @@ This is a yaml formatted file with the following structure:
   monitor_connectivity: false
   monitor_backup: false
   create_ticket: false
+  notifications:
+  - !ruby/struct:Notification
+    type: Check authorisations
+    period: Y
+    triggered: 2023-09-01
   reported_alerts: []
   endpoints: 5
 - !ruby/struct:ConfigData
@@ -81,7 +86,7 @@ This is a yaml formatted file with the following structure:
    :
 ```
 
-Keys
+### Keys
 
 |Key|Description|value|
 |:--|:--|:--|
@@ -97,6 +102,14 @@ Keys
 |endpoints|Debugging: Number of sophos endpoints found|
 |reported_alerts|Ids of alerts that have been reported to the ticket system. This to prevent duplicate entries.|
 
+### Notifications
+Each customer entry can have a number of notifications. These are triggered on specific interval.
+|Key|Description|value|
+|:--|:--|:--|
+|task|Task identifier what to do|Text, use quotes '"' when task name has spaces|
+|interval|What interval do the notifications be triggered. Select from Once, Weekly, Monthly, Quarterly,Yearly|O,W,M,Q,Y|
+|triggered|Last time it was triggered, this date can be in the future| YYYY-MM-DD|
+
 ## Script run options
 Script can be run with ruby interpreter.
 ````
@@ -107,6 +120,17 @@ Some additional options apply
 |:--|:--|
 |-s --sla|Report SLA options |
 |-l --log|Log all http api requests, used for debugging connection issues|
+|-n customer,interval[,date] --notification customer,task,interval[,date]|Add customer notification|
 |-g[N] --garbagecollect[=N]|Remove all log files older than N days where N is 90 days if not given|
 |-? -h --help|Explanation of script options|
 
+###Example
+Add weekly reminder for backup check. This is triggered next time the monitoring runs.
+````
+ruby Monitoring.rb -n COAS,"Check week backup",W
+````
+
+Add reminder to destroy backup tapes end of te year. This is triggered once.
+````
+ruby Monitoring.rb -n COAS,"Destroy backup tapes",O,2023-12-31
+````

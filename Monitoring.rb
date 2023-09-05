@@ -9,6 +9,7 @@ require_relative "SkykickMonitor"
 require_relative "CloudAllyMonitor"
 require_relative "ZabbixMonitor"
 require_relative "MonitoringModel"
+require_relative "MonitoringSLA"
 
 def file_age(name)
   (Time.now - File.ctime(name))/(24*3600)
@@ -24,7 +25,7 @@ def garbage_collect days
 	end
 end
 
-def get_options config
+def get_options config, sla
 	options = {}
 	o=OptionParser.new do |opts|
 		opts.banner = "Usage: Monitor.rb [options]"
@@ -46,6 +47,15 @@ def get_options config
 	#	opts.on("-r", "--reload", "Reload cached files") do |a|
 	#		options[:reload] = a
 	#	end
+		opts.on("-n customer,task,interval[,date]", "--notification customer,task,interval[,date]", Array, "Add customer notification") do |a|
+			options[:customer]	= a[0]
+			options[:task]		= a[1]
+			options[:interval]	= a[2]
+			options[:date]		= a[3]
+			options[:notification] = a
+			sla.add_interval_notification a[0], a[1], a[2], a[3]
+			exit 0
+		end
 		opts.on("-l", "--log", "Log http requests") do |log|
 			puts "- API logging turned on"
 			options[:log] = log
@@ -96,18 +106,40 @@ def run_monitors( report, config, options )
 	customer_alerts
 end
 
-puts "Monitor v1.0.0 - #{Time.now}"
+def create_ticket zammad_client, title, text
+	ticket = nil
+	if !"DEBUG".eql? ENV["MONITORING"]
+		ticket = zammad_client.ticket.create(
+			title: title,
+			state: 'new',
+			group: ENV['ZAMMAD_GROUP'],
+			priority: '2 normal',
+			customer: ENV['ZAMMAD_CUSTOMER'],
+			article: {
+				content_type: 'text/plain', # or text/html, if not given test/plain is used
+				body: text
+			}
+		)
+	end
+	puts "Ticket created #{title}"
+	puts text
+	ticket
+end
+
+puts "Monitor v1.1.0 - #{Time.now}"
 
 # use environment from .env if any
 Dotenv.load
 config = MonitoringConfig.new
-options = get_options config
+sla = MonitoringSLA.new( config )
+options = get_options config, sla
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
 		url:			ENV["ZAMMAN_HOST"],
 		oauth2_token:	ENV["ZAMMAD_OAUTH_TOKEN"]
 	)
 	report_tenants( report, config, options ) if options[:tenants]
+
 	customer_alerts  = run_monitors( report, config, options )
 	# create ticket
 	last = ""
@@ -123,22 +155,18 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 			cfg.reported_alerts = cl.remove_reported_incidents( cfg.reported_alerts || [] )
 			monitoring_report = cl.report
 			if monitoring_report
-				puts "Ticket created for #{cl.name}"
-				puts monitoring_report
-				ticket = client.ticket.create(
-					title: "Monitoring: #{cl.name}",
-					state: 'new',
-					group: ENV['ZAMMAD_GROUP'],
-					priority: '2 normal',
-					customer: ENV['ZAMMAD_CUSTOMER'],
-					article: {
-						content_type: 'text/plain', # or text/html, if not given test/plain is used
-						body: monitoring_report
-					}
-				)
+				ticket = create_ticket client, "Monitoring: #{cl.name}", monitoring_report
 			end
 		end
 	end
+
+	a = sla.get_periodic_alerts
+	a.each do |notification|
+		if notification.config.create_ticket
+			ticket = create_ticket client, "Monitoring: #{notification.config.description}", notification.description
+		end
+	end
+	
 	# update list of alerts
 	config.compact! if options[:compact]
 	config.save_config
