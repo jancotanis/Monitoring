@@ -1,4 +1,4 @@
-require "Date"
+require "date"
 require "optparse"
 require_relative 'MonitoringConfig'
 
