@@ -3,7 +3,7 @@ require_relative 'utils'
 
 MONITORING_CFG = "monitoring.cfg"
 
-ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :create_ticket, :notifications, :reported_alerts, :endpoints ) do
+ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :monitor_dtc, :create_ticket, :notifications, :reported_alerts, :endpoints ) do
     def initialize(*)
         super
 		@touched = false
@@ -12,6 +12,7 @@ ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, 
 		self.monitor_endpoints		||= false
 		self.monitor_connectivity	||= false
 		self.monitor_backup			||= false
+		self.monitor_dtc			||= false
 		self.create_ticket			||= false
 		self.reported_alerts		||= []
 		self.notifications			||= []
@@ -102,9 +103,10 @@ alias entries config
 		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam", "Zabbix" ]
 		report_file = "configuration.md"
 		File.open( report_file, "w") do |report|
-			report.puts "| Company | Ticket | Endpoints | Backup | #{keys.join( ' | ' )} |"
+			report.puts "| Company | Ticket | Endpoints | Backup | DTC | #{keys.join( ' | ' )} |"
 			report.puts "|:--|:--:|:--:|:--:|#{':--: | ' * keys.count}"
 			@config.each do |cfg|
+				puts cfg.description
 				v = {}
 				keys.each do |key|
 					if cfg.source.include? key
@@ -124,7 +126,8 @@ alias entries config
 				create_ticket     = "on" if cfg.create_ticket
 				monitor_endpoints = "on" if cfg.monitor_endpoints
 				monitor_backup    = "on" if cfg.monitor_backup
-				report.puts "|#{cfg.description}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{s}"
+				monitor_dtc       = "on" if cfg.monitor_dtc
+				report.puts "|#{cfg.description}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{monitor_dtc}|#{s}"
 			end
 			puts "- #{report_file} written"
 		end

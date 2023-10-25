@@ -10,6 +10,7 @@ require_relative "CloudAllyMonitor"
 require_relative "ZabbixMonitor"
 require_relative "MonitoringModel"
 require_relative "MonitoringSLA"
+require_relative "MonitoringDTC"
 
 def file_age(name)
   (Time.now - File.ctime(name))/(24*3600)
@@ -132,7 +133,9 @@ puts "Monitor v1.1.0 - #{Time.now}"
 Dotenv.load
 config = MonitoringConfig.new
 sla = MonitoringSLA.new( config )
+dtc = MonitoringDTC.new( config )
 options = get_options config, sla
+
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
 		url:			ENV["ZAMMAN_HOST"],
@@ -165,6 +168,11 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 		if notification.config.create_ticket
 			ticket = create_ticket client, "Monitoring: #{notification.config.description}", notification.description
 		end
+	end
+
+	a = dtc.get_vulnerabilities_list
+	a.each do |vulnerability|
+		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description
 	end
 	
 	# update list of alerts
