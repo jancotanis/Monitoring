@@ -62,12 +62,9 @@ class SophosMonitor < AbstractMonitor
 					# group alerts by customer
 					count = handle_endpoint_alerts( customer_alerts ) if cfg.monitor_endpoints
 
-					# include connectivity issues in case of decive issues
 					connection_errors = 0
-					if cfg.monitor_connectivity || ( count && count > 0 )
-						r = handle_connectivity_alerts( customer_alerts ) 
-						connection_errors = r[0]
-					end
+					connection_errors = handle_connectivity_alerts( customer_alerts ) if cfg.monitor_connectivity
+
 					customer_alerts.devices.each do |device_id, incidents|
 						endpoint = customer.endpoints[device_id]
 						@report.puts "- #{endpoint}"
@@ -98,7 +95,7 @@ class SophosMonitor < AbstractMonitor
 				customer.add_incident( a.endpoint_id, a, ConnectivityIncident )
 			end
 		end
-		[connection_errors, endpoints.count]
+		connection_errors
 	end
 	def handle_endpoint_alerts( customer )
 		endpoints = handle_unique_alerts( customer ) do |ep, a|
