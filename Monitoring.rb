@@ -1,3 +1,8 @@
+#
+# 1.0	Initial version of monitoring coas saas vendor portals
+# 1.1.0	Implementation of weekly/monthly/yearly notifications for SLA actions
+# 1.2.0	Scan digital trust center
+#
 require "dotenv"
 require "optparse"
 require 'zammad_api'
@@ -127,7 +132,7 @@ def create_ticket zammad_client, title, text
 	ticket
 end
 
-puts "Monitor v1.1.0 - #{Time.now}"
+puts "Monitor v1.2.0 - #{Time.now}"
 
 # use environment from .env if any
 Dotenv.load
