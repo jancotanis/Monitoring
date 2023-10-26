@@ -10,7 +10,7 @@ Vulnerability = Struct.new( :feed_item, :companies ) do
 	end
 	def description
 		companies_list = companies.map(&:description).join("\n- ")
-		"#{feed_item.link}\n#{feed_item.description.strip}\n Please check following clients wihtin working 72 hours\n- #{companies_list}"
+		"#{feed_item.title}\n#{feed_item.link}\n\n*** Controleer de klanten met een SLA en onderneem aktie binnen 72 uur (3 werkdagen)\n- #{companies_list}"
 	end
 end
 
@@ -38,9 +38,9 @@ class MonitoringDTC
 		URI.open( DTC_FEED ) do |rss|
 			feed = RSS::Parser.parse( rss, false )
 
-			# compress items based on link (the feed contain duplicates for some reason causinf guid not unique)
+			# compress items based on link (the feed contain duplicates for some reason causing guid not unique)
 			feed.items.sort_by{ |i| i.pubDate }.each do |item|
-				items[item.link] = item
+				items[item.link] = item unless items[item.link]
 			end
 			
 			FileUtil.write_file( DTC_TIMESTAMP, YAML.dump( items.values.last.pubDate ) )

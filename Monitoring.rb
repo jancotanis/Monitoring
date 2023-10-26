@@ -2,6 +2,7 @@
 # 1.0	Initial version of monitoring coas saas vendor portals
 # 1.1.0	Implementation of weekly/monthly/yearly notifications for SLA actions
 # 1.2.0	Scan digital trust center
+# 1.2.1	change ticket prio DTC, remove html description
 #
 require "dotenv"
 require "optparse"
@@ -16,6 +17,10 @@ require_relative "ZabbixMonitor"
 require_relative "MonitoringModel"
 require_relative "MonitoringSLA"
 require_relative "MonitoringDTC"
+
+PRIO_LOW = '1 low'
+PRIO_NORMAL = '2 normal'
+PRIO_HIGH = '3 high'
 
 def file_age(name)
   (Time.now - File.ctime(name))/(24*3600)
@@ -112,14 +117,14 @@ def run_monitors( report, config, options )
 	customer_alerts
 end
 
-def create_ticket zammad_client, title, text
+def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL
 	ticket = nil
 	if !"DEBUG".eql? ENV["MONITORING"]
 		ticket = zammad_client.ticket.create(
 			title: title,
 			state: 'new',
 			group: ENV['ZAMMAD_GROUP'],
-			priority: '2 normal',
+			priority: ticket_prio,
 			customer: ENV['ZAMMAD_CUSTOMER'],
 			article: {
 				content_type: 'text/plain', # or text/html, if not given test/plain is used
@@ -127,7 +132,7 @@ def create_ticket zammad_client, title, text
 			}
 		)
 	end
-	puts "Ticket created #{title}"
+	puts "Ticket created #{title}/#{ticket_prio}"
 	puts text
 	ticket
 end
@@ -177,7 +182,7 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 
 	a = dtc.get_vulnerabilities_list
 	a.each do |vulnerability|
-		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description
+		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, PRIO_HIGH
 	end
 	
 	# update list of alerts
