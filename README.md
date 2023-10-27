@@ -73,6 +73,7 @@ This is a yaml formatted file with the following structure:
   monitor_endpoints: false
   monitor_connectivity: false
   monitor_backup: false
+  monitor_dtc: false
   create_ticket: false
   notifications:
   - !ruby/struct:Notification
@@ -97,6 +98,7 @@ This is a yaml formatted file with the following structure:
 |monitor_endpoints|Monitor issues with endpoints (Sophos and Zabbix)|true/false|
 |monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
 |monitor_backup|Monitor issues with VEEAM backups|true/false|
+|monitor_dtc|Client is included in Digital Trust Center alert tickets|true/false|
 |create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
 |reported_alerts|Alerts that have been created a ticket for|
 |endpoints|Debugging: Number of sophos endpoints found|
@@ -116,11 +118,12 @@ Script can be run with ruby interpreter.
 ruby Monitoring.rb [options]
 ````
 Some additional options apply
+
 |Parameter|Description|
 |:--|:--|
-|-s --sla|Report SLA options |
+|-s --sla|Report SLA options in configuration.md file (markdown format) |
 |-l --log|Log all http api requests, used for debugging connection issues|
-|-n customer,interval[,date] --notification customer,task,interval[,date]|Add customer notification|
+|-n customer,interval[,date] --notification customer,task,interval[,date]|Add customer notification weekly, monthly, quarterly, yearly or once. Interval is one of 'W', 'M', 'Q', 'Y' or 'O'|
 |-g[N] --garbagecollect[=N]|Remove all log files older than N days where N is 90 days if not given|
 |-? -h --help|Explanation of script options|
 
