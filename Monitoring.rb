@@ -2,7 +2,7 @@
 # 1.0	Initial version of monitoring coas saas vendor portals
 # 1.1.0	Implementation of weekly/monthly/yearly notifications for SLA actions
 # 1.2.0	Scan digital trust center
-# 1.2.1	change ticket prio DTC, remove html description
+# 1.2.1	change ticket prio DTC, remove html description. enable ticket when adding sla
 #
 require "dotenv"
 require "optparse"
@@ -137,7 +137,7 @@ def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL
 	ticket
 end
 
-puts "Monitor v1.2.0 - #{Time.now}"
+puts "Monitor v1.2.1 - #{Time.now}"
 
 # use environment from .env if any
 Dotenv.load
