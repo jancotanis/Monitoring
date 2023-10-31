@@ -67,7 +67,9 @@ class MonitoringSLA
 				end
 				n = Notification.new( text, interval, d )
 				cfg.notifications << n
+				cfg.create_ticket = true
 				puts "Notification added: #{n.to_s}"
+				@config.save_config
 			else
 				puts "- '#{interval}' is not a valid interval, please use #{CODES.join(', ')}"
 			end
