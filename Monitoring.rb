@@ -182,7 +182,11 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 
 	a = dtc.get_vulnerabilities_list
 	a.each do |vulnerability|
-		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, PRIO_HIGH
+		prio = PRIO_NORMAL
+		if ["KRITIEK","ERNSTIG"].any? { |term| vulnerability.title.upcase.include? term }
+			prio = PRIO_HIGH
+		end
+		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, prio
 	end
 	
 	# update list of alerts
