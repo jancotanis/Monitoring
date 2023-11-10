@@ -15,6 +15,7 @@ Vulnerability = Struct.new( :feed_item, :companies ) do
 end
 
 DTC_TIMESTAMP = "./monitordtc.yml"
+DTC_ALERTS = "./monitordtcalerts.yml"
 DTC_FEED = 'https://www.digitaltrustcenter.nl/rss.xml'
 class MonitoringDTC
 
@@ -22,9 +23,15 @@ class MonitoringDTC
 		@config = config
 		# load feed and check from last item
 		if File.file?( DTC_TIMESTAMP )
-			@last_time = YAML.load_file( DTC_TIMESTAMP ) 
+			@last_time = YAML.load_file( DTC_TIMESTAMP )
+			File.delete( DTC_TIMESTAMP )
 		else
 			@last_time = Time.new( 0 )
+		end
+		if File.file?( DTC_ALERTS )
+			@alerts = YAML.load_file( DTC_ALERTS ) 
+		else
+			@alerts = []
 		end
 
 		# select companies to monitor for DTC
@@ -43,14 +50,19 @@ class MonitoringDTC
 				items[item.link] = item unless items[item.link]
 			end
 			
-			FileUtil.write_file( DTC_TIMESTAMP, YAML.dump( items.values.last.pubDate ) )
+			#FileUtil.write_file( DTC_TIMESTAMP, YAML.dump( items.values.last.pubDate ) )
 		end
 		vulnerabilities = []
 		items.values.each do |item| 
-			if item.pubDate > since
-				vulnerabilities << Vulnerability.new( item, @companies ) 
+			guid = item.link
+			if !@alerts.include? guid
+				@alerts << guid
+				if item.pubDate > since
+					vulnerabilities << Vulnerability.new( item, @companies ) 
+				end
 			end
 		end
+		FileUtil.write_file( DTC_ALERTS, YAML.dump( @alerts ) )
 		vulnerabilities
 	end
 end
