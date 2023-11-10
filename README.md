@@ -95,9 +95,9 @@ This is a yaml formatted file with the following structure:
 |description|Customer description of the setting, this is unique and used to find configuration for SAAS cleint|string|
 |source|Debugging: source where entry originates from|array|
 |sla|Used to report kind of SLA in place with customer. Entries in format `source-state`.|array|
-|monitor_endpoints|Monitor issues with endpoints (Sophos and Zabbix)|true/false|
-|monitor_connectivity|Monitor issues with sophos connectivity with firewalls etc|true/false|
-|monitor_backup|Monitor issues with VEEAM backups|true/false|
+|monitor_endpoints|Monitor issues with Sophos endpoints (Sophos and Zabbix)|true/false|
+|monitor_connectivity|Monitor Zabbix issues|true/false|
+|monitor_backup|Monitor issues with VEEAM, CloudAlly, Skykick backups|true/false|
 |monitor_dtc|Client is included in Digital Trust Center alert tickets|true/false|
 |create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
 |reported_alerts|Alerts that have been created a ticket for|
