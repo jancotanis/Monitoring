@@ -63,7 +63,7 @@ class SophosMonitor < AbstractMonitor
 					count = handle_endpoint_alerts( customer_alerts ) if cfg.monitor_endpoints
 
 					connection_errors = 0
-					connection_errors = handle_connectivity_alerts( customer_alerts ) if cfg.monitor_connectivity
+					#connection_errors = handle_connectivity_alerts( customer_alerts ) if cfg.monitor_connectivity
 
 					customer_alerts.devices.each do |device_id, incidents|
 						endpoint = customer.endpoints[device_id]

@@ -36,7 +36,7 @@ class ZabbixMonitor < AbstractMonitor
 		@tenants.each do |customer|
 			cfg = @config.by_description(customer.description)
 			cfg.endpoints = customer.endpoints.count
-			if cfg.monitor_endpoints
+			if cfg.monitor_connectivity
 				all_alerts[customer.id] = customer_alerts = CustomerAlerts.new( customer.description, customer.alerts )
 				customer_alerts.customer = customer
 				if ( customer.alerts.count > 0 )
