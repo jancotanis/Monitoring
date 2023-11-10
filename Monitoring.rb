@@ -3,6 +3,7 @@
 # 1.1.0	Implementation of weekly/monthly/yearly notifications for SLA actions
 # 1.2.0	Scan digital trust center
 # 1.2.1	change ticket prio DTC, remove html description. enable ticket when adding sla
+# 1.3.0	use monitor connectivity cfg flag for Zabbix, ignore duplicates on DTC alerts
 #
 require "dotenv"
 require "optparse"
@@ -137,7 +138,7 @@ def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL
 	ticket
 end
 
-puts "Monitor v1.2.1 - #{Time.now}"
+puts "Monitor v1.3.0 - #{Time.now}"
 
 # use environment from .env if any
 Dotenv.load
