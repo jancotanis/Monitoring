@@ -37,9 +37,14 @@ describe '#1 config' do
 end
 
 describe '#2 utils' do
-	it '#2.1 FileUtils' do
+	it '#2.1.1 FileUtils' do
 		begin
 			assert value(FileUtil.daily_file_name( "error.log" )).must_equal 'error-'+FileUtil.timestamp+'.log', "2.1.1 daily name"
+		end
+	end
+	it '#2.1.2 FileUtils' do
+		begin
+			assert value(FileUtil.daily_module_name( "" )).must_equal 'string-'+FileUtil.timestamp+'.log', "2.1.2 daily module name"
 		end
 	end
 	it '#2.2 Struct' do

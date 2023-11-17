@@ -33,4 +33,7 @@ class FileUtil
 		file_name[ext] = "-#{timestamp}#{ext}"
 		file_name
 	end
+	def self.daily_module_name( object )
+		self.daily_file_name( object.class.name.split( "::" ).first.downcase + ".log" )
+	end
 end
