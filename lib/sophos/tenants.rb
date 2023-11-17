@@ -85,15 +85,15 @@ private
 =begin
 items: [{
          "id":"00aa843d-333b-45a2-8617-81386bc35989",
-         "showAs":"Overstag Stoffering",
-         "name":"Overstag Stoffering",
+         "showAs":"company name",
+         "name":"company name",
          "dataGeography":"DE",
          "dataRegion":"eu02",
          "billingType":"usage",
          "partner":{
-            "id":"879fd7a8-c0a9-4cb2-b775-583fb604a474"
+            "id":"879fd7a8-c0a9-4casb2-b76875-583sgfj43a474"
          },
-         "apiHost":"https://api-eu02.central.sophos.com",
+         "apiHost":"https://api-eu.central.sophos.com",
          "status":"active"
 		}],
    "pages":{

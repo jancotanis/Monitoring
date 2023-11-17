@@ -48,10 +48,10 @@ module Sophos
 =begin
    "items":[
       {
-         "id":"00581310-521f-4d70-98b1-ca9128ae79aa",
+         "id":"99581310-521f34-234d70-983b1-ca945128ae79aa",
          "type":"computer",
          "tenant":{
-            "id":"f0c4d412-e91c-40fa-b720-f01c91fde12b"
+            "id":"f0c456d412-e6591c-4506fa-b65720-f08871c91fde12b"
          },
          "hostname":"DAT-PC07",
          "health":{
@@ -120,9 +120,9 @@ module Sophos
             "A0:8C:FD:DC:1B:D1"
          ],
          "associatedPerson":{
-            "name":"DTA\\S.LaGrange",
-            "viaLogin":"DTA\\S.LaGrange",
-            "id":"adc79069-95f8-45a2-9458-bb52e103868b"
+            "name":"ABC\\S.uperDuper",
+            "viaLogin":"ABC\\S.uperDuper",
+            "id":"adc79069-1234-1234-9458-bb52e103868b"
          },
          "tamperProtectionEnabled":false,
          "assignedProducts":[
@@ -151,7 +151,7 @@ module Sophos
          "encryption":{
             "volumes":[
                {
-                  "volumeId":"\\\\?\\Volume{361a99a0-d915-4efb-9a9a-6910ef750f4f}\\",
+                  "volumeId":"\\\\?\\Volume{361312a99a0-d925-4eff-9a91-6946778108ef0f4f}\\",
                   "status":"notEncrypted"
                }
             ]

@@ -103,7 +103,7 @@ class AbstractMonitor
 protected
 	def collect_alerts tenant
 		result = @client.alerts( tenant.id )
-		# resturn hash of alerts
+		# return hash of alerts
 		result
 	end
 	def create_endpoint_from_alert( customer, alert )

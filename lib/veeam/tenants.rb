@@ -55,11 +55,11 @@ module Veeam
   },
   "data": [
     {
-      "instanceUid": "0b44edd8-9823-43c0-8708-792108e65958",
-      "name": "Machinefabriek Padmos",
+      "instanceUid": "0b454dd8-69823-463c0-86708-792465108e65958",
+      "name": "Company name",
       "status": "Active",
-      "resellerUid": "445caa74-b8ba-48e6-8277-f2656b581310",
-      "subscriptionPlanUid": "774d5c9a-3c63-429b-b3ef-46af208cb98c",
+      "resellerUid": "423545caa74-9b8ba-498e6-82977-f296563b565781310",
+      "subscriptionPlanUid": "772ga4d5c9a-3c36-4239-b33e-46adffaf208cb98c",
       "permissions": [],
       "isAlarmDetectEnabled": true,
       "_embedded": {

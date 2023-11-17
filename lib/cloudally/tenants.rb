@@ -52,18 +52,18 @@ module CloudAlly
    "nextPageToken":null,
    "data":[
       {
-         "id":"4fbd097f-77e4-4681-af91-ec702699eaee",
-         "name":"Biolgen",
-         "email":"wim@biolgen.nl",
+         "id":"4fbd097f-77e4-4641-af891-ec7sftw099ee",
+         "name":"B",
+         "email":"w@b.tld",
          "status":"ACTIVE",
          "date":20210311,
          "dailyReport":true,
-         "region":"EU_FRANKFURT",
+         "region":"EU_F",
          "discount":35,
          "reportEmails":[
             
          ],
-         "partnerID":"RZNL0001",
+         "partnerID":"RASD1234",
          "currency":"EUR",
          "customStorage":null,
          "ms365EnterprisePlan":true,

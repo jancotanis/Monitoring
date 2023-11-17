@@ -94,7 +94,7 @@ module Zabbix
 			"value": "1",
 			"acknowledged": "0",
 			"ns": "126484783",
-			"name": "Stellendam.XGS116 is unavailable by ICMP",
+			"name": "XGS116 is unavailable by ICMP",
 			"severity": "4",
 			"r_eventid": "0",
 			"c_eventid": "0",
