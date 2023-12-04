@@ -100,7 +100,7 @@ alias entries config
 	end
 	
 	def report
-		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam", "Zabbix" ]
+		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam", "Integra365", "Zabbix" ]
 		report_file = "configuration.md"
 		File.open( report_file, "w") do |report|
 			report.puts "| Company | Ticket | Endpoints | Backup | DTC | #{keys.join( ' | ' )} |"

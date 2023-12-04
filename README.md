@@ -35,6 +35,13 @@ VEEAM_API_HOST=https://portal.host.com
 VEEAM_API_KEY=834hdfskgsj54rghkbvfiurve984
 ````
 
+### Integra 365
+Connection to Integra 365 provider console. 
+````
+INTEGRA365_USER=john.doe@acme.com
+INTEGRA365_PASSWORD=your_password_here
+````
+
 ### Zabbix
 Connection to ZAbbix servicer api. This is location specific.
 ````
@@ -97,7 +104,7 @@ This is a yaml formatted file with the following structure:
 |sla|Used to report kind of SLA in place with customer. Entries in format `source-state`.|array|
 |monitor_endpoints|Monitor issues with Sophos endpoints (Sophos and Zabbix)|true/false|
 |monitor_connectivity|Monitor Zabbix issues|true/false|
-|monitor_backup|Monitor issues with VEEAM, CloudAlly, Skykick backups|true/false|
+|monitor_backup|Monitor issues with VEEAM, CloudAlly, Skykick, Integra backups|true/false|
 |monitor_dtc|Client is included in Digital Trust Center alert tickets|true/false|
 |create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
 |reported_alerts|Alerts that have been created a ticket for|

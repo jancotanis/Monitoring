@@ -15,6 +15,7 @@ require_relative "VeeamMonitor"
 require_relative "SkykickMonitor"
 require_relative "CloudAllyMonitor"
 require_relative "ZabbixMonitor"
+require_relative "Integra365Monitor"
 require_relative "MonitoringModel"
 require_relative "MonitoringSLA"
 require_relative "MonitoringDTC"
@@ -85,7 +86,7 @@ def monitors_do report, config, options, &block
 	if !@monitors
 		@monitors = []
 		
-		[SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor] .each do |klass|
+		[SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor] .each do |klass|
 			@monitors << klass.new( report, config, options[:log] )
 		rescue Faraday::Error => e
 			puts "** Error instantiating #{klass.name}"
