@@ -1,8 +1,9 @@
-require "dotenv"
+require 'dotenv'
 require 'json'
+require 'cloudally'
 
-require_relative 'utils'
 require_relative 'CloudAllyAPI'
+require_relative 'utils'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
@@ -20,12 +21,12 @@ class CloudAllyMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log ) 
-		client = CloudAlly::Client.new( 
+		client = CloudAlly::ClientWrapper.new( 
 			ENV["CLOUDALLY_CLIENT_ID"],
 			ENV["CLOUDALLY_CLIENT_SECRET"],
 			ENV["CLOUDALLY_USER"],
 			ENV["CLOUDALLY_PASSWORD"],
-			log			
+			log
 		)
 		super( CLOUDALLY, client, report, config, log )
 
@@ -38,7 +39,7 @@ class CloudAllyMonitor < AbstractMonitor
 		collect_data()
 		@tenants.each do |customer|
 			cfg = @config.by_description(customer.description)
-			if true || cfg.monitor_backup
+			if cfg.monitor_backup
 				all_alerts[customer.id] = customer_alerts = CustomerAlerts.new( customer.description, customer.alerts )
 				customer_alerts.customer = customer
 				if ( customer.alerts.count > 0 )
@@ -73,8 +74,9 @@ private
 			endpts.each do |e|
 				customer.endpoints[e.id] = e
 			end
+
 			cfg = @config.by_description(customer.description)
-			if true || cfg.monitor_backup
+			if cfg.monitor_backup
 				customer_alerts = collect_alerts( customer )
 				# add active alerts to customer record
 				if ( customer_alerts.count > 0 )
@@ -85,7 +87,6 @@ private
 							customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
 						end
 					end
-
 				end
 			end
 		end
