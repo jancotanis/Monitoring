@@ -57,6 +57,17 @@ ZAMMAD_OAUTH_TOKEN=834hdfskgsj54rghkbvfiurve984
 ZAMMAD_GROUP=Monitoring
 ZAMMAD_CUSTOMER=john.doe@acme.com
 ```
+A ticket is created and the following fields are populated:
+
+|Field|Description|value|
+|:--|:--|:--|
+|Title|`Monitoring <customer name>`||
+|State|`new`||
+|Group|`ZAMMAD_GROUP` environment setting||
+|Priority|Default prio `2 normal` for DTC alerts it can be `3 high` when certain keywords are within the text||
+|Customer|`ZAMMAD_CUSTOMER` environment setting||
+|Article|Text of the monitored system||
+|Tags|For DTC alerts the tag `DTC` is included||
 
 ## Application configuration
 Application configuration is stored in `monitoring.cfg`. The document will be automatically extended based on the 
@@ -105,19 +116,24 @@ This is a yaml formatted file with the following structure:
 |monitor_endpoints|Monitor issues with Sophos endpoints (Sophos and Zabbix)|true/false|
 |monitor_connectivity|Monitor Zabbix issues|true/false|
 |monitor_backup|Monitor issues with VEEAM, CloudAlly, Skykick, Integra backups|true/false|
-|monitor_dtc|Client is included in Digital Trust Center alert tickets|true/false|
+|monitor_dtc|Client is included in Digital Trust Center alerts (https://www.digitaltrustcenter.nl/cyberalerts)|true/false|
 |create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
 |reported_alerts|Alerts that have been created a ticket for|
 |endpoints|Debugging: Number of sophos endpoints found|
 |reported_alerts|Ids of alerts that have been reported to the ticket system. This to prevent duplicate entries.|
 
 ### Notifications
-Each customer entry can have a number of notifications. These are triggered on specific interval.
-|Key|Description|value|
-|:--|:--|:--|
-|task|Task identifier what to do|Text, use quotes '"' when task name has spaces|
-|interval|What interval do the notifications be triggered. Select from Once, Weekly, Monthly, Quarterly,Yearly|O,W,M,Q,Y|
-|triggered|Last time it was triggered, this date can be in the future| YYYY-MM-DD|
+Each customer entry can have a number of notifications. These are triggered on specific interval. Notifications can be added using the command line using 
+`-n <customer>,`
+
+|Key|Description|value|example|
+|:--|:--|:--|:--|
+|customer|Customer identifier, this should match description in application configuration file|Text, use quotes '"' when customer name has spaces|`"Ford Motor Company"`|
+|task|Task identifier what to do|Text, use quotes '"' when task name has spaces|`"Monitor XYZ backup"`|
+|interval|What interval do the notifications be triggered. Select from Once, Weekly, Monthly, Quarterly,Yearly|O,W,M,Q,Y| |
+|triggered|Last time it was triggered, this date can be in the future| YYYY-MM-DD| `2023-01-01` |
+
+
 
 ## Script run options
 Script can be run with ruby interpreter.

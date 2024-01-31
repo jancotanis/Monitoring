@@ -29,6 +29,8 @@ attr_accessor :customer #hidden field
 		@source
 	end
 	def add_incident( device, alert, klass )
+    # contact alerts for same type together to get start end times
+    # TODO: not all systems have alert type
 		alert_type = alert.property("type")
 		device_alerts = devices[alert.endpoint_id]
 		if device_alerts[alert_type] 

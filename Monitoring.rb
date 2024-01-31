@@ -4,7 +4,10 @@
 # 1.2.0	Scan digital trust center
 # 1.2.1	change ticket prio DTC, remove html description. enable ticket when adding sla
 # 1.3.0	use monitor connectivity cfg flag for Zabbix, ignore duplicates on DTC alerts
+# 1.4.0	Tag TDC tickets in zammad with DTC
 #
+MONITOR_VERSION = "1.4.0"
+
 require "dotenv"
 require "optparse"
 require 'zammad_api'
@@ -86,7 +89,7 @@ def monitors_do report, config, options, &block
 	if !@monitors
 		@monitors = []
 		
-		[SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor] .each do |klass|
+		[SophosMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor].each do |klass|
 			@monitors << klass.new( report, config, options[:log] )
 		rescue Faraday::Error => e
 			puts "** Error instantiating #{klass.name}"
@@ -119,7 +122,7 @@ def run_monitors( report, config, options )
 	customer_alerts
 end
 
-def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL
+def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL, ticket_tag=nil
 	ticket = nil
 	if !"DEBUG".eql? ENV["MONITORING"]
 		ticket = zammad_client.ticket.create(
@@ -131,7 +134,8 @@ def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL
 			article: {
 				content_type: 'text/plain', # or text/html, if not given test/plain is used
 				body: text
-			}
+			}, 
+			tags: ticket_tag
 		)
 	end
 	puts "Ticket created #{title}/#{ticket_prio}"
@@ -139,7 +143,7 @@ def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL
 	ticket
 end
 
-puts "Monitor v1.3.0 - #{Time.now}"
+puts "Monitor v#{MONITOR_VERSION} - #{Time.now}"
 
 # use environment from .env if any
 Dotenv.load
@@ -188,7 +192,7 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 		if ["KRITIEK","ERNSTIG"].any? { |term| vulnerability.title.upcase.include? term }
 			prio = PRIO_HIGH
 		end
-		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, prio
+		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, prio, "DTC"
 	end
 	
 	# update list of alerts
