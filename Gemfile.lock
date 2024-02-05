@@ -27,12 +27,17 @@ GEM
     faraday-patron (1.0.0)
     faraday-rack (1.0.0)
     faraday-retry (1.0.3)
+    integra365 (0.1.0)
+      faraday
+      wrapi (~> 0.1.2)
     multipart-post (2.3.0)
     optparse (0.4.0)
     rexml (3.2.6)
     rss (0.3.0)
       rexml
     ruby2_keywords (0.0.5)
+    wrapi (0.1.2)
+      faraday
     zammad_api (1.1.0)
       faraday (~> 1)
 
@@ -43,6 +48,7 @@ DEPENDENCIES
   cloudally
   dotenv
   faraday
+  integra365
   optparse
   rss
   zammad_api

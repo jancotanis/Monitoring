@@ -21,7 +21,7 @@ class Integra365Monitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log  ) 
-		client = Integra365::Client.new( ENV['INTEGRA365_USER'], ENV['INTEGRA365_PASSWORD'], log )
+		client = Integra365::ClientWrapper.new( ENV['INTEGRA365_USER'], ENV['INTEGRA365_PASSWORD'], log )
 		super( INTEGRA, client, report, config, log )
 
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
