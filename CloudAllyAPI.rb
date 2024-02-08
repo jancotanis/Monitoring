@@ -66,8 +66,8 @@ module CloudAlly
         config.password = password
         config.logger = Logger.new( FileUtil.daily_file_name( "cloudally.log" ) ) if log
       end
-      CloudAlly.partner_login
       @api = CloudAlly.client
+      @api.partner_login
     end
 
     def tenants

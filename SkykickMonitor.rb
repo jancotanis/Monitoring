@@ -5,7 +5,6 @@ require_relative 'utils'
 require_relative 'SkykickAPI'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
-require_relative 'lib/skykick/endpoints'
 
 SKYKICK = "Skykick"
 class SkykickBackupIncident < MonitoringIncident
@@ -21,8 +20,13 @@ class SkykickMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log  ) 
-		client = Skykick::Client.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'], log )
-		super( SKYKICK, client, report, config, log )
+
+		super(
+      SKYKICK,
+      Skykick::ClientWrapper.new( ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'], log ),
+      report,
+      config,
+      log )
 
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 

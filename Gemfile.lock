@@ -1,8 +1,9 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    cloudally (0.2.0)
+    cloudally (0.2.1)
       faraday
+      wrapi (>= 0.1.3)
     dotenv (2.8.1)
     faraday (1.10.3)
       faraday-em_http (~> 1.0)
@@ -36,7 +37,10 @@ GEM
     rss (0.3.0)
       rexml
     ruby2_keywords (0.0.5)
-    wrapi (0.1.2)
+    skykick (0.1.0)
+      faraday
+      wrapi (~> 0.1.3)
+    wrapi (0.1.3)
       faraday
     zammad_api (1.1.0)
       faraday (~> 1)
@@ -51,6 +55,7 @@ DEPENDENCIES
   integra365
   optparse
   rss
+  skykick
   zammad_api
 
 BUNDLED WITH
