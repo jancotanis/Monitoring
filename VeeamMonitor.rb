@@ -21,7 +21,7 @@ class VeeamMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log ) 
-		client = Veeam::Client.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'], log )
+		client = Veeam::ClientWrapper.new( ENV['VEEAM_API_HOST'], ENV['VEEAM_API_KEY'], log )
 		super( VEEAM, client, report, config, log )
 
 		@alerts = @client.alerts
