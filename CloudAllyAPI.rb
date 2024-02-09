@@ -58,7 +58,6 @@ module CloudAlly
     attr_reader :api
 
     def initialize( client_id, client_secret, user, password, log=true )
-      #silent logger  Logger.new(IO::NULL)
       CloudAlly.configure do |config|
         config.client_id = client_id
         config.client_secret = client_secret
