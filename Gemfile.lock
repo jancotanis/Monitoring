@@ -45,6 +45,9 @@ GEM
       wrapi (>= 0.2.0)
     wrapi (0.2.0)
       faraday
+    zabbix_api_gem (0.2.0)
+      faraday
+      wrapi (>= 0.2.0)
     zammad_api (1.1.0)
       faraday (~> 1)
 
@@ -60,6 +63,7 @@ DEPENDENCIES
   rss
   skykick
   veeam
+  zabbix_api_gem
   zammad_api
 
 BUNDLED WITH

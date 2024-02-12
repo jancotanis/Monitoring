@@ -1,33 +1,129 @@
-require 'open-uri'
-require 'uri'
-
-require 'json'
-require 'faraday'
-require 'forwardable'
 require 'logger'
+require 'zabbix_api_gem'
 
 require_relative 'utils'
-require_relative 'lib/zabbix/connection'
-require_relative 'lib/zabbix/tenants'
-require_relative 'lib/zabbix/endpoints'
-require_relative 'lib/zabbix/alerts'
 
 module Zabbix
-  class Client
-    extend Forwardable
-    attr_reader :connection
-    def_delegators :@tenants, :tenants, :groups
-    def_delegators :@alerts, :alerts, :events_by_id
-    def_delegators :@connection, :create_connection
-	def_delegators :@endpoints, :endpoints
-
-	# use userid and primary key for login information found in https://zabbix-portal/zabbix.php?action=token.list
-    def initialize( host, auth_token, log=true )
-	  logger = Logger.new( FileUtil.daily_file_name( "zabbix.log" ) ) if log
-      @connection = Connection.new( host, auth_token, logger )
-      @tenants = Tenants.new( self )
-      @endpoints = Endpoints.new( self )
-      @alerts = Alerts.new( self )
+  TenantData  = Struct.new( :id, :name, :status, :raw_data, :endpoints, :alerts ) do
+    def initialize(*)
+      super
+      self.endpoints ||= {}
+      self.alerts ||= []
     end
+    
+    def description
+      name
+    end
+
+    def clear_endpoint_alerts
+      if self.endpoints
+        endpoints.each do |k,v|
+          v.clear_alerts
+        end
+      end
+    end
+  end
+
+	EndpointData  = Struct.new( :id, :type, :hostname, :group, :status, :raw_data, :alerts, :incident_alerts ) do
+    def initialize(*)
+        super
+        self.alerts ||= []
+        self.incident_alerts ||= []
+    end
+    def clear_alerts
+      self.alerts = []
+          self.incident_alerts = []
+    end
+    def to_s
+      "#{type} #{hostname}"
+    end
+  end
+
+  AlertData  = Struct.new( :id, :created, :description, :severity_code, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :event ) do
+    def create_endpoint
+      # :id, :type, :hostname, :group, :status, :raw_data
+      Zabbix::EndpointData.new( id, '?', '?' )
+    end
+    def severity
+      severity_text = ["not classified", "information", "warning", "average", "high", "disaster"]
+      if ( severity_code.to_i >= 0 ) && ( severity_code.to_i < severity_text.count )
+        severity_text[ severity_code.to_i ]
+      else
+        severity_code
+      end
+    end
+  end
+
+  class ClientWrapper
+    attr_reader :api
+
+    # use userid and primary key for login information found in https://zabbix-portal/zabbix.php?action=token.list
+    def initialize( host, auth_token, log=true )
+      Zabbix.configure do |config|
+        config.endpoint = host
+        config.access_token = auth_token
+        config.logger = Logger.new( FileUtil.daily_file_name( "zabbix.log" ) ) if log
+      end
+      @api = Zabbix.client
+      @api.login
+    end
+
+    def tenants
+      if !@tenants
+        @tenants = {}
+
+        data = @api.hostgroups
+        data.each do |item|
+          t = TenantData.new( item.groupid, item.name, nil, item.attributes )
+          @tenants[ t.id ] = t
+          endpoints = endpoints( t )
+          endpoints ||= {}
+          t.endpoints = endpoints
+        end
+      end
+      @tenants.values
+    end
+
+    def endpoints( customer )
+      @endpoints={}
+
+
+      data = @api.hosts({ "groupids":[customer.id], "selectInventory":"extend" })
+      #:id, :type, :hostname, :group, :status, :raw_data, :alerts, :incident_alerts 
+      data.each do |item|
+        ep = EndpointData.new( item.hostid, "zabbix item", item.name, customer.id, item.status, item.attributes )
+        @endpoints[ ep.id ] = ep
+      end
+
+      @endpoints
+    end
+
+    def alerts customer=nil
+      @alerts={}
+
+      query = nil
+      query = { "groupids": [customer.id] } if customer
+      data = @api.problems(query)
+      #:id, :created, :description, :severity_code, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :event
+      data.each do |item|
+        a = AlertData.new( item.eventid, zabbix_clock( item.clock ), item.name.strip, item.severity, item.object, 'zabbix', nil, nil, item.attributes )
+
+        event = events_by_id( a.id ).first
+        if event.hosts
+          h = event.hosts.first
+          a.endpoint_id = h.hostid
+          puts "* host #{a.endpoint_id} in multiple zabbix groups" if event.hosts.count > 1
+        end
+        @alerts[ a.id ] = a
+      end
+      @alerts
+    end
+  private
+    def events_by_id id
+      id = [id] unless id.is_a? Array
+      # get events including hostid for the object that created the event
+      @api.event( id, {'selectHosts':['hostid'] })
+    end
+
   end
 end

@@ -25,7 +25,7 @@ class ZabbixMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts
 
 	def initialize( report, config, log  ) 
-		client = Zabbix::Client.new( ENV['ZABBIX_API_HOST'], ENV['ZABBIX_API_KEY'], log )
+		client = Zabbix::ClientWrapper.new( ENV['ZABBIX_API_HOST'], ENV['ZABBIX_API_KEY'], log )
 		super( ZABBIX, client, report, config, log )
 		@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 		@config.load_config( source, @tenants )
