@@ -51,11 +51,10 @@ module Veeam
     attr_reader :api
 
     def initialize( host, auth_token, log=true )
-      logger = Logger.new( FileUtil.daily_file_name( "veeam.log" ) ) if log
       Veeam.configure do |config|
         config.endpoint = host
         config.access_token = auth_token
-        config.logger = Logger.new( FileUtil.daily_file_name( "cloudally.log" ) ) if log
+        config.logger = Logger.new( FileUtil.daily_file_name( "veeam.log" ) ) if log
       end
       @api = Veeam.client
       @api.login
