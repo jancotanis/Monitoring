@@ -40,10 +40,13 @@ GEM
     skykick (0.1.1)
       faraday
       wrapi (>= 0.2.0)
+    sophos_central_api (0.1.2)
+      faraday
+      wrapi (>= 0.3.0)
     veeam (0.1.0)
       faraday
       wrapi (>= 0.2.0)
-    wrapi (0.2.0)
+    wrapi (0.3.0)
       faraday
     zabbix_api_gem (0.2.0)
       faraday
@@ -62,6 +65,7 @@ DEPENDENCIES
   optparse
   rss
   skykick
+  sophos_central_api (>= 0.1.2)
   veeam
   zabbix_api_gem
   zammad_api

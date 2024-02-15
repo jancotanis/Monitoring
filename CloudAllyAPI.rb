@@ -99,7 +99,7 @@ module CloudAlly
     end
   private
 
-     def get_endpoints()
+    def get_endpoints()
       @endpoints={}
       data = @api.partner_tasks
       data.each do |item|

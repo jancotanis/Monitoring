@@ -7,6 +7,8 @@ gem 'faraday'
 gem 'rss'
 
 gem 'zammad_api'
+
+gem 'sophos_central_api', '>= 0.1.2'
 gem 'cloudally'
 gem 'integra365'
 gem 'skykick'

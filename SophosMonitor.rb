@@ -41,7 +41,7 @@ class SophosMonitor < AbstractMonitor
 	TENANTS_CACHE = SOPHOS.downcase+"-tenants.yml"
 
 	def initialize( report, config, log  ) 
-		client = Sophos::Client.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
+		client = Sophos::ClientWrapper.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
 		super( SOPHOS, client, report, config, log )
 		@products = {}
 		load_tenants
