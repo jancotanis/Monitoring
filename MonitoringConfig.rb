@@ -19,7 +19,7 @@ ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, 
     end
 	
 	def monitoring?
-		self.monitor_endpoints || self.monitor_connectivity || self.monitor_backup
+		self.monitor_endpoints || self.monitor_connectivity || self.monitor_backup || self.monitor_dtc
 	end
 	
 	def touch
