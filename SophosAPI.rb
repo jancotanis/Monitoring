@@ -3,7 +3,9 @@ require 'sophos_central_api'
 require_relative 'utils'
 
 module Sophos
-	# billing type - term, trial, usage
+  CACHE_DIR = "./data/"
+  CACHE_EXT = "-data.yml"	# billing type - term, trial, usage
+
   TenantData  = Struct.new( :id, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
       super
@@ -72,7 +74,7 @@ module Sophos
           @tenants[ t.id ] = t
           endpoints = YAML.load_file( cache_file( t ) ) if File.file?( cache_file( t ) )
           if !endpoints
-            endpoints = @api.endpoints( t ) || {}
+            endpoints = self.endpoints( t ) || {}
             update_cache( t ) 
           end
           t.endpoints = endpoints
@@ -122,6 +124,22 @@ module Sophos
         @alerts[ a.id ] = a
       end
       @alerts
+    end
+  private
+    def create_cache_dir
+      if !Dir.exists?(CACHE_DIR)
+        puts "Creating #{CACHE_DIR}..."
+        FileUtils::mkdir_p CACHE_DIR
+      end
+    end
+    def cache_file( tenant )
+      "#{CACHE_DIR}#{tenant.id}#{CACHE_EXT}"
+    end
+    def update_cache( tenant )
+      create_cache_dir
+      File.open( cache_file( tenant ), "w") do |f|
+        f.puts( YAML.dump( tenant.endpoints ) )
+      end
     end
   end
 end
