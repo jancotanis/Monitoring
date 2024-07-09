@@ -11,7 +11,7 @@ Vulnerability = Struct.new( :feed_item, :companies ) do
 	end
 	def description
 		companies_list = companies.map(&:description).join("\n- ")
-		"#{feed_item.link}\n#{feed_item.decription}\n Please check following clients wihtin working 72 hours\n- #{companies_list]}"
+		"#{feed_item.link}\n#{feed_item.decription}\n Please check following clients wihtin working 72 hours\n- #{companies_list}"
 	end
 end
 

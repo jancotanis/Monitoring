@@ -17,6 +17,7 @@ end
 ONCE = Interval.new( "Once", 0 )
 WEEKLY = Interval.new( "Weekly", 7 )
 MONTHLY = Interval.new( "Monthly", 30 )
+BIMONTHLY = Interval.new( "Bi-Monthly", 61 )
 QUARTERLY = Interval.new( "Quarterly", 91 )
 HALF_YEARLY = Interval.new( "Halfyearly", 182 )
 YEARLY = Interval.new( "Yearly", 365 )
@@ -25,6 +26,7 @@ INTERVALS = {
 	ONCE.code => ONCE,
 	WEEKLY.code => WEEKLY,
 	MONTHLY.code => MONTHLY,
+	BIMONTHLY.code => BIMONTHLY,
 	QUARTERLY.code => QUARTERLY,
 	HALF_YEARLY.code => HALF_YEARLY,
 	YEARLY.code => YEARLY

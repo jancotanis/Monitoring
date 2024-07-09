@@ -7,15 +7,15 @@ ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, 
     def initialize(*)
         super
 		@touched = false
-		self.source					||= []
-		self.sla					||= []
+		self.source       				||= []
+		self.sla					        ||= []
 		self.monitor_endpoints		||= false
 		self.monitor_connectivity	||= false
-		self.monitor_backup			||= false
-		self.monitor_dtc			||= false
-		self.create_ticket			||= false
-		self.reported_alerts		||= []
-		self.notifications			||= []
+		self.monitor_backup			  ||= false
+		self.monitor_dtc		    	||= false
+		self.create_ticket		  	||= false
+		self.reported_alerts	  	||= []
+		self.notifications		  	||= []
     end
 	
 	def monitoring?
@@ -104,7 +104,7 @@ alias entries config
 		report_file = "configuration.md"
 		File.open( report_file, "w") do |report|
 			report.puts "| Company | Ticket | Endpoints | Backup | DTC | #{keys.join( ' | ' )} |"
-			report.puts "|:--|:--:|:--:|:--:|#{':--: | ' * keys.count}"
+			report.puts "|:--|:--:|:--:|:--:|:--:|#{':--: | ' * keys.count}"
 			@config.each do |cfg|
 				puts cfg.description
 				v = {}

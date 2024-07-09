@@ -37,3 +37,11 @@ class FileUtil
 		self.daily_file_name( object.class.name.split( "::" ).first.downcase + ".log" )
 	end
 end
+
+class Enum
+  def self.enum(array, proc=:to_s)
+    array.each do |c|
+      const_set c.upcase,c.send(proc)
+    end
+  end
+end
