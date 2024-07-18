@@ -21,6 +21,10 @@ module Sophos
       # it looks like new tenants are created as COAS Business Systems and showAs is the actual name.
       name
     end
+    
+    def apiHost
+      api
+    end
 
     def clear_endpoint_alerts
       if self.endpoints
@@ -73,7 +77,7 @@ module Sophos
           t = TenantData.new( item.id, item.showAs, item.apiHost, item.status, item.billingType, item.attributes )
           @tenants[ t.id ] = t
           endpoints = YAML.load_file( cache_file( t ) ) if File.file?( cache_file( t ) )
-          if !endpoints
+          if !endpoints || endpoints.count.zero?
             endpoints = self.endpoints( t ) || {}
             update_cache( t ) 
           end
@@ -92,9 +96,11 @@ module Sophos
       @endpoints={}
 
       data = @api.client(customer).endpoints
+
       data.each do |item|
-        status = item.health.overall if item.health
-        ep = EndpointData.new( item.id, item.type, item.hostname, item.groupName, status, item.attributes )
+        status = item.health.overall if item.attributes.key? 'health'
+        group_name = item.group.name if item.attributes.key? 'group'
+        ep = EndpointData.new( item.id, item.type, item.hostname, group_name, status, item.attributes )
         @endpoints[ ep.id ] = ep
       end
       @endpoints

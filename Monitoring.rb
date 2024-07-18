@@ -5,8 +5,9 @@
 # 1.2.1	change ticket prio DTC, remove html description. enable ticket when adding sla
 # 1.3.0	use monitor connectivity cfg flag for Zabbix, ignore duplicates on DTC alerts
 # 1.4.0	Tag TDC tickets in zammad with DTC
+# 1.4.1	Fix Sophos issue with missing apiHost attribute
 #
-MONITOR_VERSION = "1.4.0"
+MONITOR_VERSION = "1.4.1"
 
 require "dotenv"
 require "optparse"
