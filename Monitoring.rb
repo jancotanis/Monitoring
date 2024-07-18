@@ -6,8 +6,9 @@
 # 1.3.0	use monitor connectivity cfg flag for Zabbix, ignore duplicates on DTC alerts
 # 1.4.0	Tag TDC tickets in zammad with DTC
 # 1.4.1	Fix Sophos issue with missing apiHost attribute
+# 1.4.2	Fix Zabbix issue with missing zabbix_clock method
 #
-MONITOR_VERSION = "1.4.1"
+MONITOR_VERSION = "1.4.2"
 
 require "dotenv"
 require "optparse"
