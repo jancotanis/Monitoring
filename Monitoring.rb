@@ -24,6 +24,7 @@ require_relative "Integra365Monitor"
 require_relative "MonitoringModel"
 require_relative "MonitoringSLA"
 require_relative "MonitoringDTC"
+require_relative "MonitoringNCSC"
 
 PRIO_LOW = '1 low'
 PRIO_NORMAL = '2 normal'
@@ -151,7 +152,7 @@ puts "Monitor v#{MONITOR_VERSION} - #{Time.now}"
 Dotenv.load
 config = MonitoringConfig.new
 sla = MonitoringSLA.new( config )
-dtc = MonitoringDTC.new( config )
+feeds = [MonitoringDTC.new( config ), MonitoringNCSC.new( config )]
 options = get_options config, sla
 
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
@@ -176,7 +177,7 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 			cfg.reported_alerts = cl.remove_reported_incidents( cfg.reported_alerts || [] )
 			monitoring_report = cl.report
 			if monitoring_report
-				ticket = create_ticket client, "Monitoring: #{cl.name}", monitoring_report
+				ticket = create_ticket client, "Monitoring: #{cl.name}", monitoring_report, PRIO_NORMAL, cl.source
 			end
 		end
 	end
@@ -187,15 +188,18 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 			ticket = create_ticket client, "Monitoring: #{notification.config.description}", notification.description
 		end
 	end
+  feeds.each do |feed|
+    a = feed.get_vulnerabilities_list
+    a.each do |vulnerability|
+      if vulnerability.high_priority?
+        prio = PRIO_HIGH 
+      else
+        prio = PRIO_NORMAL
+      end
 
-	a = dtc.get_vulnerabilities_list
-	a.each do |vulnerability|
-		prio = PRIO_NORMAL
-		if ["KRITIEK","ERNSTIG"].any? { |term| vulnerability.title.upcase.include? term }
-			prio = PRIO_HIGH
-		end
-		ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, prio, "DTC"
-	end
+      ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, prio, feed.source
+    end
+  end
 	
 	# update list of alerts
 	config.compact! if options[:compact]
