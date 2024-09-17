@@ -79,6 +79,7 @@ module Sophos
           endpoints = YAML.load_file( cache_file( t ) ) if File.file?( cache_file( t ) )
           if !endpoints || endpoints.count.zero?
             endpoints = self.endpoints( t ) || {}
+            t.endpoints = endpoints
             update_cache( t ) 
           end
           t.endpoints = endpoints
