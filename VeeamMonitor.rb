@@ -45,10 +45,15 @@ class VeeamMonitor < AbstractMonitor
 							@report.puts "- Endpount #{ep}"
 							ep.alerts.each do |a|
 								# group alerts by customer
-								if !a.severity.eql? "Resolved"
+								if a.severity.eql? "Resolved"
+                  # resolved alert, maybe remove from reported_alerts
+                  if cfg.reported_alerts.include? "#{VEEAM}-#{a.id}"
+                    @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{a.id})"
+                  end
+								else
 									customer_alerts.add_incident( a.endpoint_id, a, VeeamBackupIncident )
 									@report.puts "  #{a.created} #{a.severity} #{a.description} "
-								end
+                end
 							end
 						end
 					end

@@ -1,5 +1,8 @@
 
 MonitoringIncident = Struct.new( :source, :device, :start_time, :end_time, :alert ) do
+  def incident_id
+    "#{source}-#{alert.id}"
+  end
 	def time_to_s
 		if start_time.eql? end_time
 			start_time.to_s
@@ -68,7 +71,7 @@ attr_accessor :customer #hidden field
 			orig += incidents.values.map{ |i| "#{i.source}-#{i.alert.id}" }
 			incidents.each do |type,incident|
 				# backward compatibility, check for reported alerts without prefix
-				if reported_alerts.include?( "#{incident.source}-#{incident.alert.id}" ) || reported_alerts.include?( incident.alert.id )
+				if reported_alerts.include?( incident.incident_id ) || reported_alerts.include?( incident.alert.id )
 					source = incident.source
 					count += 1
 					orig.delete( incident.alert.id )
