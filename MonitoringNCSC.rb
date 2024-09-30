@@ -7,7 +7,7 @@ require_relative 'MonitoringFeed'
 
 class MonitoringNCSC < MonitoringFeed
 	def initialize( config )
-    super( config, 'https://advisories.ncsc.nl/rss/advisories', "./monitorncscalerts.yml", "NCSC" )
+    super( config, 'https://advisories.ncsc.nl/rss/advisories', 'NCSC' )
   end
   def high_priority?( item )
     probability = impact = '?'
