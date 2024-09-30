@@ -47,6 +47,10 @@ Notification = Struct.new( :task, :interval, :triggered ) do
 			"Notification #{task}, invalid interval='#{interval}', triggered=#{triggered}"
 		end
 	end
+  
+  def to_s
+    "Notification '#{task}', executed #{INTERVALS[interval].description}, last triggered=#{triggered}"
+  end
 end
 PeriodicalNotification = Struct.new( :config, :notification, :interval, :description ) 
 
@@ -82,26 +86,36 @@ class MonitoringSLA
 		puts "- '#{date}' is not a valid date"
 	end
 	def get_periodic_alerts
-		result = []
+    result = []
 
 		@config.entries.each do |cfg|
-			cfg.notifications ||= [] 
-			cfg.notifications.each do |n|
-				if CODES.include? n.interval
-					interval = INTERVALS[n.interval]
-					# quarter is approx 91 days
-					if n.triggered.nil? || interval.is_due?( n.triggered )
-						result << PeriodicalNotification.new( cfg, n, interval, n.to_s ) 
-						n.triggered = Date.today
-						# check if once is triggered and remove it
-						if ONCE.code.eql? n.interval
-							n.interval = "X"
-						end
-					end
-				end
-			end
-			cfg.notifications.delete_if {|n| n.interval == "X" } 
-		end
-		result
+      cfg.notifications ||= [] 
+      cfg.notifications.each do |n|
+        if CODES.include? n.interval
+          interval = INTERVALS[n.interval]
+          # quarter is approx 91 days
+          if n.triggered.nil? || interval.is_due?( n.triggered )
+            result << PeriodicalNotification.new( cfg, n, interval, n.to_s ) 
+            n.triggered = Date.today
+            # check if once is triggered and remove it
+            if ONCE.code.eql? n.interval
+              n.interval = "X"
+            end
+          end
+        end
+      end
+      cfg.notifications.delete_if {|n| n.interval == "X" } 
+    end
+    result
 	end
+  def report
+    @config.entries.each do |cfg|
+      if cfg.notifications && cfg.notifications.count > 0
+        puts cfg.description
+        cfg.notifications.each do |n|
+          puts "- #{n}"
+        end
+      end
+    end
+  end
 end
