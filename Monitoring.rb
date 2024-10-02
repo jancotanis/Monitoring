@@ -7,8 +7,9 @@
 # 1.4.0	Tag TDC tickets in zammad with DTC
 # 1.4.1	Fix Sophos issue with missing apiHost attribute
 # 1.4.2	Fix Zabbix issue with missing zabbix_clock method
+# 1.4.3	List notificaitons, and add NCSC feed scanning
 #
-MONITOR_VERSION = "1.4.2"
+MONITOR_VERSION = "1.4.3"
 
 require "dotenv"
 require "optparse"
@@ -66,13 +67,17 @@ def get_options config, sla
 	#	opts.on("-r", "--reload", "Reload cached files") do |a|
 	#		options[:reload] = a
 	#	end
-		opts.on("-n customer,task,interval[,date]", "--notification customer,task,interval[,date]", Array, "Add customer notification") do |a|
-			options[:customer]	= a[0]
-			options[:task]		= a[1]
-			options[:interval]	= a[2]
-			options[:date]		= a[3]
-			options[:notification] = a
-			sla.add_interval_notification a[0], a[1], a[2], a[3]
+		opts.on("-n [customer,task,interval[,date]]", "--notification [customer,task,interval[,date]]", Array, "Add customer notification of list them if no arguments given") do |a|
+      if a
+        options[:customer]     = a[0]
+        options[:task]         = a[1]
+        options[:interval]     = a[2]
+        options[:date]         = a[3]
+        options[:notification] = a
+        sla.add_interval_notification a[0], a[1], a[2], a[3]
+      else
+        sla.report
+      end
 			exit 0
 		end
 		opts.on("-l", "--log", "Log http requests") do |log|
@@ -86,6 +91,10 @@ def get_options config, sla
 	end
 	o.parse!
 	options
+rescue OptionParser::ParseError => e
+  puts "ERROR: #{e}\n\n"
+  puts o
+  exit -1
 end
 
 def monitors_do report, config, options, &block
@@ -146,14 +155,14 @@ def create_ticket zammad_client, title, text, ticket_prio=PRIO_NORMAL, ticket_ta
 	ticket
 end
 
-puts "Monitor v#{MONITOR_VERSION} - #{Time.now}"
+puts "Monitor v#{MONITOR_VERSION} - #{Time.now}",""
 
 # use environment from .env if any
 Dotenv.load
 config = MonitoringConfig.new
 sla = MonitoringSLA.new( config )
+options = get_options(config,sla)
 feeds = [MonitoringDTC.new( config ), MonitoringNCSC.new( config )]
-options = get_options config, sla
 
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
@@ -185,7 +194,7 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	a = sla.get_periodic_alerts
 	a.each do |notification|
 		if notification.config.create_ticket
-			ticket = create_ticket client, "Monitoring: #{notification.config.description}", notification.description
+			ticket = create_ticket client, "Monitoring: #{notification.config.description}", notification.description, PRIO_NORMAL, 'NOTIFICATION'
 		end
 	end
   feeds.each do |feed|
@@ -196,7 +205,6 @@ File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
       else
         prio = PRIO_NORMAL
       end
-
       ticket = create_ticket client, "Monitoring: #{vulnerability.title}", vulnerability.description, prio, feed.source
     end
   end
