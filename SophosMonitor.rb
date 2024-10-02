@@ -37,7 +37,7 @@ class ConnectivityIncident < SophosIncident
 end
 
 class SophosMonitor < AbstractMonitor
-	attr_reader :config, :all_alerts
+	attr_reader :config, :all_alerts, :tenants
 	TENANTS_CACHE = SOPHOS.downcase+"-tenants.yml"
 
 	def initialize( report, config, log  ) 
