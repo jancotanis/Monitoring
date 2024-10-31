@@ -7,7 +7,7 @@
 # 1.4.0	Tag TDC tickets in zammad with DTC
 # 1.4.1	Fix Sophos issue with missing apiHost attribute
 # 1.4.2	Fix Zabbix issue with missing zabbix_clock method
-# 1.4.3	List notificaitons, and add NCSC feed scanning
+# 1.4.3	List notifications and add NCSC feed scanning
 #
 MONITOR_VERSION = "1.4.3"
 
@@ -166,8 +166,8 @@ feeds = [MonitoringDTC.new( config ), MonitoringNCSC.new( config )]
 
 File.open( FileUtil.daily_file_name( "report.txt" ), "w") do |report|
 	client = ZammadAPI::Client.new(
-		url:			ENV["ZAMMAN_HOST"],
-		oauth2_token:	ENV["ZAMMAD_OAUTH_TOKEN"]
+		url:          ENV['ZAMMAD_HOST'] || ENV['ZAMMAN_HOST'],
+		oauth2_token: ENV["ZAMMAD_OAUTH_TOKEN"]
 	)
 	report_tenants( report, config, options ) if options[:tenants]
 
