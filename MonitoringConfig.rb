@@ -3,7 +3,7 @@ require_relative 'utils'
 
 MONITORING_CFG = "monitoring.cfg"
 
-ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :monitor_dtc, :create_ticket, :notifications, :reported_alerts, :endpoints ) do
+ConfigData  = Struct.new( :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup, :monitor_dtc, :create_ticket, :notifications, :backup_domain, :last_backup, :reported_alerts, :endpoints ) do
     def initialize(*)
         super
 		@touched = false
@@ -95,7 +95,6 @@ alias entries config
 			cfg.source << source unless cfg.source.include? source
 		end
 		# update config
-		save_config
 		@config
 	end
 	
