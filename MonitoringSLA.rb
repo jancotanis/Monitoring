@@ -76,13 +76,13 @@ class MonitoringSLA
 				puts "Notification added: #{n.to_s}"
 				@config.save_config
 			else
-				puts "- '#{interval}' is not a valid interval, please use #{CODES.join(', ')}"
+				puts "* '#{interval}' is not a valid interval, please use #{CODES.join(', ')}"
 			end
 		else
-			puts "- customer '#{customer}' not found in configuration"
+			puts "* customer '#{customer}' not found in configuration"
 		end
 	rescue ArgumentError # assume date parsing issue
-		puts "- '#{date}' is not a valid date"
+		puts "* '#{date}' is not a valid date"
 	end
 	def get_periodic_alerts
     result = []

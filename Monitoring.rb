@@ -69,12 +69,12 @@ def get_options config, sla
 	#	end
 		opts.on("-n [customer,task,interval[,date]]", "--notification [customer,task,interval[,date]]", Array, "Add customer notification of list them if no arguments given") do |a|
       if a
-        options[:customer]     = a[0]
-        options[:task]         = a[1]
-        options[:interval]     = a[2]
+        options[:customer]     = a[0].to_s.strip
+        options[:task]         = a[1].to_s.strip
+        options[:interval]     = a[2].to_s.strip
         options[:date]         = a[3]
         options[:notification] = a
-        sla.add_interval_notification a[0], a[1], a[2], a[3]
+        sla.add_interval_notification options[:customer], options[:task], options[:interval], options[:date]
       else
         sla.report
       end
