@@ -106,7 +106,6 @@ class SophosMonitor < AbstractMonitor
 	end
 
 	def load_tenants
-    puts "- loading spohos tenants"
     @tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 	end
 
