@@ -22,7 +22,7 @@ class ZabbixIncident < MonitoringIncident
 end
 
 class ZabbixMonitor < AbstractMonitor
-	attr_reader :config, :all_alerts
+	attr_reader :config, :all_alerts, :tenants
 
 	def initialize( report, config, log  ) 
 		client = Zabbix::ClientWrapper.new( ENV['ZABBIX_API_HOST'], ENV['ZABBIX_API_KEY'], log )
@@ -35,8 +35,8 @@ class ZabbixMonitor < AbstractMonitor
 		collect_data()
 		@tenants.each do |customer|
 			cfg = @config.by_description(customer.description)
-			cfg.endpoints = customer.endpoints.count
-			if cfg.monitor_connectivity
+      if cfg.monitor_connectivity
+        cfg.endpoints = customer.endpoints.count if customer.endpoints.count > 0
 				all_alerts[customer.id] = customer_alerts = CustomerAlerts.new( customer.description, customer.alerts )
 				customer_alerts.customer = customer
 				if ( customer.alerts.count > 0 )
