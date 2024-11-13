@@ -102,8 +102,8 @@ alias entries config
 		keys = [ "CloudAlly", "Skykick", "Sophos", "Veeam", "Integra365", "Zabbix" ]
 		report_file = "configuration.md"
 		File.open( report_file, "w") do |report|
-			report.puts "| Company | Ticket | Endpoints | Backup | DTC | #{keys.join( ' | ' )} |"
-			report.puts "|:--|:--:|:--:|:--:|:--:|#{':--: | ' * keys.count}"
+			report.puts "| Company | Notifications | Ticket | Endpoints | Backup | Monitoring | DTC | #{keys.join( ' | ' )} |"
+			report.puts "|:--|:--:|:--:|:--:|:--:|:--:|:--:|#{':--: | ' * keys.count}"
 			@config.each do |cfg|
 				puts cfg.description
 				v = {}
@@ -111,7 +111,7 @@ alias entries config
 					if cfg.source.include? key
 						sla = (cfg.sla.grep /#{key}/).first
 						if !sla || sla.empty?
-							sla = "*todo*"
+							sla = "x"
 						else
 							sla = sla.gsub( key + "-", "" )
 						end
@@ -122,11 +122,13 @@ alias entries config
 				end
 				s =  keys.map{|k| "#{v[k]}|"}.join
 				create_ticket = monitor_endpoints = monitor_backup = ""
-				create_ticket     = "on" if cfg.create_ticket
-				monitor_endpoints = "on" if cfg.monitor_endpoints
-				monitor_backup    = "on" if cfg.monitor_backup
-				monitor_dtc       = "on" if cfg.monitor_dtc
-				report.puts "|#{cfg.description}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{monitor_dtc}|#{s}"
+				create_ticket        = "on" if cfg.create_ticket
+				monitor_endpoints    = "on" if cfg.monitor_endpoints
+				monitor_backup       = "on" if cfg.monitor_backup
+				monitor_connectivity = "on" if cfg.monitor_connectivity
+				monitor_dtc          = "on" if cfg.monitor_dtc
+        notifications = cfg.notifications.count if cfg.notifications && cfg.notifications.count > 0
+				report.puts "|#{cfg.description}|#{notifications}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{monitor_connectivity}|#{monitor_dtc}|#{s}"
 			end
 			puts "- #{report_file} written"
 		end
