@@ -7,7 +7,6 @@ module Zabbix
   TenantData  = Struct.new( :id, :name, :status, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
       super
-      self.endpoints ||= {}
       self.alerts ||= []
     end
     
@@ -20,6 +19,13 @@ module Zabbix
         endpoints.each do |k,v|
           v.clear_alerts
         end
+      end
+    end
+    
+    def set_endpoints_loader(loader)
+      self[:endpoints] = nil
+      define_singleton_method(:endpoints) do
+        self[:endpoints] ||= loader.call
       end
     end
   end
@@ -76,26 +82,23 @@ module Zabbix
         data.each do |item|
           t = TenantData.new( item.groupid, item.name, nil, item.attributes )
           @tenants[ t.id ] = t
-          endpoints = endpoints( t )
-          endpoints ||= {}
-          t.endpoints = endpoints
+          # lazy loading
+          t.set_endpoints_loader( ->{ endpoints( t ) } )
         end
       end
       @tenants.values
     end
 
     def endpoints( customer )
-      @endpoints={}
-
-
+      endp = {}
+      
       data = @api.hosts({ "groupids":[customer.id], "selectInventory":"extend" })
       #:id, :type, :hostname, :group, :status, :raw_data, :alerts, :incident_alerts 
       data.each do |item|
-        ep = EndpointData.new( item.hostid, "zabbix item", item.name, customer.id, item.status, item.attributes )
-        @endpoints[ ep.id ] = ep
+        endp[ item.hostid ] = EndpointData.new( item.hostid, "zabbix item", item.name, customer.id, item.status, item.attributes )
       end
 
-      @endpoints
+      endp
     end
 
     def alerts customer=nil
