@@ -3,8 +3,6 @@ require 'sophos_central_api'
 require_relative 'utils'
 
 module Sophos
-  CACHE_DIR = "./data/"
-  CACHE_EXT = "-data.yml"	# billing type - term, trial, usage
 
   TenantData  = Struct.new( :id, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts ) do
     def initialize(*)
@@ -31,6 +29,13 @@ module Sophos
         endpoints.each do |k,v|
           v.clear_alerts
         end
+      end
+    end
+    def set_endpoints_loader(loader)
+      self[:endpoints] = nil
+      define_singleton_method(:endpoints) do
+        self[:endpoints] ||= loader.call
+        self[:endpoints]
       end
     end
   end
@@ -76,13 +81,7 @@ module Sophos
         data.each do |item|
           t = TenantData.new( item.id, item.showAs, item.apiHost, item.status, item.billingType, item.attributes )
           @tenants[ t.id ] = t
-          endpoints = YAML.load_file( cache_file( t ) ) if File.file?( cache_file( t ) )
-          if !endpoints || endpoints.count.zero?
-            endpoints = self.endpoints( t ) || {}
-            t.endpoints = endpoints
-            update_cache( t ) 
-          end
-          t.endpoints = endpoints
+          t.set_endpoints_loader( ->{ endpoints( t ) } )
         end
       end
       @tenants.values
@@ -94,17 +93,14 @@ module Sophos
     end
 
     def endpoints( customer )
-      @endpoints={}
-
+      endp={}
       data = @api.client(customer).endpoints
-
       data.each do |item|
         status = item.health.overall if item.attributes.key? 'health'
         group_name = item.group.name if item.attributes.key? 'group'
-        ep = EndpointData.new( item.id, item.type, item.hostname, group_name, status, item.attributes )
-        @endpoints[ ep.id ] = ep
+        endp[ item.id ] = EndpointData.new( item.id, item.type, item.hostname, group_name, status, item.attributes )
       end
-      @endpoints
+      endp
     rescue => e
       @logger.error e if @logger
       @logger.error e.response.to_json if @logger
@@ -112,7 +108,7 @@ module Sophos
 
     def alerts( customer )
       @alerts={}
-
+      customer.clear_endpoint_alerts()
       data = @api.client(customer).alerts
       data.each do |item|
         a = AlertData.new( item.id, item.raisedAt, item.description, item.severity, item.category, item.product, item.managedAgent.id, item.managedAgent.type, item.attributes )
@@ -131,22 +127,6 @@ module Sophos
         @alerts[ a.id ] = a
       end
       @alerts
-    end
-  private
-    def create_cache_dir
-      if !Dir.exists?(CACHE_DIR)
-        puts "Creating #{CACHE_DIR}..."
-        FileUtils::mkdir_p CACHE_DIR
-      end
-    end
-    def cache_file( tenant )
-      "#{CACHE_DIR}#{tenant.id}#{CACHE_EXT}"
-    end
-    def update_cache( tenant )
-      create_cache_dir
-      File.open( cache_file( tenant ), "w") do |f|
-        f.puts( YAML.dump( tenant.endpoints ) )
-      end
     end
   end
 end

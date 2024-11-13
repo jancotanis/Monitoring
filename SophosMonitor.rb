@@ -38,9 +38,8 @@ end
 
 class SophosMonitor < AbstractMonitor
 	attr_reader :config, :all_alerts, :tenants
-	TENANTS_CACHE = SOPHOS.downcase+"-tenants.yml"
 
-	def initialize( report, config, log  ) 
+	def initialize( report, config, log ) 
 		client = Sophos::ClientWrapper.new( ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log )
 		super( SOPHOS, client, report, config, log )
 		@products = {}
@@ -52,8 +51,8 @@ class SophosMonitor < AbstractMonitor
 		collect_data()
 		@tenants.each do |customer|
 			cfg = @config.by_description(customer.description)
-			cfg.endpoints = customer.endpoints.count
 			if cfg.monitoring?
+        cfg.endpoints = customer.endpoints.count if customer.endpoints.count > 0
 				all_alerts[customer.id] = customer_alerts = CustomerAlerts.new( customer.description, customer.alerts )
 				customer_alerts.customer = customer
 				if ( customer.alerts.count > 0 )
@@ -76,7 +75,7 @@ class SophosMonitor < AbstractMonitor
 				end
 			end
 		end
-		save_tenants
+
 		FileUtil.write_file( FileUtil.daily_file_name(source.downcase+'-alerts.json'), all_alerts.to_json )
 		all_alerts
 	end
@@ -91,7 +90,7 @@ class SophosMonitor < AbstractMonitor
 		connection_errors = 0
 		endpoints = handle_unique_alerts( customer ) do |ep, a|
 			if CONNECTIVITY.eql?(a.category)
-				connection_errors  += 1
+				connection_errors += 1
 				customer.add_incident( a.endpoint_id, a, ConnectivityIncident )
 			end
 		end
@@ -107,17 +106,8 @@ class SophosMonitor < AbstractMonitor
 	end
 
 	def load_tenants
-		if File.file?( TENANTS_CACHE )
-			puts "- loading tenants cache"
-			@tenants = YAML.load_file( TENANTS_CACHE ) 
-		else
-			puts "- loading spohos tenants"
-			@tenants = @client.tenants.sort_by{ |t| t.description.upcase }
-			save_tenants
-		end
-	end
-	def save_tenants
-		FileUtil.write_file( TENANTS_CACHE, YAML.dump( @tenants ) )
+    puts "- loading spohos tenants"
+    @tenants = @client.tenants.sort_by{ |t| t.description.upcase }
 	end
 
 	def report_endpoints
@@ -134,8 +124,6 @@ class SophosMonitor < AbstractMonitor
 private
 	def collect_data
 		@tenants.each do |customer|
-			customer.clear_endpoint_alerts(  )
-
 			cfg = @config.by_description(customer.description)
 			if cfg.monitoring?
 				alerts = @client.alerts( customer )
