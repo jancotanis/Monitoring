@@ -84,7 +84,7 @@ class FileUtil
   #   FileUtil.daily_file_name("report.txt") # => "report-2024-11-07.txt"
   def self.daily_file_name(file_name)
     ext = File.extname(file_name)
-    file_name.gsub(ext,"-#{timestamp}#{ext}")
+    file_name.gsub(ext, "-#{timestamp}#{ext}")
   end
 
   # Generates a daily log file name based on the class name of an object.
