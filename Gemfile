@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 source 'https://rubygems.org'
 
-gem "dotenv"
+gem 'dotenv'
 gem 'optparse'
 gem 'faraday'
 
@@ -13,4 +15,5 @@ gem 'cloudally'
 gem 'integra365'
 gem 'skykick'
 gem 'veeam'
+gem 'hudu'
 gem 'zabbix_api_gem'
