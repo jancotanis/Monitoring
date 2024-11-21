@@ -3,7 +3,7 @@
 #
 # 1.0	Initial version of monitoring coas saas vendor portals
 #
-HSYNC_VERSION = '1.0.0'
+HSYNC_VERSION = '1.0.1'
 
 require 'dotenv/load'
 require 'optparse'
@@ -195,31 +195,12 @@ class SyncServices
 
   def sync
     # get all assets/services for the services layout
-    update_one = true
-
     @matcher.matches.each do |hudu, portal|
       # for all portal matches, do we have a services layout
       if (asset = @assets_by_id[hudu.id]) # assignement
-        asset_layout = AssetLayout.create(asset)
-        if update_services(asset_layout.fields, portal) || @refresh
-          puts "Updating #{hudu.name}"
-          asset.fields = asset_layout.custom_fields
-          @client.update_company_asset(asset)
-          create_dash_from_asset(asset)
-        end
+        update_layout(hudu, portal, asset)
       else
-        # no asset asigned so create one
-        asset_layout = AssetLayout.create(@layout, true)
-        if update_one
-          puts "Creating #{hudu.name}"
-
-          update_services(asset_layout.fields, portal)
-          puts "+ creating layout for #{@layout.name}..."
-
-          asset = @client.create_company_asset(hudu.id, @layout, asset_layout.custom_fields)
-          create_dash_from_asset(asset)
-          ## update_one = false
-        end
+        create_layout(hudu, portal)
       end
     end
   end
@@ -233,6 +214,27 @@ class SyncServices
 
 
 private
+  def update_layout(hudu, portal, asset)
+    asset_layout = AssetLayout.create(asset)
+    if update_services(asset_layout.fields, portal) || @refresh
+      puts "Updating #{hudu.name}"
+      asset.fields = asset_layout.custom_fields
+      @client.update_company_asset(asset)
+      create_dash_from_asset(asset)
+    end
+  end
+  
+  def create_layout(hudu, portal)
+    # no asset asigned so create one
+    asset_layout = AssetLayout.create(@layout, true)
+    puts "Creating #{hudu.name}"
+
+    update_services(asset_layout.fields, portal)
+    puts "+ creating layout for #{@layout.name}..."
+
+    asset = @client.create_company_asset(hudu.id, @layout, asset_layout.custom_fields)
+    create_dash_from_asset(asset)
+  end
 
   def create_dash_from_asset(asset)
     layout = AssetLayout.create(asset)

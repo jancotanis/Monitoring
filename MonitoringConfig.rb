@@ -108,40 +108,44 @@ class MonitoringConfig
   def report
     keys = ['CloudAlly', 'Skykick', 'Sophos', 'Veeam', 'Integra365', 'Zabbix']
     report_file = 'configuration.md'
+
     File.open(report_file, 'w') do |report|
       report.puts "| Company | Notifications | Ticket | Endpoints | Backup | Monitoring | DTC | #{keys.join(' | ')} |"
       report.puts "|:--|:--:|:--:|:--:|:--:|:--:|:--:|#{':--: | ' * keys.count}"
+
       @config.each do |cfg|
         puts cfg.description
-        v = {}
-        keys.each do |key|
-          if cfg.source.include?(key)
-            sla = (cfg.sla.grep(/#{key}/)).first
-            if !sla || sla.empty?
-              sla = 'x'
-            else
-              sla = sla.gsub(key + '-', '')
-            end
-            v[key] = sla
-          else
-            v[key] = ''
-          end
-        end
-        s = keys.map { |k| "#{v[k]}|" }.join
-        create_ticket = monitor_endpoints = monitor_backup = ''
+        #v = {}
+        #keys.each do |key|
+        #  v[key] = sla_documentation(cfg,key)
+        #end
+        services = keys.map { |key| "#{sla_documentation(cfg,key)}|" }.join
+        create_ticket = monitor_endpoints = monitor_backup = monitor_connectivity = monitor_dtc = ''
         create_ticket        = 'on' if cfg.create_ticket
         monitor_endpoints    = 'on' if cfg.monitor_endpoints
         monitor_backup       = 'on' if cfg.monitor_backup
         monitor_connectivity = 'on' if cfg.monitor_connectivity
         monitor_dtc          = 'on' if cfg.monitor_dtc
         notifications = cfg.notifications.count if cfg.notifications&.count.positive?
-        report.puts "|#{cfg.description}|#{notifications}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{monitor_connectivity}|#{monitor_dtc}|#{s}"
+        report.puts "|#{cfg.description}|#{notifications}|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{monitor_connectivity}|#{monitor_dtc}|#{services}"
       end
       puts "- #{report_file} written"
     end
   end
 
 private
+  def sla_documentation(cfg, key)
+    sla = ''
+    if cfg.source.include?(key)
+      sla = (cfg.sla.grep(/#{key}/)).first
+      if !sla || sla.empty?
+        sla = 'x'
+      else
+        sla = sla.gsub(key + '-', '')
+      end
+    end
+    sla
+  end
 
   def first_result(result)
     result.first&.touch
