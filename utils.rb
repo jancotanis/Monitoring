@@ -37,7 +37,7 @@ class Struct
     if raw_data
       item = raw_data
       name.split('.').each do |o|
-        item = item[o] if item
+        item = item[o] if item&.is_a?(Hash)
       end
       item.to_s
     else
