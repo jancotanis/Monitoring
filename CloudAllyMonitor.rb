@@ -49,7 +49,7 @@ class CloudAllyMonitor < AbstractMonitor
           # walk through all endpoint elerts
           customer.endpoints.each_value do |ep|
             if ep.alerts.count.positive?
-              @report.puts "- Endpount #{ep}"
+              @report.puts "- Endpoint #{ep}"
               ep.alerts.each do |a|
                 # group alerts by customer
                 unless a.severity.eql? 'Resolved'
