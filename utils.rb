@@ -37,7 +37,7 @@ class Struct
     if raw_data
       item = raw_data
       name.split('.').each do |o|
-        item = item[o] if item&.is_a?(Hash)
+        item = item[o] if item&.is_a?(Hash) || item&.is_a?(WrAPI::Request::Entity)
       end
       item.to_s
     else
