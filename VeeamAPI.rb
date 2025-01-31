@@ -29,7 +29,7 @@ module Veeam
 
   class EndpointData < MonitoringEndpoint; end
 
-  AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data) do
+  AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :company) do
     def create_endpoint
       Veeam::EndpointData.new(endpoint_id, property('object.type'), property('object.computerName') + '/' + property('object.objectName'))
     end

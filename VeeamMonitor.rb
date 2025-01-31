@@ -95,6 +95,7 @@ private
     ca = @alerts.values.select { |a| tenant.id.eql?(a.property('object.organizationUid')) }
     result = {}
     ca.each do |a|
+      a.company = tenant.description
       result[a.id] = a
     end
     result
