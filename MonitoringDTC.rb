@@ -24,13 +24,13 @@ class MonitoringDTC < MonitoringFeed
   #   config = { alert_threshold: 'high', log_level: 'info' }
   #   feed = MonitoringDTC.new(config)
   def initialize(config)
-    super(config, 'https://www.digitaltrustcenter.nl/rss.xml', 'DTC')
+    super(config, 'https://www.digitaltrustcenter.nl/rss-cyberalerts.xml', 'DTC')
   end
 
   # Determines if an advisory is high priority based on its title.
   #
   # An advisory is considered high priority if its title contains the terms
-  # "KRITIEK" (Critical) or "ERNSTIG" (Severe), which are case-insensitive.
+  # "KRITIEK" (Critical) or "ERNSTIG" (Severe), "ACTIEF MISBRUIK"  which are case-insensitive.
   #
   # @param item [RSS::Rss::Channel::Item] The RSS item to evaluate.
   # @return [Boolean] `true` if the advisory is high priority, `false` otherwise.
@@ -42,6 +42,6 @@ class MonitoringDTC < MonitoringFeed
   #   item.title = "Minder ernstige kwetsbaarheid in webapplicatie"
   #   feed.high_priority?(item) # => false
   def high_priority?(item)
-    ['KRITIEK', 'ERNSTIG'].any? { |term| item.title.upcase.include? term }
+    ['KRITIEK', 'ERNSTIG', 'ACTIEF MISBRUIK'].any? { |term| item.title.upcase.include? term }
   end
 end

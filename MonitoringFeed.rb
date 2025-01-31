@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-
 require 'yaml'
 require 'rss'
 require 'open-uri'
@@ -95,15 +94,16 @@ class MonitoringFeed
     # Identify new vulnerabilities
     vulnerabilities = []
     items.each_value do |item|
-      guid = item.link
-      unless @alerts.include?(guid)
-        @alerts << guid
-        vulnerabilities << Vulnerability.new(item, @companies, high_priority?(item)) if item.pubDate > since
+      if report_item?(item)
+        guid = item.link
+        unless @alerts.include?(guid)
+          @alerts << guid
+          vulnerabilities << Vulnerability.new(item, @companies, high_priority?(item)) if item.pubDate > since
+        end
       end
     end
 
-    # Update the cache
-    FileUtil.write_file(cache_name(), YAML.dump(@alerts))
+    update_cache
     vulnerabilities
   end
 
@@ -114,8 +114,24 @@ class MonitoringFeed
   #
   # @param item [RSS::Rss::Channel::Item] The RSS item to evaluate.
   # @return [Boolean] `true` if the item is high priority, `false` otherwise.
-  def high_priority?(item)
+  def high_priority?(_item)
     false
+  end
+
+  # Determines if a feed item needs to be reported or ignored
+  #
+  # This method is meant to be overridden in subclasses to provide specific
+  # criteria for determining suppression of items.
+  #
+  # @param item [RSS::Rss::Channel::Item] The RSS item to evaluate.
+  # @return [Boolean] `true` the item will be reported.
+  def report_item?(_item)
+    true
+  end
+
+  def update_cache
+    # Update the cache
+    FileUtil.write_file(cache_name(), YAML.dump(@alerts))
   end
 
   private
