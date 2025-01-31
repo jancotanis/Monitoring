@@ -21,7 +21,7 @@ describe '#1 config' do
       company = 'Test Company'
       assert_nil @cfg.by_description(company), '1.2 load []; no test company'
       @cfg = MonitoringConfig.new
-      @cfg.load_config("Test", [TenantMock.new('0', company, [], false)])
+      @cfg.load_config('Test', [TenantMock.new('0', company, [], false)])
       assert value(@cfg.by_description(company).description).must_equal company, '1.1.3 load []; adding test comp'
       @cfg.delete_entry @cfg.by_description(company)
       assert_nil @cfg.by_description(company), '1.4 cfg delete entry'
@@ -40,28 +40,28 @@ end
 
 describe '#2 utils' do
   it '#2.1.1 FileUtils' do
-    assert value(FileUtil.daily_file_name('error.log')).must_equal 'error-'+FileUtil.timestamp+'.log', "2.1.1 daily name"
+    assert value(FileUtil.daily_file_name('error.log')).must_equal 'error-' + FileUtil.timestamp + '.log', '2.1.1 daily name'
   end
   it '#2.1.2 FileUtils' do
-    assert value(FileUtil.daily_module_name("")).must_equal 'string-'+FileUtil.timestamp+'.log', "2.1.2 daily module name"
+    assert value(FileUtil.daily_module_name('')).must_equal 'string-' + FileUtil.timestamp + '.log', '2.1.2 daily module name'
   end
   it '#2.2 Struct' do
     TestStruct = Struct.new(:raw_data)
     string = '{"id":"id-0", "desc":{"someKey":"someValue","anotherKey":"value"},"main_item":{"stats":{"a":8,"b":12,"c":10}}}'
     t = TestStruct.new(JSON.parse(string))
-    assert value(t.property("key")).must_equal "", "2.2.1 property not exist"
-    assert value(t.property("id")).must_equal 'id-0', "2.2.1 property "
-    assert value(t.property("desc.someKey")).must_equal 'someValue', "2.2.1 nested property"
-    assert value(t.property("main_item.stats.a")).must_equal "8", "2.2.1 nested property"
+    assert value(t.property('key')).must_equal '', '2.2.1 property not exist'
+    assert value(t.property('id')).must_equal 'id-0', '2.2.1 property '
+    assert value(t.property('desc.someKey')).must_equal 'someValue', '2.2.1 nested property'
+    assert value(t.property('main_item.stats.a')).must_equal '8', '2.2.1 nested property'
   end
 end
 
 describe '#3 SLA periods' do
   it '#3.1 weekly' do
     assert !WEEKLY.due?(Date.today)
-    assert !WEEKLY.due?(Date.today-1)
-    assert WEEKLY.due?(Date.today-7)
-    assert WEEKLY.due?(Date.today-100)
+    assert !WEEKLY.due?(Date.today - 1)
+    assert WEEKLY.due?(Date.today - 7)
+    assert WEEKLY.due?(Date.today - 100)
   end
   it '#3.1 monthly' do
     assert !MONTHLY.due?(Date.today)

@@ -58,7 +58,6 @@ def report(company)
   end
 end
 
-
 # Filters tenants by company name.
 #
 # @param mon [Object] The monitor object containing tenants.
@@ -76,7 +75,7 @@ puts "Portal Devices 1.0 - Report number of devices from Sophos and Zabbix porta
 config = MonitoringConfig.new
 
 options = parse_options
-log = File.open('portal_devices.log','w')
+log = File.open('portal_devices.log', 'w')
 sm = SophosMonitor.new(log, config, options[:log])
 zm = ZabbixMonitor.new(log, config, options[:log])
 company = options[:company].downcase

@@ -81,10 +81,13 @@ module Zabbix
     def endpoints(customer)
       endp = {}
 
-      data = @api.hosts({ "groupids": [customer.id], 'selectInventory': 'extend' })
+#      data = @api.hosts({ "groupids": [customer.id], 'selectInventory': 'extend' })
+      data = @api.hosts({ "groupids": [customer.id], 'output': 'extend', 'selectInventory': 'extend' })
       # :id, :type, :hostname, :group, :status, :raw_data, :alerts, :incident_alerts
       data.each do |item|
-        endp[item.hostid] = EndpointData.new(item.hostid, 'zabbix item', item.name, customer.id, item.status, item.attributes)
+        e = endp[item.hostid] = EndpointData.new(item.hostid, 'zabbix item', item.name, customer.id, item.status, item.attributes)
+        type = e.property('inventory.type')
+        e.type = type unless type.to_s.empty?
       end
       endp
     end
@@ -95,7 +98,7 @@ module Zabbix
       query = nil
       query = { 'groupids': [customer.id] } if customer
       data = @api.problems(query)
-      # :id, :created, :description, :severity_code, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :event
+      # :id,:created,:description,:severity_code,:category,:product,:endpoint_id,:endpoint_type,:raw_data,:event
       data.each do |item|
         a = AlertData.new(
           item.eventid, @api.zabbix_clock(item.clock), item.name.strip, item.severity, item.object, 'zabbix',

@@ -16,7 +16,7 @@ class IntegraBackupIncident < MonitoringIncident
   end
 
   def endpoint_to_s
-    "#{alert.property( "jobName" )}"
+    "#{alert.property('jobName')}"
   end
 end
 
@@ -58,7 +58,7 @@ class Integra365Monitor < AbstractMonitor
       end
     end
 
-    FileUtil.write_file(FileUtil.daily_file_name(source.downcase+'-alerts.json'), all_alerts.to_json)
+    FileUtil.write_file(FileUtil.daily_file_name(source.downcase + '-alerts.json'), all_alerts.to_json)
     all_alerts
   end
 
