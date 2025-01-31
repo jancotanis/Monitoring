@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'yaml'
 require 'rss'
 require 'open-uri'
@@ -26,15 +27,18 @@ class CVEAlert
     fetch_data
   end
 
-private
+  private
 
   # Fetches and processes the CVE data from the MITRE API.
   def fetch_data
     url = json_url
 puts url
-    response = request_data(url)
-    @data = parse_json(response)
+    @data = parse_json(request_data(url))
     @score = extract_highest_cvss_score(@data)
+  rescue OpenURI::HTTPError => e
+    warn "Failed to fetch CVE data: #{e.message}"
+    # assume 404, this means CVE id has been reserved and information about the vulnerability is not publicly disclosed
+    @score = nil
   end
 
   # Constructs the API URL for fetching CVE data.
@@ -52,9 +56,6 @@ puts url
     URI.open(url, 'User-Agent' => "Ruby/#{RUBY_VERSION}",
                   'From' => 'info@monitoring.ncsc',
                   'Referer' => url).read
-  rescue OpenURI::HTTPError => e
-    warn "Failed to fetch CVE data: #{e.message}"
-    '{}'
   end
 
   # Parses JSON data safely.
@@ -74,10 +75,11 @@ puts url
   # @return [Float] The highest CVSS score found, or -1 if unavailable
   def extract_highest_cvss_score(data)
     return -1 unless data
-    
+
     data.dig('containers', 'cna', 'metrics')&.flat_map do |metric|
-      metric.values.select { |v| v.is_a?(Hash) && v.key?('baseScore') }
-                   .map { |v| v['baseScore'] }
+      metric.values
+            .select { |v| v.is_a?(Hash) && v.key?('baseScore') }
+            .map { |v| v['baseScore'] }
     end&.compact&.max || -1
   end
 end
@@ -102,7 +104,7 @@ class CVEScoreCache
   # @return [Float] The CVSS score
   def cve_score(cve_id)
     raise ArgumentError, 'No CVE ID given' if cve_id.nil? || cve_id.strip.empty?
-    
+
     cve_id = cve_id.upcase
     @cve_scores[cve_id] ||= fetch_cve_score(cve_id)
   end
@@ -110,12 +112,12 @@ class CVEScoreCache
   # Saves the updated CVE scores to the YAML file.
   def save
     return unless @updated
-    
+
     File.write(SCORE_FILE, @cve_scores.to_yaml)
     @updated = false
   end
 
-private
+  private
 
   # Loads cached CVE scores from a YAML file.
   def load_scores
@@ -138,7 +140,6 @@ private
   end
 end
 
-
 # NCSCTextAdvisory fetches and processes text-based security advisories
 # from the Dutch National Cyber Security Centre (NCSC).
 #
@@ -160,7 +161,7 @@ class NCSCTextAdvisory
   end
 
 private
-  
+
   # Fetches and processes the advisory text from the NCSC website.
   def load_text_advisory
     url = text_url
@@ -189,7 +190,7 @@ puts url
   # @return [Array<String>] List of CVE IDs
   def parse_cve_ids(text)
     return [] unless text
-#      text.scan(/CVE-\d{4}-\d{4,5}/).each_with_object({}) { |cve_id, hash| hash[cve_id] = nil }.keys 
+
     text.scan(/CVE-\d{4}-\d{4,5}/).uniq
   end
 
@@ -199,6 +200,7 @@ puts url
   # @return [String] The cleaned advisory content
   def strip_pgp(text)
     return '' if text.nil?
+
     match = text.match(/-----BEGIN PGP SIGNED MESSAGE-----(.*?)-----BEGIN PGP SIGNATURE-----/m)
     match ? match[1].strip : text
   end
@@ -220,6 +222,7 @@ end
 #
 # @see MonitoringFeed
 class MonitoringNCSC < MonitoringFeed
+
   # Initializes a new `MonitoringNCSC` instance.
   #
   # This sets up the monitoring feed for NCSC advisories, using the provided configuration.
@@ -285,7 +288,7 @@ class MonitoringNCSC < MonitoringFeed
     score = -1
     ncsc.cve.each do |cve_id|
       cve_score = @cache.cve_score(cve_id)
-      score = cve_score if cve_score > score
+      score = cve_score if cve_score && (cve_score > score)
     end
 
     # Return true if the highest score is 9 or above

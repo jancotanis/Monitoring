@@ -99,17 +99,15 @@ class Matcher
     nomatch = []
     hudu.each do |company|
       mon = monitoring.by_description(company.name)
-      # retry partial match
-      unless mon
-        # skip test company
-        unless company.name.downcase.eql?('test')
-          found = monitoring.entries.select { |cfg| company.name.downcase[cfg.description.downcase] || cfg.description.downcase[company.name.downcase] }
-          if found.count.positive?
-            mon = found.first
-            puts " Partial match found #{company.name} / #{mon.description}" if mon
-            puts "* Duplicate match for #{mon.description}" if mon.touched?
-            mon.touch
-          end
+      name = company.name.downcase
+      # retry partial match ans skip 'test' company
+      if !mon && !'test'.eql?(name)
+        found = monitoring.entries.select { |_cfg| name[_cfg.description.downcase] || _cfg.description.downcase[name] }
+        if found.count.positive?
+          mon = found.first
+          puts " Partial match found #{company.name} / #{mon.description}" if mon
+          puts "* Duplicate match for #{mon.description}" if mon.touched?
+          mon.touch
         end
       end
 
@@ -212,8 +210,8 @@ class SyncServices
     end
   end
 
-
 private
+
   def update_layout(hudu, portal, asset)
     asset_layout = AssetLayout.create(asset)
     if update_services(asset_layout.fields, portal) || @refresh
@@ -331,13 +329,12 @@ private
   def onoff(value)
     value ? 'on' : 'off'
   end
-
 end
 
 def get_options(_config)
   options = {}
   o = OptionParser.new do |opts|
-    opts.banner = "Usage: HuduSync.rb [options]"
+    opts.banner = 'Usage: HuduSync.rb [options]'
 
     opts.on('-l', '--log', 'Log http requests') do |_arg|
       puts '- API logging turned on'

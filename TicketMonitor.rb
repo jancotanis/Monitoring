@@ -83,43 +83,8 @@ class TicketMonitor < AbstractMonitor
     # 1) Check all tickets in monitoring group; assume 100 is max?
     tickets = @client.ticket.search(query: "state.name:new AND group.name:#{@monitoring_group}")
     tickets.page(1, 100) do |ticket|
-      # check if these match a TicketCheck
-      match = false
-      @checkers.each do |check|
-        # if unknown - move to inbox, add message not sure what to do with this
-        # if succes/failure -> find config user
-        #  update last date check
-        #  if failure - move to inbox to action
-        if check.matches?(ticket)
-          match = true
-          result = check.test(ticket)
-          if result == TicketCheck::UNKNOWN
-            @report.puts "* Unknown if failure/success: #{ticket.number} - #{ticket.title} - move to inbox"
-          else
-            @report.puts "  ticket: #{ticket.number} matches #{check.description} - #{result} - #{ticket.title}"
-            ## find backup SLA
-            if (config = config_by_mail(ticket.created_by)) && config.monitor_backup
-
-              ## update watchdog for last found message
-              config.last_backup = DateTime.parse ticket.created_at
-puts "Domain found for '#{config.description}', last backup #{config.last_backup}"
-              # process succeeded/failed and move/close message
-              if result == TicketCheck::FAILED
-                ## move ticket to inbox to resolve
-                move_to_inbox(ticket, 'Backup failed, move ticket to inbox')
-                match = true
-              elsif result == TicketCheck::SUCCEEDED
-                close_ticket(ticket)
-                match = true
-              end
-            else
-              @report.puts "* Domain not found for '#{ticket.created_by}' or no monitor_backup SLA; ticket ignored"
-            end
-          end
-        end
-      end
-      # it seems not an SLA ticket
-      move_to_inbox(ticket, '* TicketMonitor no match found for subject , moved to inbox') unless match
+      # Unknown ticket type so move to inbox unless processed
+      move_to_inbox(ticket, '* TicketMonitor no match found for subject, moved to inbox') unless process_ticket(ticket)
     end
     run_watchdog
   end
@@ -140,6 +105,42 @@ puts "Didn't get any notifications for #{cfg.description} since #{cfg.last_backu
   end
 
 private
+
+  def process_ticket(ticket)
+    match = false
+    @checkers.each do |check|
+      # if unknown - move to inbox, add message not sure what to do with this
+      # if succes/failure -> find config user
+      #  update last date check
+      #  if failure - move to inbox to action
+      if check.matches?(ticket)
+        match = true
+        result = check.test(ticket)
+        if result == TicketCheck::UNKNOWN
+          @report.puts "* Unknown if failure/success: #{ticket.number} - #{ticket.title} - move to inbox"
+        else
+          @report.puts "  ticket: #{ticket.number} matches #{check.description} - #{result} - #{ticket.title}"
+          ## find backup SLA
+          if (config = config_by_mail(ticket.created_by)) && config.monitor_backup
+            ## update watchdog for last found message
+            config.last_backup = DateTime.parse(ticket.created_at)
+puts "Domain found for '#{config.description}', last backup #{config.last_backup}"
+            # process succeeded/failed and move/close message
+            if result == TicketCheck::FAILED
+              ## move ticket to inbox to resolve
+              move_to_inbox(ticket, 'Backup failed, move ticket to inbox')
+              match = true
+            elsif result == TicketCheck::SUCCEEDED
+              close_ticket(ticket)
+              match = true
+            end
+          else
+            @report.puts "* Domain not found for '#{ticket.created_by}' or no monitor_backup SLA; ticket ignored"
+          end
+        end
+      end
+    end
+  end
 
   def move_to_inbox(ticket, message)
     @report.puts "#{message} - ticket number #{ticket.number}"
@@ -188,6 +189,10 @@ private
     @monitoring_group = ENV['ZAMMAD_GROUP'] || 'Monitoring'
     raise ConfigError, "Monitoring and Inbox group cannot be the same'#{@monitoring_group}'" if @monitoring_group.eql? @inbox_group
 
+    group_ids
+  end
+  
+  def group_ids
     groups = @client.group.all
     groups.each do |group|
       if @monitoring_group.eql? group.name
