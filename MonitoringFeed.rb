@@ -94,9 +94,9 @@ class MonitoringFeed
     # Identify new vulnerabilities
     vulnerabilities = []
     items.each_value do |item|
-      if report_item?(item)
-        guid = item.link
-        unless @alerts.include?(guid)
+      guid = item.link
+      unless @alerts.include?(guid)
+        if report_item?(item)
           @alerts << guid
           vulnerabilities << Vulnerability.new(item, @companies, high_priority?(item)) if item.pubDate > since
         end
