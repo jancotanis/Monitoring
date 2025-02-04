@@ -53,9 +53,9 @@ puts url
   # @param url [String] The API URL
   # @return [String] The raw JSON response
   def request_data(url)
-    URI.open(url, 'User-Agent' => "Ruby/#{RUBY_VERSION}",
-                  'From' => 'info@monitoring.ncsc',
-                  'Referer' => url).read
+    URI.parse(url).open('User-Agent' => "Ruby/#{RUBY_VERSION}",
+                        'From' => 'info@monitoring.ncsc',
+                        'Referer' => url).read
   end
 
   # Parses JSON data safely.
@@ -176,9 +176,9 @@ puts url
   # @param url [String] The advisory URL
   # @return [String] The raw advisory text
   def fetch_data(url)
-    URI.open(url, 'User-Agent' => "Ruby/#{RUBY_VERSION}",
-                  'From' => 'info@monitoring.ncsc',
-                  'Referer' => url).read
+    URI.parse(url).open('User-Agent' => "Ruby/#{RUBY_VERSION}",
+                        'From' => 'info@monitoring.ncsc',
+                        'Referer' => url).read
   rescue OpenURI::HTTPError => e
     warn "Failed to fetch advisory: #{e.message}"
     ''
