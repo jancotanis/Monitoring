@@ -102,7 +102,7 @@ class Matcher
       name = company.name.downcase
       # retry partial match ans skip 'test' company
       if !mon && !'test'.eql?(name)
-        found = monitoring.entries.select { |_cfg| name[_cfg.description.downcase] || _cfg.description.downcase[name] }
+        found = monitoring.entries.select { |cfg| name[cfg.description.downcase] || cfg.description.downcase[name] }
         if found.count.positive?
           mon = found.first
           puts " Partial match found #{company.name} / #{mon.description}" if mon
