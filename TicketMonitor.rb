@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'dotenv'
-require 'zammad_api'
 
+require_relative 'Ticketer'
 require_relative 'utils'
 require_relative 'MonitoringConfig'
 require_relative 'MonitoringSLA'

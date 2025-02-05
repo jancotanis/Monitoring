@@ -7,6 +7,7 @@ class Ticketer
   PRIO_LOW    = '1 low'
   PRIO_NORMAL = '2 normal'
   PRIO_HIGH   = '3 high'
+  attr_reader :client
 
   # Initializes a new Ticketer instance.
   #
