@@ -6,6 +6,7 @@ require 'open-uri'
 require 'json'
 require_relative 'utils'
 require_relative 'MonitoringFeed'
+require_relative 'persistent_cache'
 
 # class CVEAlert retrieves CVE details from the MITRE CVE API
 # and extracts the highest CVSS base score.
@@ -84,61 +85,6 @@ puts url
   end
 end
 
-# CVEScoreCache manages a local cache of CVE scores to minimize API calls.
-#
-# Example usage:
-#   cache = CVECache.new
-#   score = cache.cve_score("CVE-2024-12345")
-#   cache.save
-class CVEScoreCache
-  SCORE_FILE = 'cve_scores.yml'
-
-  def initialize
-    @updated = false
-    load_scores
-  end
-
-  # Retrieves the CVSS score for a given CVE ID, fetching from API if necessary.
-  #
-  # @param cve_id [String] The CVE identifier
-  # @return [Float] The CVSS score
-  def cve_score(cve_id)
-    raise ArgumentError, 'No CVE ID given' if cve_id.nil? || cve_id.strip.empty?
-
-    cve_id = cve_id.upcase
-    @cve_scores[cve_id] ||= fetch_cve_score(cve_id)
-  end
-
-  # Saves the updated CVE scores to the YAML file.
-  def save
-    return unless @updated
-
-    File.write(SCORE_FILE, @cve_scores.to_yaml)
-    @updated = false
-  end
-
-  private
-
-  # Loads cached CVE scores from a YAML file.
-  def load_scores
-    @updated = false
-    @cve_scores = File.exist?(SCORE_FILE) ? YAML.load_file(SCORE_FILE) || {} : {}
-  rescue StandardError => e
-    warn "Error loading #{SCORE_FILE}: #{e.message}"
-    @cve_scores = {}
-  end
-
-  # Fetches CVE score from API and updates cache.
-  #
-  # @param cve_id [String] The CVE identifier
-  # @return [Float] The CVSS score
-  def fetch_cve_score(cve_id)
-    cve = CVEAlert.new(cve_id)
-    score = cve.score
-    @updated = true if score != -1
-    score
-  end
-end
 
 # NCSCTextAdvisory fetches and processes text-based security advisories
 # from the Dutch National Cyber Security Centre (NCSC).
@@ -222,6 +168,7 @@ end
 #
 # @see MonitoringFeed
 class MonitoringNCSC < MonitoringFeed
+  CUTOFF_SCORE = 9
 
   # Initializes a new `MonitoringNCSC` instance.
   #
@@ -233,13 +180,15 @@ class MonitoringNCSC < MonitoringFeed
   #   config = { alert_threshold: 'high', log_level: 'info' }
   #   feed = MonitoringNCSC.new(config)
   def initialize(config)
-    @cache = CVEScoreCache.new
+    @cve_cache = PersistentCache.new('./cve-scores.yml')
+    @ncsc_cache = PersistentCache.new('./ncsv-scores.yml')
     super(config, 'https://advisories.ncsc.nl/rss/advisories', 'NCSC')
   end
 
   # Update caches
   def update_cache
-    @cache.save
+    @cve_cache.persist_cache
+    @ncsc_cache.persist_cache
     super
   end
 
@@ -282,16 +231,30 @@ class MonitoringNCSC < MonitoringFeed
     # Extract NCSC advisory ID from the item's link
     id = item.link[/id=(NCSC-\d{4}-\d{4})/, 1]
 
-    # Fetch the NCSC advisory details
-    ncsc = NCSCTextAdvisory.new(id)
+    # get cached score
+    # start with -1 so we have a number
+    scores = [-1]
+    score = @ncsc_cache.fetch(id) do
+      # Fetch the NCSC advisory details
+      ncsc = NCSCTextAdvisory.new(id)
 
-    score = -1
-    ncsc.cve.each do |cve_id|
-      cve_score = @cache.cve_score(cve_id)
-      score = cve_score if cve_score && (cve_score > score)
+      ncsc.cve.each do |cve_id|
+        scores << @cve_cache.fetch(cve_id) do
+          CVEAlert.new(cve_id).score
+        end
+      end
+
+      score = scores.compact.max
+
+      # cache score unless we had an unknown score
+      if (score >= CUTOFF_SCORE) || !scores.include?(nil)
+        score
+      else
+        nil
+      end
     end
 
-    # Return true if the highest score is 9 or above
-    score >= 9
+    # Return true if the highest score is CUTOFF_SCORE or above
+    [-1, score].compact.max >= CUTOFF_SCORE
   end
 end
