@@ -14,7 +14,7 @@
 #       Refactor Zammad extract class
 # 1.4.6 Cache both cve and ncsc scores
 #
-MONITOR_VERSION = '1.4.5'
+MONITOR_VERSION = '1.4.6'
 
 require 'dotenv'
 require 'optparse'
