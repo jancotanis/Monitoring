@@ -48,41 +48,6 @@ class SophosMonitor < AbstractMonitor
     client = Sophos::ClientWrapper.new(ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log)
     super(SOPHOS, client, report, config, log)
     @products = {}
-    load_tenants
-    @config.load_config(source, @tenants)
-  end
-
-  def run(all_alerts)
-    collect_data
-    @tenants.each do |customer|
-      cfg = @config.by_description(customer.description)
-      if cfg.monitoring?
-        cfg.endpoints = customer.endpoints.count if customer.endpoints.count.positive?
-        all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
-        customer_alerts.customer = customer
-        if customer.alerts.count.positive?
-          @report.puts '', "#{customer.description} - license=#{customer.billing_type}"
-
-          # group alerts by customer
-          _count = handle_endpoint_alerts(customer_alerts) if cfg.monitor_endpoints
-
-          connection_errors = 0
-          ## connection_errors = handle_connectivity_alerts( customer_alerts ) if cfg.monitor_connectivity
-
-          customer_alerts.devices.each do |device_id, incidents|
-            endpoint = customer.endpoints[device_id]
-            @report.puts "- #{endpoint}"
-            incidents.each do |_type, incident|
-              @report.puts incident.to_s
-            end
-          end
-          @report.puts "  connectivity alerts: #{connection_errors}" if connection_errors.positive?
-        end
-      end
-    end
-
-    FileUtil.write_file(FileUtil.daily_file_name(source.downcase + '-alerts.json'), all_alerts.to_json)
-    all_alerts
   end
 
   def handle_unique_alerts(customer, &block)
@@ -111,10 +76,6 @@ class SophosMonitor < AbstractMonitor
     endpoints.count
   end
 
-  def load_tenants
-    @tenants = @client.tenants.sort_by { |t| t.description.upcase }
-  end
-
   def report_endpoints
     @tenants.each do |customer|
       cfg = @config.by_description(customer.description)
@@ -127,7 +88,7 @@ class SophosMonitor < AbstractMonitor
     end
   end
 
-private
+  private
 
   def collect_data
     @tenants.each do |customer|
@@ -155,6 +116,38 @@ private
         @report.puts e
       end
     end
+  end
+
+  # Processes alerts for a single customer and adds them to all_alerts.
+  #
+  # @param customer [Object] The customer object being processed.
+  # @param all_alerts [Hash] The hash storing all alerts.
+  #
+  def process_customer_alerts(customer, all_alerts)
+    cfg = @config.by_description(customer.description)
+    return unless cfg.monitoring?
+  
+    cfg.endpoints = customer.endpoints.count unless customer.endpoints.empty?
+    all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
+    customer_alerts.customer = customer
+    
+    return if customer.alerts.empty?
+    @report.puts '', "#{customer.description} - license=#{customer.billing_type}"
+
+    # group alerts by customer
+    _count = handle_endpoint_alerts(customer_alerts) if cfg.monitor_endpoints
+
+    connection_errors = 0
+    ## connection_errors = handle_connectivity_alerts( customer_alerts ) if cfg.monitor_connectivity
+
+    customer_alerts.devices.each do |device_id, incidents|
+      endpoint = customer.endpoints[device_id]
+      @report.puts "- #{endpoint}"
+      incidents.each do |_type, incident|
+        @report.puts incident.to_s
+      end
+    end
+    @report.puts "  connectivity alerts: #{connection_errors}" if connection_errors.positive?
   end
 
   def find_products(alerts)

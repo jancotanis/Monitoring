@@ -32,38 +32,6 @@ class ZabbixMonitor < AbstractMonitor
   def initialize(report, config, log)
     client = Zabbix::ClientWrapper.new(ENV['ZABBIX_API_HOST'], ENV['ZABBIX_API_KEY'], log)
     super(ZABBIX, client, report, config, log)
-    @tenants = @client.tenants.sort_by { |t| t.description.upcase }
-    @config.load_config(source, @tenants)
-  end
-
-  def run(all_alerts)
-    collect_data
-    @tenants.each do |customer|
-      cfg = @config.by_description(customer.description)
-      if cfg.monitor_connectivity
-        cfg.endpoints = customer.endpoints.count if customer.endpoints.count.positive?
-        all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
-        customer_alerts.customer = customer
-        if customer.alerts.count.positive?
-          @report.puts '', customer.description
-
-          customer.endpoints.each_value do |ep|
-            if ep.alerts.count.positive?
-              @report.puts "- Endpoint #{ep}"
-              ep.alerts.each do |a|
-                # group alerts by customer
-                if a.severity_code >= Z_MINIMUM_SEVERITY
-                  customer_alerts.add_incident(ep, a, ZabbixIncident)
-                  @report.puts "  #{a.created} #{a.severity} #{a.description} "
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-    FileUtil.write_file(FileUtil.daily_file_name(source.downcase + '-alerts.json'), all_alerts.to_json)
-    all_alerts
   end
 
 private
@@ -87,6 +55,36 @@ private
     rescue => e
       @report.puts '', "*** Error with #{customer.description}"
       @report.puts e
+    end
+  end
+
+  # Processes alerts for a single customer and adds them to all_alerts.
+  #
+  # @param customer [Object] The customer object being processed.
+  # @param all_alerts [Hash] The hash storing all alerts.
+  #
+  def process_customer_alerts(customer, all_alerts)
+    cfg = @config.by_description(customer.description)
+    return unless cfg.monitor_connectivity
+
+    cfg.endpoints = customer.endpoints.count if customer.endpoints.count.positive?
+    all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
+    customer_alerts.customer = customer
+
+    return if customer.alerts.empty?
+    @report.puts '', customer.description
+
+    customer.endpoints.each_value do |ep|
+      if ep.alerts.count.positive?
+        @report.puts "- Endpoint #{ep}"
+        ep.alerts.each do |a|
+          # group alerts by customer
+          if a.severity_code >= Z_MINIMUM_SEVERITY
+            customer_alerts.add_incident(ep, a, ZabbixIncident)
+            @report.puts "  #{a.created} #{a.severity} #{a.description} "
+          end
+        end
+      end
     end
   end
 end

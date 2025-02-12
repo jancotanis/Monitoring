@@ -145,21 +145,47 @@ class AbstractMonitor
     @config = config
     @log = log
     @all_alerts = {}
+    @tenants = @client.tenants.sort_by { |t| t.description.upcase }
+    @config.load_config(source, @tenants)
   end
 
-  def run(_all_alerts)
-    raise NotImplementedError, 'You must implement this method'
+  # Runs the monitor to collect and process alerts.
+  #
+  # Iterates through all tenants, retrieves backup alerts, and logs incidents.
+  #
+  # @param all_alerts [Hash] A hash to store collected alerts, organized by customer ID.
+  # @return [Hash] The updated `all_alerts` hash with collected incidents.
+  #
+  def run(all_alerts)
+    collect_data
+
+    @tenants.each do |customer|
+      process_customer_alerts(customer, all_alerts)
+    end
+
+    persist_alerts(all_alerts)
+    all_alerts
   end
 
   def report_tenants
     FileUtil.write_file("#{source.downcase}-tenants.json", @client.tenants.to_json)
   end
 
-protected
+  protected
 
   def collect_alerts(tenant)
     @client.alerts(tenant.id)
   end
+
+  # Processes alerts for a single customer and adds them to all_alerts.
+  #
+  # @param customer [Object] The customer object being processed.
+  # @param all_alerts [Hash] The hash storing all alerts.
+  #
+  def process_customer_alerts(_customer, _all_alerts)
+    raise NotImplementedError, 'You must implement this method'
+  end
+
 
   def create_endpoint_from_alert(customer, alert)
     device_id = alert.endpoint_id
@@ -169,5 +195,13 @@ protected
       customer.endpoints[device_id] = endpoint = alert.create_endpoint
     end
     endpoint
+  end
+
+  # Persists all collected alerts to a JSON file.
+  #
+  # @param all_alerts [Hash] The hash of all collected alerts.
+  #
+  def persist_alerts(all_alerts)
+    FileUtil.write_file(FileUtil.daily_file_name("#{@source.downcase}-alerts.json"), all_alerts.to_json)
   end
 end

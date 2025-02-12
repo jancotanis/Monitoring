@@ -28,46 +28,9 @@ class VeeamMonitor < AbstractMonitor
     super(VEEAM, client, report, config, log)
 
     @alerts = @client.alerts
-    @tenants = @client.tenants.sort_by { |t| t.description.upcase }
-
-    @config.load_config(source, @tenants)
   end
 
-  def run(all_alerts)
-    collect_data
-    @tenants.each do |customer|
-      cfg = @config.by_description(customer.description)
-      if cfg.monitor_backup
-        all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
-        customer_alerts.customer = customer
-        if customer.alerts.count.positive?
-          @report.puts '', customer.description
-          # walk through all endpoint elerts
-          customer.endpoints.each_value do |ep|
-            if ep.alerts.count.positive?
-              @report.puts "- Endpoint #{ep}"
-              ep.alerts.each do |a|
-                # group alerts by customer
-                if a.severity.eql? 'Resolved'
-                  # resolved alert, maybe remove from reported_alerts
-                  if cfg.reported_alerts.include? "#{VEEAM}-#{a.id}"
-                    @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{a.id})"
-                  end
-                else
-                  customer_alerts.add_incident(a.endpoint_id, a, VeeamBackupIncident)
-                  @report.puts "  #{a.created} #{a.severity} #{a.description} "
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-    FileUtil.write_file(FileUtil.daily_file_name(source.downcase + '-alerts.json'), @alerts.to_json)
-    all_alerts
-  end
-
-private
+  private
 
   def collect_data
     @tenants.each do |customer|
@@ -88,6 +51,41 @@ private
       end
       # throuttle api
       sleep(0.05)
+    end
+  end
+
+  # Processes alerts for a single customer and adds them to all_alerts.
+  #
+  # @param customer [Object] The customer object being processed.
+  # @param all_alerts [Hash] The hash storing all alerts.
+  #
+  def process_customer_alerts(customer, all_alerts)
+    cfg = @config.by_description(customer.description)
+    return unless cfg.monitor_backup
+
+    all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
+    customer_alerts.customer = customer
+
+    return if customer.alerts.empty?
+
+    @report.puts '', customer.description
+    # walk through all endpoint elerts
+    customer.endpoints.each_value do |ep|
+      if ep.alerts.count.positive?
+        @report.puts "- Endpoint #{ep}"
+        ep.alerts.each do |a|
+          # group alerts by customer
+          if a.severity.eql? 'Resolved'
+            # resolved alert, maybe remove from reported_alerts
+            if cfg.reported_alerts.include? "#{VEEAM}-#{a.id}"
+              @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{a.id})"
+            end
+          else
+            customer_alerts.add_incident(a.endpoint_id, a, VeeamBackupIncident)
+            @report.puts "  #{a.created} #{a.severity} #{a.description} "
+          end
+        end
+      end
     end
   end
 
