@@ -100,7 +100,7 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
       devices.each do |device_id, incidents|
         endpoint = incidents.values.first.endpoint_to_s
         rpt += "- #{endpoint} (#{device_id})\n"
-        incidents.each do |_type, incident|
+        incidents.each_value do |incident|
           rpt += "#{incident}\n"
         end
       end

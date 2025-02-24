@@ -141,7 +141,7 @@ class SophosMonitor < AbstractMonitor
     customer_alerts.devices.each do |device_id, incidents|
       endpoint = customer.endpoints[device_id]
       @report.puts "- #{endpoint}"
-      incidents.each do |_type, incident|
+      incidents.each_value do |incident|
         @report.puts incident.to_s
       end
     end
