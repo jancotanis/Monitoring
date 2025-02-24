@@ -54,7 +54,7 @@ def get_options(config, sla)
     opts.banner = 'Usage: Monitor.rb [options]'
 
     opts.on('-s', '--sla', 'Report customer SLAs') do |_arg|
-      config.report
+      sla.report
       exit(0)
     end
     opts.on('-t', '--tenants', 'Report all tenants to json') do |arg|
@@ -173,9 +173,13 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
 
   a = sla.load_periodic_alerts
   a.each do |notification|
-    if notification.config.create_ticket
-      _ticket = ticketer.create_ticket("Monitoring: #{notification.config.description}", notification.description, Ticketer::PRIO_NORMAL, 'NOTIFICATION')
-    end
+    next unless notification.config.create_ticket
+
+    ticketer.create_ticket(
+      "#{notification.config.description}: #{notification.notification.task}",
+      notification.description, Ticketer::PRIO_NORMAL,
+      'SLA-task'
+    )
   end
   feeds.each do |feed|
     a = feed.get_vulnerabilities_list
