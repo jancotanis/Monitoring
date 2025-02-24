@@ -79,8 +79,7 @@ module Zabbix
     def endpoints(customer)
       endp = {}
 
-#      data = @api.hosts({ "groupids": [customer.id], 'selectInventory': 'extend' })
-      data = @api.hosts({ "groupids": [customer.id], 'output': 'extend', 'selectInventory': 'extend' })
+      data = @api.hosts({ groupids: [customer.id], output: 'extend', selectInventory: 'extend' })
       # :id, :type, :hostname, :group, :status, :raw_data, :alerts, :incident_alerts
       data.each do |item|
         e = endp[item.hostid] = EndpointData.new(item.hostid, 'zabbix item', item.name, customer.id, item.status, item.attributes)
@@ -94,7 +93,7 @@ module Zabbix
       @alerts = {}
 
       query = nil
-      query = { 'groupids': [customer.id] } if customer
+      query = { groupids: [customer.id] } if customer
       data = @api.problems(query)
       # :id,:created,:description,:severity_code,:category,:product,:endpoint_id,:endpoint_type,:raw_data,:event
       data.each do |item|
@@ -119,7 +118,7 @@ module Zabbix
     def events_by_id(id)
       id = [id] unless id.is_a? Array
       # get events including hostid for the object that created the event
-      @api.event(id, { 'selectHosts': ['hostid'] })
+      @api.event(id, { selectHosts: ['hostid'] })
     end
   end
 end
