@@ -46,8 +46,7 @@ module Veeam
 
         data = @api.companies
         data.each do |item|
-          t = TenantData.new(item.instanceUid, item.name, item.status, item.subscriptionPlanUid, item.attributes)
-          @tenants[t.id] = t
+          @tenants[item.instanceUid] = TenantData.new(item.instanceUid, item.name, item.status, item.subscriptionPlanUid, item.attributes)
         end
       end
       @tenants.values

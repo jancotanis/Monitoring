@@ -46,8 +46,7 @@ module Integra365
         data = @api.tenants
         data.each do |item|
           # use tennat name as id as this is present in job reporting
-          t = TenantData.new(item.tenantName, item.friendlyName, item.attributes)
-          @tenants[t.id] = t
+          @tenants[item.tenantName] = TenantData.new(item.tenantName, item.friendlyName, item.attributes)
         end
       end
       @tenants.values

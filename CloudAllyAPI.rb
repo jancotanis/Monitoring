@@ -56,8 +56,7 @@ module CloudAlly
         @tenants = {}
         data = @api.partner_users
         data.each do |item|
-          t = TenantData.new(item.id, item.name, item.status, item.discount.to_s, item.attributes)
-          @tenants[t.id] = t
+          @tenants[item.id] = TenantData.new(item.id, item.name, item.status, item.discount.to_s, item.attributes)
         end
       end
       @tenants.values

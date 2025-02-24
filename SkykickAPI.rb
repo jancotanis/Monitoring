@@ -44,8 +44,7 @@ module Skykick
         @tenants = {}
         data = @api.subscriptions
         data.each do |item|
-          t = TenantData.new(item.id, item.companyName, item.orderState, item.attributes)
-          @tenants[t.id] = t
+          @tenants[item.id] = TenantData.new(item.id, item.companyName, item.orderState, item.attributes)
         end
       end
       @tenants.values
