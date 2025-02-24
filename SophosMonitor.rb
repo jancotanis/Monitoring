@@ -24,10 +24,10 @@ class EndpointIncident < SophosIncident
   def to_s
     person = "   User:        #{alert.property('person.name')}\n" unless alert.property('person.name').empty?
     "  #{time_to_s}: #{source} #{alert.severity} alert\n" \
-    "   Description: #{alert.description}\n" \
-    "   Endpoint:    #{alert.endpoint_type}\n" \
-    "#{person}" \
-    "   Resolution:  #{alert.property('allowedActions')}"
+      "   Description: #{alert.description}\n" \
+      "   Endpoint:    #{alert.endpoint_type}\n" \
+      "#{person}" \
+      "   Resolution:  #{alert.property('allowedActions')}"
   end
 end
 
