@@ -74,12 +74,7 @@ def get_options(config, sla)
       'Add customer notification of list them if no arguments given'
     ) do |arg|
       if arg
-        options[:customer]     = arg[0].to_s.strip
-        options[:task]         = arg[1].to_s.strip
-        options[:interval]     = arg[2].to_s.strip
-        options[:date]         = arg[3]
-        options[:notification] = arg
-        sla.add_interval_notification options[:customer], options[:task], options[:interval], options[:date]
+        sla.add_interval_notification(arg[0].to_s.strip, arg[1].to_s.strip, arg[2].to_s.strip, arg[3])
       else
         sla.report
       end
