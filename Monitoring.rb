@@ -13,6 +13,8 @@
 # 1.4.5 Add monitor-script tag, use new DTC alerts feed, suppres feed items NCSC which have no critical CVEs
 #       Refactor Zammad extract class
 # 1.4.6 Cache both cve and ncsc scores
+# 1.4.7 Fix issue with --sla and add SLA-task ticket tag
+#       refactor codebase
 #
 MONITOR_VERSION = '1.4.6'
 
