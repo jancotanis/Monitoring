@@ -66,7 +66,7 @@ class Integra365Monitor < AbstractMonitor
   # @param log [Logger] Logger instance for monitoring activities.
   #
   def initialize(report, config, log)
-    client = Integra365::ClientWrapper.new(ENV['INTEGRA365_USER'], ENV['INTEGRA365_PASSWORD'], log)
+    client = Integra365::ClientWrapper.new(ENV.fetch('INTEGRA365_USER'), ENV.fetch('INTEGRA365_PASSWORD'), log)
     super(INTEGRA, client, report, config, log)
   end
 

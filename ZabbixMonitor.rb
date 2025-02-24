@@ -30,11 +30,11 @@ class ZabbixMonitor < AbstractMonitor
   attr_reader :config, :all_alerts, :tenants
 
   def initialize(report, config, log)
-    client = Zabbix::ClientWrapper.new(ENV['ZABBIX_API_HOST'], ENV['ZABBIX_API_KEY'], log)
+    client = Zabbix::ClientWrapper.new(ENV.fetch('ZABBIX_API_HOST'), ENV.fetch('ZABBIX_API_KEY'), log)
     super(ZABBIX, client, report, config, log)
   end
 
-private
+  private
 
   def collect_data
     @tenants.each do |customer|

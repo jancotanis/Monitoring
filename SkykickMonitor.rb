@@ -25,7 +25,7 @@ class SkykickMonitor < AbstractMonitor
   def initialize(report, config, log)
     super(
       SKYKICK,
-      Skykick::ClientWrapper.new(ENV['SKYKICK_CLIENT_ID'], ENV['SKYKICK_CLIENT_SECRET'], log),
+      Skykick::ClientWrapper.new(ENV.fetch('SKYKICK_CLIENT_ID'), ENV.fetch('SKYKICK_CLIENT_SECRET'), log),
       report,
       config,
       log

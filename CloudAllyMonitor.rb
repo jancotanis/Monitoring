@@ -25,10 +25,10 @@ class CloudAllyMonitor < AbstractMonitor
 
   def initialize(report, config, log)
     client = CloudAlly::ClientWrapper.new(
-      ENV['CLOUDALLY_CLIENT_ID'],
-      ENV['CLOUDALLY_CLIENT_SECRET'],
-      ENV['CLOUDALLY_USER'],
-      ENV['CLOUDALLY_PASSWORD'],
+      ENV.fetch('CLOUDALLY_CLIENT_ID'),
+      ENV.fetch('CLOUDALLY_CLIENT_SECRET'),
+      ENV.fetch('CLOUDALLY_USER'),
+      ENV.fetch('CLOUDALLY_PASSWORD'),
       log
     )
     super(CLOUDALLY, client, report, config, log)

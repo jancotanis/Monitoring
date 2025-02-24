@@ -45,7 +45,7 @@ class SophosMonitor < AbstractMonitor
   attr_reader :config, :all_alerts, :tenants
 
   def initialize(report, config, log)
-    client = Sophos::ClientWrapper.new(ENV['SOPHOS_CLIENT_ID'], ENV['SOPHOS_CLIENT_SECRET'], log)
+    client = Sophos::ClientWrapper.new(ENV.fetch('SOPHOS_CLIENT_ID'), ENV.fetch('SOPHOS_CLIENT_SECRET'), log)
     super(SOPHOS, client, report, config, log)
     @products = {}
   end

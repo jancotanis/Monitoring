@@ -71,8 +71,8 @@ class TicketMonitor < AbstractMonitor
 
   def initialize(report, config, log)
     client = ZammadAPI::Client.new(
-      url:          ENV['ZAMMAD_HOST'],
-      oauth2_token: ENV['ZAMMAD_OAUTH_TOKEN']
+      url:          ENV.fetch('ZAMMAD_HOST'),
+      oauth2_token: ENV.fetch('ZAMMAD_OAUTH_TOKEN')
     )
     super('TicketScan', client, report, config, log)
     zammad_consts

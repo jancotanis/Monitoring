@@ -14,13 +14,13 @@ class Ticketer
   # @param options [Hash] Options for configuring the client, such as a logger.
   def initialize(options)
     @client = ZammadAPI::Client.new(
-      url:          ENV['ZAMMAD_HOST'],       # URL of the Zammad API
-      oauth2_token: ENV['ZAMMAD_OAUTH_TOKEN'], # OAuth2 token for authentication
-      logger:       options[:log]             # Optional logger
+      url:          ENV.fetch('ZAMMAD_HOST'),        # URL of the Zammad API
+      oauth2_token: ENV.fetch('ZAMMAD_OAUTH_TOKEN'), # OAuth2 token for authentication
+      logger:       options[:log]                    # Optional logger
     )
-    @group = ENV['ZAMMAD_GROUP']               # The group to which tickets are assigned
-    @customer = ENV['ZAMMAD_CUSTOMER']         # The customer associated with tickets
-    @debug = 'DEBUG'.eql? ENV['MONITORING']    # Enable debug mode
+    @group = ENV.fetch('ZAMMAD_GROUP')               # The group to which tickets are assigned
+    @customer = ENV.fetch('ZAMMAD_CUSTOMER')         # The customer associated with tickets
+    @debug = 'DEBUG'.eql? ENV.fetch('MONITORING')    # Enable debug mode
   end
 
   # Creates a new ticket in Zammad.
