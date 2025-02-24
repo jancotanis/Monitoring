@@ -94,7 +94,7 @@ module CloudAlly
       @endpoints = {}
       data = @api.partner_tasks
       data.each do |item|
-        @endpoints[item.id] = EndpointData.new(item.id, item.type + '/' + item.source, item.alias, item.userId, item.status, item.attributes)
+        @endpoints[item.id] = EndpointData.new(item.id, "#{item.type}/#{item.source}", item.alias, item.userId, item.status, item.attributes)
       end
       @endpoints
     end

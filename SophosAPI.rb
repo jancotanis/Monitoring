@@ -44,7 +44,7 @@ module Sophos
 
   AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data) do
     def create_endpoint
-      Sophos::EndpointData.new(endpoint_id, property('managedAgent.type') + '/' + property('product'), property('managedAgent.name'))
+      Sophos::EndpointData.new(endpoint_id, "#{property('managedAgent.type')}/#{property('product')}", property('managedAgent.name'))
     end
   end
 

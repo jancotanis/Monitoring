@@ -72,7 +72,7 @@ module Integra365
         data = @api.backup_job_reporting
         data.each do |item|
           # make alerts unique bij adding incident datetime
-          id = item.organization + ':' + item.lastRun
+          id = "#{item.organization}:#{item.lastRun}"
           # actual error/warning is under session link for the backup job
           description = "#{item.jobName}\n please check session under backup jobs for a detailed description (https://office365.integra-bcs.nl/backup/index)."
           # :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :tenant_id, :raw_data

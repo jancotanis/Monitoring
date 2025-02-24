@@ -16,7 +16,7 @@ class VeeamBackupIncident < MonitoringIncident
   end
 
   def endpoint_to_s
-    alert.property('object.type') + ' ' + alert.property('object.computerName') + ' ' + alert.property('object.objectName')
+    "#{alert.property('object.type')} #{alert.property('object.computerName')} #{alert.property('object.objectName')}"
   end
 end
 

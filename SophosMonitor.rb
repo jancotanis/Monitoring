@@ -18,7 +18,7 @@ end
 
 class EndpointIncident < SophosIncident
   def endpoint_to_s
-    alert.property('managedAgent.type') + ' ' + alert.property('managedAgent.name')
+    "#{alert.property('managedAgent.type')} #{alert.property('managedAgent.name')}"
   end
 
   def to_s
