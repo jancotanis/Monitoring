@@ -3,7 +3,7 @@
 #
 # 1.0	Initial version of monitoring coas saas vendor portals
 #
-HSYNC_VERSION = '1.0.1'
+HSYNC_VERSION = '1.0.2'
 
 require 'dotenv/load'
 require 'optparse'
@@ -85,27 +85,60 @@ class Services < Enum
   end
 end
 
+# Matcher is responsible for matching companies between Hudu and a monitoring configuration.
+#
+# This class attempts to find exact or partial matches between companies in the Hudu system
+# and their corresponding monitoring configurations.
+#
+# @example Usage
+#   matcher = Matcher.new(hudu_companies, monitoring_config)
+#   puts matcher.matches
+#   puts matcher.nonmatches
+#
 class Matcher
   attr_reader :matches, :nonmatches
 
+  # Initializes the Matcher with Hudu companies and monitoring configuration.
+  #
+  # It automatically attempts to match companies upon initialization.
+  #
+  # @param hudu_companies [Array<Object>] A list of companies from Hudu.
+  # @param monitoring_config [Object] The monitoring configuration containing company entries.
   def initialize(hudu_companies, monitoring_config)
     @hudu = hudu_companies
     @portal = monitoring_config
     @matches, @nonmatches = match(@hudu, @portal)
   end
 
+  private
+
+  # Matches Hudu companies with monitoring configuration entries.
+  #
+  # This method first attempts an exact match by description. If an exact match is not found,
+  # it performs a partial match unless the company is named "test". If multiple matches are found,
+  # it selects the first and logs a warning about duplicates.
+  #
+  # @param hudu [Array<Object>] A list of companies from Hudu.
+  # @param monitoring [Object] The monitoring configuration containing company entries.
+  #
+  # @return [Array<Hash, Array>] A tuple containing matched companies as a hash
+  #   (`{ company => monitoring_entry }`) and a list of non-matching companies.
   def match(hudu, monitoring)
     matches = {}
-    nomatch = []
+    nonmatches = []
     hudu.each do |company|
       mon = monitoring.by_description(company.name)
       name = company.name.downcase
+
       # retry partial match ans skip 'test' company
-      if !mon && !'test'.eql?(name)
-        found = monitoring.entries.select { |cfg| name[cfg.description.downcase] || cfg.description.downcase[name] }
-        if found.count.positive?
+      if mon.nil? && !'test'.eql?(name)
+        found = monitoring.entries.select do |cfg|
+          name.include?(cfg.description.downcase) || cfg.description.downcase.include?(name)
+        end
+
+        if found.any?
           mon = found.first
-          puts " Partial match found #{company.name} / #{mon.description}" if mon
+          puts " Partial match found: #{company.name} / #{mon.description}" if mon
           puts "* Duplicate match for #{mon.description}" if mon.touched?
           mon.touch
         end
@@ -114,26 +147,40 @@ class Matcher
       if mon
         matches[company] = mon
       else
-        nomatch << company
+        nonmatches << company
       end
     end
-    [matches, nomatch]
+    [matches, nonmatches]
   end
 end
 
 LAYOUT = 'Company Dashboard'
 
+# Represents a custom field
 CustomField = Struct.new(:label, :value)
+# Represents a layout field with additional properties
 LayoutField = Struct.new(:label, :value, :note, :url, :type)
+
+# Represents an asset layout which contains fields associated with an asset.
+# Provides methods for managing fields, adding new fields, and updating them.
 AssetLayout = Struct.new(:asset, :fields) do
+  # Initializes a new AssetLayout instance.
+  # @param asset [Object] The asset associated with this layout.
   def initialize(asset)
     super
     @fields = {}
   end
 
+  # Returns an array of all the fields contained within the asset layout.
+  # @return [Array<LayoutField>] The list of all fields.
   def fields
     @fields.values
   end
+
+  # Creates a new AssetLayout object and populates its fields based on the asset provided.
+  # @param asset [Object] The asset to be associated with the layout.
+  # @param is_layout [Boolean] Flag indicating whether it's a layout (default: false).
+  # @return [AssetLayout] The created AssetLayout object.
 
   def self.create(asset, is_layout = false)
     a = AssetLayout.new(asset)
@@ -141,10 +188,16 @@ AssetLayout = Struct.new(:asset, :fields) do
     a
   end
 
+  # Placeholder method to update an asset (not yet implemented).
+  # @param _asset [Object] The asset to be updated.
+  # @raise [StandardError] Always raises an exception since this method is not implemented.
   def update_asset(_asset)
     raise StandardError, 'not implemented'
   end
 
+  # Adds a new field or updates an existing field within the layout.
+  # @param hudu_field [Object] The field to be added or updated.
+  # @param is_layout [Boolean] Flag indicating whether the field is a layout (default: false).
   def add_field(hudu_field, is_layout = false)
     split = hudu_field.label.split ':'
     label = split[0]
@@ -153,11 +206,7 @@ AssetLayout = Struct.new(:asset, :fields) do
 
     case split[1]
     when Actions::ENABLED
-      field.value = if is_layout
-                      false
-                    else
-                      hudu_field.value
-                    end
+      field.value = is_layout ? false : hudu_field.value
       field.type = Actions::ENABLED
     when Actions::NOTE
       field.note = hudu_field.value unless is_layout
@@ -167,6 +216,8 @@ AssetLayout = Struct.new(:asset, :fields) do
     @fields[label] = field
   end
 
+  # Returns an array of CustomField instances for all fields in the layout.
+  # @return [Array<CustomField>] A list of custom fields with label and respective values.
   def custom_fields
     custom = []
     fields.each do |f|
@@ -178,19 +229,93 @@ AssetLayout = Struct.new(:asset, :fields) do
   end
 end
 
+
+# DashBuilder is responsible for creating dashboard entries from assets.
+#
+# This class processes an asset's layout, iterates through its fields, and sends
+# the relevant dashboard data to a client.
+#
+# @example Usage
+#   client = APIClient.new
+#   dash_builder = DashBuilder.new(client)
+#   dash_builder.create_dash_from_asset(asset)
+#
+class DashBuilder
+  # Initializes the DashBuilder with a client instance.
+  #
+  # @param client [Object] The API client used to send dashboard data.
+  def initialize(client)
+    @client = client
+  end
+
+  # Creates a dashboard entry from the given asset.
+  #
+  # This method retrieves the asset layout, iterates over its fields, and posts
+  # an entry for each field that has an enabled action.
+  #
+  # @param asset [Object] The asset containing layout and service fields.
+  # @return [void]
+  def create_dash_from_asset(asset)
+    layout = AssetLayout.create(asset)
+
+    layout.fields.each do |service|
+      next unless Actions::ENABLED.eql?(service.type)
+
+      colour = service.value.to_s.empty? ? 'grey' : 'success'
+      message = service.note.to_s.empty? ? Services::NO_SERVICE_TEXT : service.note
+
+      dash = dash_structure(service.label, asset.company_name, colour, message, service.url)
+      @client.post(@client.api_url('magic_dash'), dash)
+    end
+  end
+
+  private
+
+  # Builds the structured data for a dashboard entry.
+  #
+  # @param label [String] The label of the service.
+  # @param company_name [String] The company associated with the asset.
+  # @param colour [String] The display colour based on service status.
+  # @param message [String] The message or note related to the service.
+  # @param url [String, nil] The optional URL associated with the service.
+  #
+  # @return [Hash] The structured data for the dashboard.
+  def dash_structure(label, company_name, colour, message, url)
+    {
+      'title' => label,
+      'company_name' => company_name,
+      'content_link' => url,
+      'shade' => colour,
+      'message' => message
+    }
+  end
+end
+
+# SyncServices handles the synchronization between a portal and HUDU, 
+# ensuring the proper alignment of services and assets. It manages
+# creating, updating, and syncing layout and service configurations.
 class SyncServices
+  # Initializes a new SyncServices object with the required parameters.
+  #
+  # @param client [Object] The client object to interact with the asset system.
+  # @param matcher [Object] The matcher responsible for determining asset matches.
+  # @param refresh [Boolean] A flag to determine whether to refresh the data.
   def initialize(client, matcher, refresh)
     @client  = client
     @matcher = matcher
     @refresh = refresh
+    @dash    = DashBuilder.new(@client)
     @layout  = @client.asset_layouts.select { |al| LAYOUT.eql? al.name }.first
-
-    @assets = @client.assets({ asset_layout_id: @layout.id })
-    @assets_by_id = @assets.map { |o| [o.company_id, o] }.to_h
-  rescue => e
+    @assets  = @client.assets({ asset_layout_id: @layout.id })
+    @assets_by_id = @assets.to_h { |o| [o.company_id, o] }
+  rescue Hudu::HuduError => e
     puts "** Error loading layout #{LAYOUT}, aborting sync: #{e}"
   end
 
+  # Synchronizes the services and layout configurations for each matched asset.
+  #
+  # Iterates over each match between the HUDU and portal services, checking if an asset
+  # exists. If an asset is found, it updates the layout; otherwise, it creates a new layout.
   def sync
     # get all assets/services for the services layout
     @matcher.matches.each do |hudu, portal|
@@ -203,25 +328,35 @@ class SyncServices
     end
   end
 
+  # Updates the dashboard by creating a dash for each asset in the layout.
   def update_dashes
     @assets.each do |asset|
       puts asset.company_name
-      create_dash_from_asset(asset)
+      @dash.create_dash_from_asset(asset)
     end
   end
 
-private
+  private
 
+  # Updates the asset layout based on the services and portal information.
+  #
+  # @param hudu [Object] The HUDU object for the asset.
+  # @param portal [Object] The portal object for the service.
+  # @param asset [Object] The asset to be updated.
   def update_layout(hudu, portal, asset)
     asset_layout = AssetLayout.create(asset)
-    if update_services(asset_layout.fields, portal) || @refresh
-      puts "Updating #{hudu.name}"
-      asset.fields = asset_layout.custom_fields
-      @client.update_company_asset(asset)
-      create_dash_from_asset(asset)
-    end
+    return unless update_services(asset_layout.fields, portal) || @refresh
+
+    puts "Updating #{hudu.name}"
+    asset.fields = asset_layout.custom_fields
+    @client.update_company_asset(asset)
+    @dash.create_dash_from_asset(asset)
   end
-  
+
+  # Creates a new asset layout based on the provided HUDU and portal.
+  #
+  # @param hudu [Object] The HUDU object for the asset.
+  # @param portal [Object] The portal object for the service.
   def create_layout(hudu, portal)
     # no asset asigned so create one
     asset_layout = AssetLayout.create(@layout, true)
@@ -231,101 +366,111 @@ private
     puts "+ creating layout for #{@layout.name}..."
 
     asset = @client.create_company_asset(hudu.id, @layout, asset_layout.custom_fields)
-    create_dash_from_asset(asset)
+    @dash.create_dash_from_asset(asset)
   end
 
-  def create_dash_from_asset(asset)
-    layout = AssetLayout.create(asset)
-    layout.fields.each do |service|
-      if Actions::ENABLED.eql? service.type
-
-        if service.value && !service.value.to_s.empty?
-          colour = 'success'
-        else
-          message = Services::NO_SERVICE_TEXT
-          colour = 'grey'
-        end
-
-        if service.note && !service.note.empty?
-          message = service.note
-        else # do not touch the message
-          message = Services::NO_SERVICE_TEXT
-        end
-
-#        if service.url && !service.url.empty?
-#          url = service.url unless service.url.empty?
-#        else
-        url = service.url
-#        end
-
-        dash = dash_structure(service.label, asset.company_name, colour, message, url)
-        @client.post(@client.api_url('magic_dash'), dash)
-      end
-    end
-  end
-
-  def dash_structure(label, company_name, colour, message, url)
-    {
-      'title' => label,
-      'company_name' => company_name,
-      'content_link' => url,
-      'shade' => colour,
-      'message' => message # efault
-    }
-  end
-
-  # update HUDU service settings to reflect monitoring settings
+  # Updates the service settings on the provided asset fields.
+  #
+  # @param fields [Array] The fields of the asset to be updated.
+  # @param portal [Object] The portal object containing service settings.
+  #
+  # @return [Boolean] Returns true if any changes were made, otherwise false.
   def update_services(fields, portal)
     changes = false
     # source = serice assigned to asset
     fields.each do |field|
       # only for known portal services
-      monitoring = false
       Services::KNOWN_SERVICES.each do |service|
-        set_value = portal.source.include? service
         test = Services::TITLE_TEST[service]
-        case service
-        when Services::SOPHOS
-          monitoring = portal.monitor_endpoints
-        when Services::ZABBIX
-          monitoring = portal.monitor_connectivity
-        when Services::VEEAM
-          monitoring = portal.monitor_backup
-        when Services::INTEGRA365
-          monitoring = portal.monitor_backup
-        when Services::DTC
-          set_value = (portal.monitor_dtc == true)
-          monitoring = portal.monitor_dtc
-        else
-          monitoring = portal.monitor_backup
-        end
+        next unless field.label.downcase[test]
 
-        if field.label.downcase[test]
-          if field.value != set_value
-            changes = true
-            puts "- #{service} service turning #{onoff(set_value)}, was #{onoff(field.value)}"
-          end
-          field.value = set_value
+        set_value = set_new_value?(service, portal)
+        changes ||= has_changes?(field.value, set_value)
+        field.value = set_value
 
-          # This overwrites existing notes...
-          if set_value
-            note = field.note
-            if monitoring && portal.create_ticket
-              field.note = Services::SLA_TEXT
-            else
-              field.note = "Customer has #{service}; no SLA"
-            end
-            changes ||= (changes || !note.to_s.eql?(field.note))
-          else
-            field.note = '-'
-          end
-          field.url = Services.url(service) if set_value || field.url.to_s.empty?
-        end
+        # This overwrites existing notes...
+        changes ||= update_field_note(field, service, portal, set_value)
+        field.url = Services.url(service) if set_value || field.url.to_s.empty?
       end
     end
     changes
   end
 
+  # New method for updating the field note
+  def update_field_note(field, service, portal, set_value)
+    if set_value
+      note = field.note
+      field.note = get_note(service, portal)
+      !note.to_s.eql?(field.note) # returns true if there was a change in the note
+    else
+      field.note = '-'
+      false
+    end
+  end
+
+  # Checks if the value has changed between the original and the new value.
+  #
+  # @param original_value [Object] The original value.
+  # @param new_value [Object] The new value.
+  #
+  # @return [Boolean] True if there are changes, false otherwise.
+  def has_changes?(original_value, new_value)
+    return false if original_value == new_value
+
+    puts "- #{service} service turning #{onoff(new_value)}, was #{onoff(original_value)}"
+    true
+  end
+
+  # Determines the new value for a given service based on the portal's configuration.
+  #
+  # @param service [Symbol] The service to check.
+  # @param portal [Object] The portal object to fetch settings from.
+  #
+  # @return [Boolean] The new value for the service setting.
+  def set_new_value?(service, portal)
+    service.eql?(Services::DTC) ? (portal.monitor_dtc == true) : portal.source.include?(service)
+  end
+
+  # Generates the note based on the service, portal, and monitoring status.
+  #
+  # @param service [Symbol] The service to generate the note for.
+  # @param portal [Object] The portal object to determine monitoring.
+  #
+  # @return [String] The generated note text.
+  def get_note(service, portal)
+    if monitoring_service?(service, portal) && portal.create_ticket
+      Services::SLA_TEXT
+    else
+      "Customer has #{service}; no SLA"
+    end
+  end
+
+  # Determines if a service is being monitored based on the portal configuration.
+  #
+  # @param service [Symbol] The service to check.
+  # @param portal [Object] The portal object containing monitoring configuration.
+  #
+  # @return [Boolean] Whether the service is monitored.
+  def monitoring_service?(service, portal)
+    # return case value
+    case service
+    when Services::SOPHOS
+      portal.monitor_endpoints
+    when Services::ZABBIX
+      portal.monitor_connectivity
+    when Services::DTC
+      portal.monitor_dtc
+    else
+      # Services::VEEAM, Services::INTEGRA365, ...
+      portal.monitor_backup
+    end
+  end
+
+  # Converts a boolean value into its string equivalent, "on" or "off".
+  #
+  # @param value [Boolean] The boolean value to convert.
+  #
+  # @return [String] The string representation of the boolean value.
   def onoff(value)
     value ? 'on' : 'off'
   end
