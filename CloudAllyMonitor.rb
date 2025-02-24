@@ -46,18 +46,18 @@ class CloudAllyMonitor < AbstractMonitor
       end
 
       cfg = @config.by_description(customer.description)
-      if cfg.monitor_backup
-        customer_alerts = collect_alerts(customer)
-        # add active alerts to customer record
-        if customer_alerts.count.positive?
-          customer.alerts = customer_alerts
-          customer_alerts.each do |a|
-            if a.severity.eql? 'FAILED'
-              create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
-              customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
-            end
-          end
-        end
+      next unless cfg.monitor_backup
+
+      customer_alerts = collect_alerts(customer)
+      # add active alerts to customer record
+      next unless  customer_alerts.count.positive?
+
+      customer.alerts = customer_alerts
+      customer_alerts.each do |a|
+        next unless a.severity.eql? 'FAILED'
+
+        create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
+        customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
       end
     end
   end

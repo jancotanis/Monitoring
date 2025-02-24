@@ -79,11 +79,10 @@ class SophosMonitor < AbstractMonitor
   def report_endpoints
     @tenants.each do |customer|
       cfg = @config.by_description(customer.description)
+      next unless cfg.monitoring?
 
-      if cfg.monitoring?
-        customer.endpoints.each do |e|
-          puts e
-        end
+      customer.endpoints.each do |e|
+        puts e
       end
     end
   end

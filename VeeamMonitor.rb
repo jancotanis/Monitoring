@@ -71,19 +71,19 @@ class VeeamMonitor < AbstractMonitor
     @report.puts '', customer.description
     # walk through all endpoint elerts
     customer.endpoints.each_value do |ep|
-      if ep.alerts.count.positive?
-        @report.puts "- Endpoint #{ep}"
-        ep.alerts.each do |a|
-          # group alerts by customer
-          if a.severity.eql? 'Resolved'
-            # resolved alert, maybe remove from reported_alerts
-            if cfg.reported_alerts.include? "#{VEEAM}-#{a.id}"
-              @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{a.id})"
-            end
-          else
-            customer_alerts.add_incident(a.endpoint_id, a, VeeamBackupIncident)
-            @report.puts "  #{a.created} #{a.severity} #{a.description} "
+      next unless ep.alerts.count.positive?
+
+      @report.puts "- Endpoint #{ep}"
+      ep.alerts.each do |a|
+        # group alerts by customer
+        if a.severity.eql? 'Resolved'
+          # resolved alert, maybe remove from reported_alerts
+          if cfg.reported_alerts.include? "#{VEEAM}-#{a.id}"
+            @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{a.id})"
           end
+        else
+          customer_alerts.add_incident(a.endpoint_id, a, VeeamBackupIncident)
+          @report.puts "  #{a.created} #{a.severity} #{a.description} "
         end
       end
     end

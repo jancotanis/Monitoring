@@ -72,17 +72,18 @@ class ZabbixMonitor < AbstractMonitor
     customer_alerts.customer = customer
 
     return if customer.alerts.empty?
+
     @report.puts '', customer.description
 
     customer.endpoints.each_value do |ep|
-      if ep.alerts.count.positive?
-        @report.puts "- Endpoint #{ep}"
-        ep.alerts.each do |a|
-          # group alerts by customer
-          if a.severity_code >= Z_MINIMUM_SEVERITY
-            customer_alerts.add_incident(ep, a, ZabbixIncident)
-            @report.puts "  #{a.created} #{a.severity} #{a.description} "
-          end
+      next unless ep.alerts.count.positive?
+
+      @report.puts "- Endpoint #{ep}"
+      ep.alerts.each do |a|
+        # group alerts by customer
+        if a.severity_code >= Z_MINIMUM_SEVERITY
+          customer_alerts.add_incident(ep, a, ZabbixIncident)
+          @report.puts "  #{a.created} #{a.severity} #{a.description} "
         end
       end
     end

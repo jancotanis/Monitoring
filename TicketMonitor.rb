@@ -93,18 +93,18 @@ class TicketMonitor < AbstractMonitor
     # check if backups haven't ran for 2 days.
     @config.entries.each do |cfg|
       # check  backup monitored entries
-      if cfg.monitor_backup
-        cfg.last_backup = DateTime.now unless cfg.last_backup
-        if (DateTime.now - cfg.last_backup) * 24 > TWO_DAYS
-          # only valid for backups using mail notifications so check domain
-          # alert if backup_domain
-puts "Didn't get any notifications for #{cfg.description} since #{cfg.last_backup}"
-        end
-      end
+      next unless cfg.monitor_backup
+
+      cfg.last_backup = DateTime.now unless cfg.last_backup
+      next unless (DateTime.now - cfg.last_backup) * 24 > TWO_DAYS
+
+      # only valid for backups using mail notifications so check domain
+      # alert if backup_domain
+      puts "Didn't get any notifications for #{cfg.description} since #{cfg.last_backup}"
     end
   end
 
-private
+  private
 
   def process_ticket(ticket)
     match = false
@@ -113,30 +113,30 @@ private
       # if succes/failure -> find config user
       #  update last date check
       #  if failure - move to inbox to action
-      if check.matches?(ticket)
-        match = true
-        result = check.test(ticket)
-        if result == TicketCheck::UNKNOWN
-          @report.puts "* Unknown if failure/success: #{ticket.number} - #{ticket.title} - move to inbox"
-        else
-          @report.puts "  ticket: #{ticket.number} matches #{check.description} - #{result} - #{ticket.title}"
-          ## find backup SLA
-          if (config = config_by_mail(ticket.created_by)) && config.monitor_backup
-            ## update watchdog for last found message
-            config.last_backup = DateTime.parse(ticket.created_at)
+      next unless check.matches?(ticket)
+
+      match = true
+      result = check.test(ticket)
+      if result == TicketCheck::UNKNOWN
+        @report.puts "* Unknown if failure/success: #{ticket.number} - #{ticket.title} - move to inbox"
+      else
+        @report.puts "  ticket: #{ticket.number} matches #{check.description} - #{result} - #{ticket.title}"
+        ## find backup SLA
+        if (config = config_by_mail(ticket.created_by)) && config.monitor_backup
+          ## update watchdog for last found message
+          config.last_backup = DateTime.parse(ticket.created_at)
 puts "Domain found for '#{config.description}', last backup #{config.last_backup}"
-            # process succeeded/failed and move/close message
-            if result == TicketCheck::FAILED
-              ## move ticket to inbox to resolve
-              move_to_inbox(ticket, 'Backup failed, move ticket to inbox')
-              match = true
-            elsif result == TicketCheck::SUCCEEDED
-              close_ticket(ticket)
-              match = true
-            end
-          else
-            @report.puts "* Domain not found for '#{ticket.created_by}' or no monitor_backup SLA; ticket ignored"
+          # process succeeded/failed and move/close message
+          if result == TicketCheck::FAILED
+            ## move ticket to inbox to resolve
+            move_to_inbox(ticket, 'Backup failed, move ticket to inbox')
+            match = true
+          elsif result == TicketCheck::SUCCEEDED
+            close_ticket(ticket)
+            match = true
           end
+        else
+          @report.puts "* Domain not found for '#{ticket.created_by}' or no monitor_backup SLA; ticket ignored"
         end
       end
     end

@@ -69,12 +69,12 @@ module Skykick
       # :id, :description, :severity, :category, :product, :actions
       data.each do |item|
         status = item.Status
-        if 'Active'.eql? status
-          a = AlertData.new(
-            item.Id, item.PublishDate, item.Description, item.AlertType, item.Subject, 'Skykick', item.BackupMailboxId, 'Mailbox', item.attributes
-          )
-          @alerts[a.id] = a
-        end
+        next unless 'Active'.eql? status
+
+        a = AlertData.new(
+          item.Id, item.PublishDate, item.Description, item.AlertType, item.Subject, 'Skykick', item.BackupMailboxId, 'Mailbox', item.attributes
+        )
+        @alerts[a.id] = a
       end
       @alerts
     end

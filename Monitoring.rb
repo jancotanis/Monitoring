@@ -159,16 +159,15 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
     # we have alerts
 
     cfg = config.by_description(cl.customer.description)
-    if cfg.create_ticket
-      # remove incidents reported last run(s)
-      puts cfg.description unless last.eql? cfg.description
-      last = cfg.description
-      cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
-      monitoring_report = cl.report
-      if monitoring_report
-        _ticket = ticketer.create_ticket("Monitoring: #{cl.name}", monitoring_report, Ticketer::PRIO_NORMAL, cl.source)
-      end
-    end
+    next unless cfg.create_ticket
+
+    # remove incidents reported last run(s)
+    puts cfg.description unless last.eql? cfg.description
+    last = cfg.description
+    cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
+    monitoring_report = cl.report
+
+    ticketer.create_ticket("Monitoring: #{cl.name}", monitoring_report, Ticketer::PRIO_NORMAL, cl.source) if monitoring_report
   end
 
   a = sla.load_periodic_alerts

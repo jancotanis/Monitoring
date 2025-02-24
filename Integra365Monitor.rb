@@ -110,15 +110,15 @@ class Integra365Monitor < AbstractMonitor
     @report.puts '', customer.description
     # Process all endpoint alerts
     customer.endpoints.each_value do |ep|
-      if ep.alerts.count.positive?
-        @report.puts "- Endpoint #{ep}"
-        ep.alerts.each do |a|
-          severity = a.severity
-          unless severity.eql?('Resolved')
-            customer_alerts.add_incident(a.endpoint_id, a, IntegraBackupIncident)
-            @report.puts "  #{a.created} #{severity} #{a.description} "
-          end
-        end
+      next unless ep.alerts.count.positive?
+
+      @report.puts "- Endpoint #{ep}"
+      ep.alerts.each do |a|
+        severity = a.severity
+        next if severity.eql?('Resolved')
+
+        customer_alerts.add_incident(a.endpoint_id, a, IntegraBackupIncident)
+        @report.puts "  #{a.created} #{severity} #{a.description} "
       end
     end
   end

@@ -119,12 +119,12 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
       orig += incidents.values.map { |i| "#{i.source}-#{i.alert.id}" }
       incidents.each do |type, incident|
         # backward compatibility, check for reported alerts without prefix
-        if reported_alerts.include?(incident.incident_id) || reported_alerts.include?(incident.alert.id)
-          source = incident.source
-          count += 1
-          orig.delete(incident.alert.id)
-          incidents.delete(type)
-        end
+        next unless reported_alerts.include?(incident.incident_id) || reported_alerts.include?(incident.alert.id)
+
+        source = incident.source
+        count += 1
+        orig.delete(incident.alert.id)
+        incidents.delete(type)
       end
       # remove if all incidents have been removed
       devices.delete(device_id) if incidents.count.zero?

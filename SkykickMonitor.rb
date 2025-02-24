@@ -73,14 +73,14 @@ class SkykickMonitor < AbstractMonitor
     @report.puts '', customer.description
     # walk through all endpoint elerts
     customer.endpoints.each_value do |ep|
-      if ep.alerts.count.positive?
-        @report.puts "- Endpoint #{ep}"
-        ep.alerts.each do |a|
-          # group alerts by customer
-          if !a.severity.eql? 'Resolved'
-            customer_alerts.add_incident(a.endpoint_id, a, SkykickBackupIncident)
-            @report.puts "  #{a.created} #{a.severity} #{a.description} "
-          end
+      next unless ep.alerts.count.positive?
+
+      @report.puts "- Endpoint #{ep}"
+      ep.alerts.each do |a|
+        # group alerts by customer
+        unless a.severity.eql?('Resolved')
+          customer_alerts.add_incident(a.endpoint_id, a, SkykickBackupIncident)
+          @report.puts "  #{a.created} #{a.severity} #{a.description} "
         end
       end
     end

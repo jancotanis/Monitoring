@@ -114,13 +114,13 @@ module CloudAlly
     # filter alerts for STATUS wanted
     def create_alert_from_data(alert_id, item)
       not_actives = item.backupStatus.select { |si| STATUS_WANTED.eql?(si.status) }
-      if not_actives.count.positive?
-        # retuend new instance
-        AlertData.new(
-          alert_id, item.lastBackupAttemptDate, not_actives.first.error, not_actives.first.status,
-          item.source, item.source, item.taskId, item.entityName, item.attributes
-        )
-      end
+      return unless not_actives.count.positive?
+
+      # return new instance
+      AlertData.new(
+        alert_id, item.lastBackupAttemptDate, not_actives.first.error, not_actives.first.status,
+        item.source, item.source, item.taskId, item.entityName, item.attributes
+      )
     end
   end
 end
