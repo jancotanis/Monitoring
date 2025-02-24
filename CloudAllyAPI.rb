@@ -27,8 +27,8 @@ module CloudAlly
   AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data) do
     def description
       # collect subsources that failed the task
-      failedSubSources = raw_data['backupStatus'].select { |src| STATUS_WANTED.eql? src.status }.map(&:subSource).join ' '
-      "#{endpoint_type}: #{failedSubSources}"
+      failed_sub_sources = raw_data['backupStatus'].select { |src| STATUS_WANTED.eql? src.status }.map(&:subSource).join ' '
+      "#{endpoint_type}: #{failed_sub_sources}"
     end
 
     def create_endpoint
