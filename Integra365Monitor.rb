@@ -130,7 +130,7 @@ class Integra365Monitor < AbstractMonitor
   #
   def process_endpoint_alerts(customer, customer_alerts)
     customer_alerts.each_value do |a|
-      next if ['Success', 'Running'].include?(a.severity)
+      next if %w[Success Running].include?(a.severity)
 
       create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
       customer.endpoints[a.endpoint_id]&.alerts&.push(a)
