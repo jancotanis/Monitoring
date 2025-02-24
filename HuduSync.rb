@@ -374,8 +374,8 @@ end
 
 def create_hudu_client(log)
   Hudu.configure do |config|
-    config.endpoint = ENV['HUDU_API_HOST'].downcase
-    config.api_key = ENV['HUDU_API_KEY']
+    config.endpoint = ENV.fetch('HUDU_API_HOST').downcase
+    config.api_key = ENV.fetch('HUDU_API_KEY')
     config.page_size = 500
     config.logger = log if log
   end
