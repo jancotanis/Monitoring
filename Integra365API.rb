@@ -20,9 +20,7 @@ module Integra365
     end
 
     def clear_endpoint_alerts
-      endpoints&.each do |_k, v|
-        v.clear_alerts
-      end
+      endpoints&.each_value(&:clear_alerts)
     end
   end
 
