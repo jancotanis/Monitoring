@@ -37,7 +37,7 @@ class Struct
     if raw_data
       item = raw_data
       name.split('.').each do |o|
-        item = item[o] if item&.is_a?(Hash) || item&.is_a?(WrAPI::Request::Entity)
+        item = item[o] if item.is_a?(Hash) || item.is_a?(WrAPI::Request::Entity)
       end
       item.to_s
     else
@@ -99,7 +99,7 @@ class FileUtil
   #   module MyModule; end
   #   FileUtil.daily_module_name(MyModule) # => "my_module-2024-11-07.log"
   def self.daily_module_name(object)
-    daily_file_name(object.class.name.split('::').first.downcase + '.log')
+    daily_file_name("#{object.class.name.split('::').first.downcase}.log")
   end
 end
 

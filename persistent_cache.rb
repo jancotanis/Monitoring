@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'yaml'
 
 # PersistentCache
@@ -40,7 +42,8 @@ class PersistentCache
   # @return [Object] the cached or loaded value
   def fetch(key, &loader)
     if @cache.key?(key)
-      @cache[key]  # Return cached value
+      # Return cached value
+      @cache[key]
     else
       # Use the loader if key is not found, store and persist the result
       value = loader.call
@@ -85,9 +88,11 @@ class PersistentCache
   def load_cache
     @dirty = false
     if File.exist?(@file_path)
-      YAML.load_file(@file_path) || {}  # Load YAML file or return empty hash
+      # Load YAML file or return empty hash
+      YAML.load_file(@file_path) || {}
     else
-      {}  # Return empty hash if file doesn't exist
+      # Return empty hash if file doesn't exist
+      {}
     end
   end
 end

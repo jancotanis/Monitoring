@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'yaml'
 require 'rss'
 require 'open-uri'
@@ -29,8 +30,8 @@ Vulnerability = Struct.new(:feed_item, :companies, :high_priority?) do
   def description
     companies_list = companies.map(&:description).join("\n- ")
     "#{feed_item.title}\n#{feed_item.link}\n\n" \
-    "*** Controleer de klanten met een SLA en onderneem aktie binnen 72 uur (3 werkdagen)\n" \
-    "- #{companies_list}"
+      "*** Controleer de klanten met een SLA en onderneem aktie binnen 72 uur (3 werkdagen)\n" \
+      "- #{companies_list}"
   end
 end
 
@@ -95,11 +96,11 @@ class MonitoringFeed
     vulnerabilities = []
     items.each_value do |item|
       guid = item.link
-      unless @alerts.include?(guid)
-        if report_item?(item)
-          @alerts << guid
-          vulnerabilities << Vulnerability.new(item, @companies, high_priority?(item)) if item.pubDate > since
-        end
+      next if @alerts.include?(guid)
+
+      if report_item?(item)
+        @alerts << guid
+        vulnerabilities << Vulnerability.new(item, @companies, high_priority?(item)) if item.pubDate > since
       end
     end
 

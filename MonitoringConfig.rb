@@ -47,7 +47,7 @@ class MonitoringConfig
   def initialize
     if File.file?(MONITORING_CFG)
       @config = YAML.load_file(MONITORING_CFG)
-      @config.each { |c| c.untouch }
+      @config.each(&:untouch)
     else
       @config = []
     end
@@ -69,10 +69,10 @@ class MonitoringConfig
 
   def compact!
     # remove all unused entries
-    @config.reject { |cfg| cfg.touched? }.each do |removed|
+    @config.reject(&:touched?).each do |removed|
       puts " * removed customer #{removed.description}"
     end
-    @config = @config.select { |cfg| cfg.touched? }
+    @config = @config.select(&:touched?)
   end
 
   def save_config
@@ -106,7 +106,7 @@ class MonitoringConfig
   end
 
   def report
-    keys = ['CloudAlly', 'Skykick', 'Sophos', 'Veeam', 'Integra365', 'Zabbix']
+    keys = %w[CloudAlly Skykick Sophos Veeam Integra365 Zabbix]
     report_file = 'configuration.md'
 
     File.open(report_file, 'w') do |report|
@@ -122,7 +122,7 @@ class MonitoringConfig
         monitor_backup       = 'on' if cfg.monitor_backup
         monitor_connectivity = 'on' if cfg.monitor_connectivity
         monitor_dtc          = 'on' if cfg.monitor_dtc
-        notifications = cfg.notifications.count if cfg.notifications&.count.positive?
+        notifications = cfg.notifications.count if cfg.notifications&.count&.positive?
         report.puts "|#{cfg.description}|#{notifications}" \
                     "|#{create_ticket}|#{monitor_endpoints}|#{monitor_backup}|#{monitor_connectivity}|#{monitor_dtc}|#{services}"
       end
@@ -130,19 +130,15 @@ class MonitoringConfig
     end
   end
 
-private
+  private
 
   def sla_documentation(cfg, key)
-    sla = ''
-    if cfg.source.include?(key)
-      sla = (cfg.sla.grep(/#{key}/)).first
-      if !sla || sla.empty?
-        sla = 'x'
-      else
-        sla = sla.gsub(key + '-', '')
-      end
-    end
-    sla
+    return '' unless cfg.source.include?(key)
+
+    sla = cfg.sla.grep(/#{key}/).first
+    return 'x' if !sla || sla.empty?
+
+    sla.gsub("#{key}-", '')
   end
 
   def first_result(result)

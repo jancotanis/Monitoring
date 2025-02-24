@@ -85,7 +85,6 @@ puts url
   end
 end
 
-
 # NCSCTextAdvisory fetches and processes text-based security advisories
 # from the Dutch National Cyber Security Centre (NCSC).
 #
@@ -94,7 +93,7 @@ end
 #   puts advisory.advisory  # Full advisory text
 #   puts advisory.cve       # Extracted CVE IDs
 class NCSCTextAdvisory
-  attr_reader :advisory, :cve
+  attr_reader :id, :advisory, :cve
 
   # Initializes the class and loads the advisory.
   #
@@ -106,7 +105,7 @@ class NCSCTextAdvisory
     load_text_advisory
   end
 
-private
+  private
 
   # Fetches and processes the advisory text from the NCSC website.
   def load_text_advisory
@@ -158,7 +157,6 @@ puts url
     "https://advisories.ncsc.nl/advisory?id=#{@id}&format=plain"
   end
 end
-
 
 # A specialized monitoring class for fetching and analyzing NCSC advisories via RSS.
 #
@@ -215,12 +213,12 @@ class MonitoringNCSC < MonitoringFeed
     probability = impact = '?'
 
     # Extract probability and impact levels from the advisory title
-    if (match = item.title.match( %r(\[([HML])/([HM])\])))
+    if (match = item.title.match(%r{\[([HML])/([HM])\]}))
       probability = match[1]
       impact = match[2]
     end
 
-    (probability == 'H' || impact == 'H')
+    probability == 'H' || impact == 'H'
   end
 
   # Determines if an item is to be reported based on its associated CVE scores.
@@ -248,9 +246,8 @@ class MonitoringNCSC < MonitoringFeed
 
       # cache score unless we had an unknown score
       if (score >= CUTOFF_SCORE) || !scores.include?(nil)
+        # return score from loop
         score
-      else
-        nil
       end
     end
 

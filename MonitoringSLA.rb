@@ -82,10 +82,10 @@ Notification = Struct.new(:task, :interval, :triggered) do
     i = INTERVALS[interval]
     if i
       time_desc = if i == ONCE
-         'after date'
-      else
-        'last time triggered'
-      end
+                    'after date'
+                  else
+                    'last time triggered'
+                  end
       "Task '#{task}' to be executed #{i.description}; #{time_desc} #{triggered}"
     else
       "Notification #{task}, invalid interval='#{interval}', triggered=#{triggered}"
@@ -137,11 +137,7 @@ class MonitoringSLA
     cfg = @config.by_description customer
     if cfg
       if CODES.include? interval
-        if date && !date.empty?
-          d = Date.parse(date)
-        else
-          d = nil
-        end
+        d = Date.parse(date) if date && !date.empty?
         n = Notification.new(text, interval, d)
         cfg.notifications << n
         cfg.create_ticket = true
@@ -166,17 +162,17 @@ class MonitoringSLA
     @config.entries.each do |cfg|
       cfg.notifications ||= []
       cfg.notifications.each do |n|
-        if CODES.include? n.interval
-          interval = INTERVALS[n.interval]
-          # quarter is approx 91 days
-          if n.triggered.nil? || interval.due?(n.triggered)
-            result << PeriodicalNotification.new(cfg, n, interval, n.to_s)
-            n.triggered = Date.today
+        next unless CODES.include? n.interval
 
-            # check if once is triggered and remove it
-            n.interval = CLEAR_INTERVAL if ONCE.code.eql? n.interval
-          end
-        end
+        interval = INTERVALS[n.interval]
+        # quarter is approx 91 days
+        next unless n.triggered.nil? || interval.due?(n.triggered)
+
+        result << PeriodicalNotification.new(cfg, n, interval, n.to_s)
+        n.triggered = Date.today
+
+        # check if once is triggered and remove it
+        n.interval = CLEAR_INTERVAL if ONCE.code.eql? n.interval
       end
       cfg.notifications.delete_if { |n| n.interval == CLEAR_INTERVAL }
     end
@@ -188,11 +184,11 @@ class MonitoringSLA
   # @return [void]
   def report
     @config.entries.each do |cfg|
-      if cfg.notifications&.count&.positive?
-        puts cfg.description
-        cfg.notifications.each do |n|
-          puts "- #{n}"
-        end
+      next unless cfg.notifications&.count&.positive?
+
+      puts cfg.description
+      cfg.notifications.each do |n|
+        puts "- #{n}"
       end
     end
   end

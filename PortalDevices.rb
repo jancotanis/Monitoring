@@ -34,10 +34,10 @@ def parse_options
     end
   end
   o.parse!
-    unless options[:company]
-      puts o
-      exit 0
-    end
+  unless options[:company]
+    puts o
+    exit 0
+  end
   options
 end
 
