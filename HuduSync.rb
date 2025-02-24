@@ -61,9 +61,9 @@ class Services < Enum
     CLOUDALLY => 'https://partners.cloudally.com/',
     SKYKICK => 'https://manage.skykick.com/',
     SOPHOS => 'https://cloud.sophos.com/manage/partner',
-    VEEAM => ENV['VEEAM_API_HOST'],
+    VEEAM => ENV.fetch('VEEAM_API_HOST'),
     INTEGRA365 => 'https://office365.integra-bcs.nl/',
-    ZABBIX => ENV['ZABBIX_API_HOST'],
+    ZABBIX => ENV.fetch('ZABBIX_API_HOST'),
     DTC => 'https://www.digitaltrustcenter.nl/cyberalerts'
   }.freeze
   TITLE_TEST = {
