@@ -9,18 +9,12 @@ require_relative 'MonitoringModel'
 module Integra365
   # billing type - term, trial, usage
   TenantData = Struct.new(:id, :name, :raw_data, :endpoints, :alerts) do
+    include MonitoringTenant
+
     def initialize(*)
       super
       self.endpoints ||= {}
       self.alerts ||= []
-    end
-
-    def description
-      name
-    end
-
-    def clear_endpoint_alerts
-      endpoints&.each_value(&:clear_alerts)
     end
   end
 

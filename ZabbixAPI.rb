@@ -8,17 +8,11 @@ require_relative 'MonitoringModel'
 
 module Zabbix
   TenantData = Struct.new(:id, :name, :status, :raw_data, :endpoints, :alerts) do
+    include MonitoringTenant
+
     def initialize(*)
       super
       self.alerts ||= []
-    end
-
-    def description
-      name
-    end
-
-    def clear_endpoint_alerts
-      endpoints&.each_value(&:clear_alerts)
     end
 
     def lazy_endpoints_loader(loader)

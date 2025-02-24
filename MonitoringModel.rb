@@ -134,6 +134,35 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
   end
 end
 
+# Module for monitoring tenant endpoints and managing alerts.
+#
+# This module provides functionality to interact with a tenant's endpoints,
+# specifically to clear any active alerts.
+#
+# @example Usage
+#   tenant = MonitoringTenant.new
+#   tenant.clear_endpoint_alerts
+#   puts tenant.description
+#
+module MonitoringTenant
+  # Clears alerts for all endpoints associated with the tenant.
+  #
+  # This method iterates over all available endpoints and calls `clear_alerts`
+  # on each one. If there are no endpoints, the method does nothing.
+  #
+  # @return [void]
+  def clear_endpoint_alerts
+    endpoints&.each_value(&:clear_alerts)
+  end
+
+  # Alias for `name`, returning the name of the tenant.
+  #
+  # @return [String] the name of the tenant
+  def description
+    name
+  end
+end
+
 class AbstractMonitor
   attr_reader :source
 

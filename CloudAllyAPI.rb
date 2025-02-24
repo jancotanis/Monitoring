@@ -12,18 +12,12 @@ module CloudAlly
 
   # billing type - term, trial, usage
   TenantData = Struct.new(:id, :name, :status, :billing_type, :raw_data, :endpoints, :alerts) do
+    include MonitoringTenant
+
     def initialize(*)
       super
       self.endpoints ||= {}
       self.alerts ||= []
-    end
-
-    def description
-      name
-    end
-
-    def clear_endpoint_alerts
-      endpoints&.each_value(&:clear_alerts)
     end
   end
 

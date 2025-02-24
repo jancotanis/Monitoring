@@ -8,6 +8,8 @@ require_relative 'MonitoringModel'
 
 module Sophos
   TenantData = Struct.new(:id, :name, :api, :status, :billing_type, :raw_data, :endpoints, :alerts) do
+    include MonitoringTenant
+
     def initialize(*)
       super
       self.endpoints ||= {}
@@ -18,17 +20,8 @@ module Sophos
       'trial'.eql?(billing_type)
     end
 
-    def description
-      # it looks like new tenants are created as COAS Business Systems and showAs is the actual name.
-      name
-    end
-
     def apiHost
       api
-    end
-
-    def clear_endpoint_alerts
-      endpoints&.each_value(&:clear_alerts)
     end
 
     def lazy_endpoints_loader(loader)

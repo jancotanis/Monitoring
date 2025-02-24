@@ -9,19 +9,12 @@ require_relative 'MonitoringModel'
 
 module Veeam
   TenantData = Struct.new(:id, :name, :status, :billing_type, :raw_data, :endpoints, :alerts) do
+    include MonitoringTenant
+
     def initialize(*)
       super
       self.endpoints ||= {}
       self.alerts ||= []
-    end
-
-    def description
-      # it looks like new tenants are created as COAS Business Systems and showAs is the actual name.
-      name
-    end
-
-    def clear_endpoint_alerts
-      endpoints&.each_value(&:clear_alerts)
     end
   end
 
