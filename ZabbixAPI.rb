@@ -33,11 +33,7 @@ module Zabbix
 
     def severity
       severity_text = ['not classified', 'information', 'warning', 'average', 'high', 'disaster']
-      if (severity_code.to_i >= 0) && (severity_code.to_i < severity_text.count)
-        severity_text[severity_code.to_i]
-      else
-        severity_code
-      end
+      severity_text.fetch(severity_code.to_i, severity_code)
     end
   end
 
