@@ -19,7 +19,6 @@
 # @!attribute [rw] incident_alerts
 #   @return [Array] A list of incident-specific alerts for the endpoint.
 MonitoringEndpoint = Struct.new(:id, :type, :hostname, :tenant, :status, :raw_data, :alerts, :incident_alerts) do
-
   # Initializes the MonitoringEndpoint, ensuring alerts and incident_alerts are arrays.
   #
   # @param [Array] args The arguments to initialize the struct.
@@ -64,7 +63,7 @@ MonitoringIncident = Struct.new(:source, :device, :start_time, :end_time, :alert
 
   def to_s
     "  #{time_to_s}: #{source} #{alert.severity} alert\n" \
-    "   Description: #{alert.description}\n"
+      "   Description: #{alert.description}\n"
   end
 end
 
@@ -185,7 +184,6 @@ class AbstractMonitor
   def process_customer_alerts(_customer, _all_alerts)
     raise NotImplementedError, 'You must implement this method'
   end
-
 
   def create_endpoint_from_alert(customer, alert)
     device_id = alert.endpoint_id

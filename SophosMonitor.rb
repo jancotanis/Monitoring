@@ -126,12 +126,12 @@ class SophosMonitor < AbstractMonitor
   def process_customer_alerts(customer, all_alerts)
     cfg = @config.by_description(customer.description)
     return unless cfg.monitoring?
-  
+
     cfg.endpoints = customer.endpoints.count unless customer.endpoints.empty?
     all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
     customer_alerts.customer = customer
-    
     return if customer.alerts.empty?
+
     @report.puts '', "#{customer.description} - license=#{customer.billing_type}"
 
     # group alerts by customer

@@ -22,7 +22,7 @@ class ZabbixIncident < MonitoringIncident
 
   def to_s
     "  #{time_to_s}: #{source} #{alert.severity} alert\n" \
-    "   Description: #{alert.description}\n"
+      "   Description: #{alert.description}\n"
   end
 end
 

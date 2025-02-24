@@ -185,10 +185,10 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
     a = feed.get_vulnerabilities_list
     a.each do |vulnerability|
       prio = if vulnerability.high_priority?
-        Ticketer::PRIO_HIGH
-      else
-        Ticketer::PRIO_NORMAL
-      end
+               Ticketer::PRIO_HIGH
+             else
+               Ticketer::PRIO_NORMAL
+             end
       _ticket = ticketer.create_ticket("Monitoring: #{vulnerability.title}", vulnerability.description, prio, feed.source)
     end
   end

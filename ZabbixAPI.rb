@@ -114,7 +114,7 @@ module Zabbix
       @alerts
     end
 
-  private
+    private
 
     def events_by_id(id)
       id = [id] unless id.is_a? Array

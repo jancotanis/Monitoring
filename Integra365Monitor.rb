@@ -12,14 +12,13 @@ INTEGRA = 'Integra365'
 
 # Represents an incident related to Integra backup monitoring.
 #
-# This class inherits from `MonitoringIncident` and is used to track 
+# This class inherits from `MonitoringIncident` and is used to track
 # backup-related issues for Integra devices.
 #
 # @example Creating a new incident
 #   incident = IntegraBackupIncident.new(device, start_time, end_time, alert)
 #
 class IntegraBackupIncident < MonitoringIncident
-
   # Initializes an Integra backup incident.
   #
   # @param device [Object, nil] The device related to the incident (default: nil).
@@ -80,15 +79,15 @@ class Integra365Monitor < AbstractMonitor
   def collect_data
     @tenants.each do |customer|
       customer.clear_endpoint_alerts
-      
+
       next unless @config.by_description(customer.description).monitor_backup
-      
+
       customer_alerts = collect_alerts(customer)
       next if customer_alerts.empty?
-      
+
       customer.alerts = customer_alerts
       process_endpoint_alerts(customer, customer_alerts)
-      
+
       # Throttle API requests
       sleep(0.05)
     end

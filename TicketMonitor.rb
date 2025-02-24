@@ -191,7 +191,7 @@ puts "Domain found for '#{config.description}', last backup #{config.last_backup
 
     group_ids
   end
-  
+
   def group_ids
     groups = @client.group.all
     groups.each do |group|

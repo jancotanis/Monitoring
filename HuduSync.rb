@@ -153,11 +153,11 @@ AssetLayout = Struct.new(:asset, :fields) do
 
     case split[1]
     when Actions::ENABLED
-      if is_layout
-        field.value = false
-      else
-        field.value = hudu_field.value
-      end
+      field.value = if is_layout
+                      false
+                    else
+                      hudu_field.value
+                    end
       field.type = Actions::ENABLED
     when Actions::NOTE
       field.note = hudu_field.value unless is_layout

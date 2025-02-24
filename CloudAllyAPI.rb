@@ -88,7 +88,7 @@ module CloudAlly
       end
     end
 
-  private
+    private
 
     def load_endpoints
       @endpoints = {}
