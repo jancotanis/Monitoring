@@ -107,8 +107,7 @@ class SophosMonitor < AbstractMonitor
       end
       # throuttle sophos api
       sleep(0.2)
-
-    rescue => e
+    rescue Sophos::SophosError => e
       if customer.trial?
         puts '', "*** Trial customer skipped #{customer.description}"
       else

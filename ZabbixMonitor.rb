@@ -52,7 +52,7 @@ class ZabbixMonitor < AbstractMonitor
           end
         end
       end
-    rescue => e
+    rescue Zabbix::ZabbixError => e
       @report.puts '', "*** Error with #{customer.description}"
       @report.puts e
     end

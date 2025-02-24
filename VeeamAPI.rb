@@ -70,7 +70,7 @@ module Veeam
         end
       end
       @endpoints
-    rescue => e
+    rescue Veeam::VeeamError => e
       @logger&.error e
       @logger&.error e.response.to_json
     end

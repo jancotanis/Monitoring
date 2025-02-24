@@ -88,7 +88,7 @@ module Sophos
         endp[item.id] = EndpointData.new(item.id, item.type, item.hostname, group_name, status, item.attributes)
       end
       endp
-    rescue => e
+    rescue Sophos::SophosError => e
       @logger&.error e
       @logger&.error e.response.to_json
     end
