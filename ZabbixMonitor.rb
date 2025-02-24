@@ -36,26 +36,26 @@ class ZabbixMonitor < AbstractMonitor
 
   private
 
-  def collect_data
-    @tenants.each do |customer|
-      customer.clear_endpoint_alerts
+  # Monitor when endpoints is on
+  def monitor_tenant?(cfg)
+    cfg.monitor_endpoints
+  end
 
-      cfg = @config.by_description(customer.description)
-      if cfg.monitor_endpoints
-        alerts = @client.alerts(customer)
-        # add active alerts to customer record
-        if alerts.count.positive?
-          customer.alerts = alerts
-          alerts.each_value do |a|
-            create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
-            customer.endpoints[a.endpoint_id].alerts << a
-          end
+  def collect_data
+    process_active_tenants do |customer, cfg|
+      alerts = @client.alerts(customer)
+      # add active alerts to customer record
+      if alerts.count.positive?
+        customer.alerts = alerts
+        alerts.each_value do |a|
+          create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
+          customer.endpoints[a.endpoint_id].alerts << a
         end
       end
-    rescue Zabbix::ZabbixError => e
-      @report.puts '', "*** Error with #{customer.description}"
-      @report.puts e
     end
+  rescue Zabbix::ZabbixError => e
+    @report.puts '', "*** Error with #{customer.description}"
+    @report.puts e
   end
 
   # Processes alerts for a single customer and adds them to all_alerts.

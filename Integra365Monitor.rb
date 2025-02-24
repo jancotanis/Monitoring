@@ -71,25 +71,24 @@ class Integra365Monitor < AbstractMonitor
 
   private
 
+  # Monitor when backup is on
+  def monitor_tenant?(cfg)
+    cfg.monitor_backup
+  end
+
   # Collects and organizes data from all monitored tenants.
   #
   # Retrieves alerts for each tenant, filters out successful/running alerts,
   # and associates them with endpoints.
   #
   def collect_data
-    @tenants.each do |customer|
-      customer.clear_endpoint_alerts
-
-      next unless @config.by_description(customer.description).monitor_backup
+    process_active_tenants do |customer, cfg|
 
       customer_alerts = collect_alerts(customer)
       next if customer_alerts.empty?
 
       customer.alerts = customer_alerts
       process_endpoint_alerts(customer, customer_alerts)
-
-      # Throttle API requests
-      sleep(0.05)
     end
   end
 

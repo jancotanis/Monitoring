@@ -36,17 +36,18 @@ class CloudAllyMonitor < AbstractMonitor
 
   private
 
+  # Monitor when backup is on
+  def monitor_tenant?(cfg)
+    cfg.monitor_backup
+  end
+
   def collect_data
-    @tenants.each do |customer|
-      customer.clear_endpoint_alerts
+    process_active_tenants do |customer, cfg|
       # add endpoints to customer
       endpts = @client.endpoints(customer.id)
       endpts.each do |e|
         customer.endpoints[e.id] = e
       end
-
-      cfg = @config.by_description(customer.description)
-      next unless cfg.monitor_backup
 
       customer_alerts = collect_alerts(customer)
       # add active alerts to customer record

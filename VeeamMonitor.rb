@@ -32,25 +32,24 @@ class VeeamMonitor < AbstractMonitor
 
   private
 
+  # Monitor when backup is on
+  def monitor_tenant?(cfg)
+    cfg.monitor_backup
+  end
+
   def collect_data
-    @tenants.each do |customer|
-      customer.clear_endpoint_alerts
-      cfg = @config.by_description(customer.description)
-      if cfg.monitor_backup
-        customer_alerts = collect_alerts(customer)
-        # add active alerts to customer record
-        if customer_alerts.count.positive?
-          customer.alerts = customer_alerts
-          customer_alerts.each_value do |a|
-            unless a.severity.eql? 'Resolved'
-              create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
-              customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
-            end
+    process_active_tenants do |customer, cfg|
+      customer_alerts = collect_alerts(customer)
+      # add active alerts to customer record
+      if customer_alerts.count.positive?
+        customer.alerts = customer_alerts
+        customer_alerts.each_value do |a|
+          unless a.severity.eql? 'Resolved'
+            create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
+            customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
           end
         end
       end
-      # throuttle api
-      sleep(0.05)
     end
   end
 

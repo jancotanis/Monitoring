@@ -89,30 +89,30 @@ class SophosMonitor < AbstractMonitor
 
   private
 
+  # Monitor when backup is on
+  def monitor_tenant?(cfg)
+    cfg.monitoring?
+  end
+
   def collect_data
-    @tenants.each do |customer|
-      cfg = @config.by_description(customer.description)
-      if cfg.monitoring?
-        alerts = @client.alerts(customer)
-        # add active alerts to customer record
-        if alerts.count.positive?
-          find_products(alerts)
-          customer.alerts = alerts
-          alerts.each_value do |a|
-            create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
-            customer.endpoints[a.endpoint_id].alerts << a
-          end
+    process_active_tenants do |customer, cfg|
+      alerts = @client.alerts(customer)
+      # add active alerts to customer record
+      if alerts.count.positive?
+        find_products(alerts)
+        customer.alerts = alerts
+        alerts.each_value do |a|
+          create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
+          customer.endpoints[a.endpoint_id].alerts << a
         end
       end
-      # throuttle sophos api
-      sleep(0.2)
-    rescue Sophos::SophosError => e
-      if customer.trial?
-        puts '', "*** Trial customer skipped #{customer.description}"
-      else
-        @report.puts '', "*** Error with #{customer.description}"
-        @report.puts e
-      end
+    end
+  rescue Sophos::SophosError => e
+    if customer.trial?
+      puts '', "*** Trial customer skipped #{customer.description}"
+    else
+      @report.puts '', "*** Error with #{customer.description}"
+      @report.puts e
     end
   end
 

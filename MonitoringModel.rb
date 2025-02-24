@@ -201,6 +201,44 @@ class AbstractMonitor
 
   protected
 
+  # Collect all required data to monitor
+  #
+  def collect_data
+    raise NotImplementedError, 'You must implement this method'
+  end
+
+  # Check if tenant config should be monitored
+  #
+  def monitor_tenant?(cfg)
+    raise NotImplementedError, 'You must implement this method'
+  end
+
+  # Processes active tenants by clearing their endpoint alerts and executing a monitoring block.
+  #
+  # This method iterates through all tenants, clears their endpoint alerts, retrieves
+  # their configuration, and conditionally yields them to a provided block if they meet
+  # monitoring criteria.
+  #
+  # @yield [customer, cfg] Yields the tenant and its configuration if it meets monitoring conditions.
+  # @yieldparam customer [Object] The tenant being processed.
+  # @yieldparam cfg [Object] The configuration associated with the tenant.
+  #
+  # @note A slight delay (0.05 seconds) is introduced between iterations to throttle API calls.
+  #
+  # @return [void]
+  def process_active_tenants
+    @tenants.each do |customer|
+      customer.clear_endpoint_alerts
+      cfg = @config.by_description(customer.description)
+
+      yield(customer, cfg) if monitor_tenant?(cfg)
+      # throttle api
+      sleep(0.05)
+    end
+  end
+
+  # Collect all alerts
+  #
   def collect_alerts(tenant)
     @client.alerts(tenant.id)
   end
