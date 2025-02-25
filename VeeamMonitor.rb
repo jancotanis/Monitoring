@@ -22,6 +22,7 @@ end
 
 class VeeamMonitor < AbstractMonitor
   attr_reader :config, :all_alerts
+  RESOLVED = 'Resolved'
 
   def initialize(report, config, log)
     client = Veeam::ClientWrapper.new(ENV.fetch('VEEAM_API_HOST'), ENV.fetch('VEEAM_API_KEY'), log)
@@ -41,10 +42,10 @@ class VeeamMonitor < AbstractMonitor
     process_active_tenants do |customer, cfg|
       customer_alerts = collect_alerts(customer)
       # add active alerts to customer record
-      if customer_alerts.count.positive?
+      if customer_alerts.any?
         customer.alerts = customer_alerts
         customer_alerts.each_value do |a|
-          unless a.severity.eql? 'Resolved'
+          unless a.severity.eql? RESOLVED
             create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
             customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
           end
@@ -68,14 +69,14 @@ class VeeamMonitor < AbstractMonitor
     return if customer.alerts.empty?
 
     @report.puts '', customer.description
-    # walk through all endpoint elerts
+    # walk through all endpoint alerts
     customer.endpoints.each_value do |ep|
-      next unless ep.alerts.count.positive?
+      next unless ep.alerts.any?
 
       @report.puts "- Endpoint #{ep}"
       ep.alerts.each do |a|
         # group alerts by customer
-        if a.severity.eql? 'Resolved'
+        if a.severity.eql? RESOLVED
           # resolved alert, maybe remove from reported_alerts
           if cfg.reported_alerts.include? "#{VEEAM}-#{a.id}"
             @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{a.id})"
