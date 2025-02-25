@@ -95,7 +95,7 @@ class SophosMonitor < AbstractMonitor
   end
 
   def collect_data
-    process_active_tenants do |customer, cfg|
+    process_active_tenants do |customer, _cfg|
       alerts = @client.alerts(customer)
       # add active alerts to customer record
       if alerts.count.positive?

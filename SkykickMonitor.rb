@@ -40,7 +40,7 @@ class SkykickMonitor < AbstractMonitor
   end
 
   def collect_data
-    process_active_tenants do |customer, cfg|
+    process_active_tenants do |customer, _cfg|
       customer_alerts = collect_alerts(customer)
       # add active alerts to customer record
       if customer_alerts.count.positive?
