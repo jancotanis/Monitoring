@@ -130,13 +130,9 @@ class Matcher
       mon = monitoring.by_description(company.name)
       name = company.name.downcase
 
-      # retry partial match ans skip 'test' company
+      # No exact match found and skip 'test' company
       if mon.nil? && !'test'.eql?(name)
-        found = monitoring.entries.select do |cfg|
-          name.include?(cfg.description.downcase) || cfg.description.downcase.include?(name)
-        end
-
-        if found.any?
+        if (found = partial_match?(monitoring.entries, name)).any?
           mon = found.first
           puts " Partial match found: #{company.name} / #{mon.description}" if mon
           puts "* Duplicate match for #{mon.description}" if mon.touched?
@@ -151,6 +147,28 @@ class Matcher
       end
     end
     [matches, nonmatches]
+  end
+
+  # Checks if a given company name partially matches any company descriptions in the list.
+  #
+  # This method performs a case-insensitive check to see if the `company_name` is a substring
+  # of any company's description or vice versa.
+  #
+  # @param companies [Array] An array of objects that must respond to `description`.
+  # @param company_name [String] The company name to check for partial matches.
+  # @return [Boolean] `true` if a partial match is found, otherwise `false`.
+  #
+  # @example
+  #   companies = [OpenStruct.new(description: "TechCorp"), OpenStruct.new(description: "InnoSoft")]
+  #   partial_match?(companies, "tech")           #=> true
+  #   partial_match?(companies, "innosoftware")   #=> true
+  #   partial_match?(companies, "apple")          #=> false
+  #
+  def partial_match?(companies, company_name)
+    companies.select do |company|
+      name = company.description.downcase
+      company_name.include?(name) || name.include?(company_name)
+    end
   end
 end
 
