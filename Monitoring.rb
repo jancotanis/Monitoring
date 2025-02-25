@@ -55,8 +55,8 @@ def get_options(config, sla)
   o = OptionParser.new do |opts|
     opts.banner = 'Usage: Monitor.rb [options]'
 
-    opts.on('-s', '--sla', 'Report customer SLAs') do |_arg|
-      sla.report
+    opts.on('-s', '--sla', 'Report customer SLAs to configuration.md') do |_arg|
+      config.report
       exit(0)
     end
     opts.on('-t', '--tenants', 'Report all tenants to json') do |arg|
