@@ -3,7 +3,6 @@
 require 'date'
 require_relative 'MonitoringConfig'
 
-
 # Represents a recurring time interval with a description and a number of days.
 # @!attribute [r] description
 #   @return [String] The name of the interval.

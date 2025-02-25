@@ -22,6 +22,7 @@ end
 
 class VeeamMonitor < AbstractMonitor
   attr_reader :config, :all_alerts
+
   RESOLVED = 'Resolved'
 
   def initialize(report, config, log)
@@ -39,15 +40,16 @@ class VeeamMonitor < AbstractMonitor
   end
 
   def collect_data
-    process_active_tenants do |customer, cfg|
+    process_active_tenants do |customer, _cfg|
       customer_alerts = collect_alerts(customer)
       # add active alerts to customer record
       if customer_alerts.any?
         customer.alerts = customer_alerts
         customer_alerts.each_value do |a|
           unless a.severity.eql? RESOLVED
-            create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
-            customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
+            endpoint_id = a.endpoint_id
+            create_endpoint_from_alert(customer, a) unless customer.endpoints[endpoint_id]
+            customer.endpoints[endpoint_id]&.alerts&.push(a)
           end
         end
       end

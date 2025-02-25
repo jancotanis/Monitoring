@@ -42,23 +42,24 @@ class CloudAllyMonitor < AbstractMonitor
   end
 
   def collect_data
-    process_active_tenants do |customer, cfg|
+    process_active_tenants do |customer, _cfg|
       # add endpoints to customer
       endpts = @client.endpoints(customer.id)
-      endpts.each do |e|
-        customer.endpoints[e.id] = e
+      endpts.each do |ep|
+        customer.endpoints[ep.id] = ep
       end
 
       customer_alerts = collect_alerts(customer)
       # add active alerts to customer record
-      next unless  customer_alerts.count.positive?
+      next unless customer_alerts.count.positive?
 
       customer.alerts = customer_alerts
       customer_alerts.each do |a|
         next unless a.severity.eql? 'FAILED'
 
-        create_endpoint_from_alert(customer, a) unless customer.endpoints[a.endpoint_id]
-        customer.endpoints[a.endpoint_id].alerts << a if customer.endpoints[a.endpoint_id]
+        endpoint_id = a.endpoint_id
+        create_endpoint_from_alert(customer, a) unless customer.endpoints[endpoint_id]
+        customer.endpoints[endpoint_id]&.alerts&.push(a)
       end
     end
   end
@@ -69,18 +70,19 @@ class CloudAllyMonitor < AbstractMonitor
   # @param all_alerts [Hash] The hash storing all alerts.
   #
   def process_customer_alerts(customer, all_alerts)
-    cfg = @config.by_description(customer.description)
+    description = customer.description
+    cfg = @config.by_description(description)
     return unless cfg.monitor_backup
 
-    all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(customer.description, customer.alerts)
+    all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(description, customer.alerts)
     customer_alerts.customer = customer
 
     return if customer.alerts.empty?
 
-    @report.puts '', customer.description
+    @report.puts '', description
     # walk through all endpoint elerts
     customer.endpoints.each_value do |ep|
-      if ep.alerts.count.positive?
+      if ep.alerts.any?
         @report.puts "- Endpoint #{ep}"
         ep.alerts.each do |a|
           # group alerts by customer
