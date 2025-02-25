@@ -103,7 +103,7 @@ class MonitoringConfig
   # @return [ConfigData, nil] The matching configuration entry, or nil if not found.
   def by_id(idx)
     result = @config.select { |cfg| cfg.id.eql?(idx) }
-    first_result(result)
+    MonitoringConfig.first_result(result)
   end
 
   # Returns the first matching configuration entry by its description.
@@ -115,7 +115,7 @@ class MonitoringConfig
   # @return [ConfigData, nil] The matching configuration entry, or nil if not found
   def by_description(desc)
     result = @config.select { |cfg| cfg.description.upcase.eql?(desc.upcase) }
-    first_result(result)
+    MonitoringConfig.first_result(result)
   end
 
   # Deletes a configuration entry from the list.
