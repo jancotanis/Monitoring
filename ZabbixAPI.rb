@@ -26,6 +26,8 @@ module Zabbix
   class EndpointData < MonitoringEndpoint; end
 
   AlertData = Struct.new(:id, :created, :description, :severity_code, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :event) do
+    include MonitoringAlert
+
     def create_endpoint
       # :id, :type, :hostname, :tenant, :status, :raw_data
       Zabbix::EndpointData.new(id, '?', '?')

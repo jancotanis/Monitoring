@@ -39,6 +39,10 @@ module Sophos
     def create_endpoint
       Sophos::EndpointData.new(endpoint_id, "#{property('managedAgent.type')}/#{property('product')}", property('managedAgent.name'))
     end
+
+    def type
+      property('type')
+    end
   end
 
   class ClientWrapper

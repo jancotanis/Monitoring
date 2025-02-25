@@ -21,6 +21,8 @@ module Integra365
   class EndpointData < MonitoringEndpoint; end
 
   AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :tenant_id, :raw_data) do
+    include MonitoringAlert
+
     def create_endpoint
       # endpoint is backup job
       Integra365::EndpointData.new(id, 'BackupJob', property('jobName').to_s)

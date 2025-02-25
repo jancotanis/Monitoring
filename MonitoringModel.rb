@@ -78,17 +78,18 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
     self.devices ||= Hash.new { |hsh, key| hsh[key] = {} }
   end
 
-  def add_incident(device, alert, klass)
+  def add_incident(device_id, alert, klass)
     # contact alerts for same type together to get start end times
     # TODO: not all systems have alert type
-    alert_type = alert.property('type')
+    alert_type = alert.type
+
     device_alerts = devices[alert.endpoint_id]
-    if device_alerts[alert_type]
-      # update end date
-      incident = device_alerts[alert_type]
+    if incident = device_alerts[alert_type]
+      # update end date & alert
       incident.end_time = alert.created
+      #incident.alert = alert
     else
-      instance = klass.new(device, alert.created, alert.created, alert)
+      instance = klass.new(device_id, alert.created, alert.created, alert)
       device_alerts[alert_type] = instance
       @source = instance.source
     end
@@ -160,6 +161,30 @@ module MonitoringTenant
   # @return [String] the name of the tenant
   def description
     name
+  end
+end
+
+# Module: MonitoringAlert
+# This module provides defaut methods for monitoring alerts.
+#
+# Usage:
+#   class Alert
+#     include MonitoringAlert
+#
+#     def description
+#       "Critical Alert"
+#     end
+#   end
+#
+#   alert = Alert.new
+#   puts alert.type  # Output: "Critical Alert"
+#
+module MonitoringAlert
+  # Returns the `description` of the object as `type`. type is used to summarize similar events
+  #
+  # @return [String] the description of the alert.
+  def type
+    description
   end
 end
 

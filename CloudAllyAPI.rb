@@ -25,6 +25,8 @@ module CloudAlly
 
   # Alert data wrapper for task statusses
   AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data) do
+    include MonitoringAlert
+
     def description
       # collect subsources that failed the task
       failed_sub_sources = raw_data['backupStatus'].select { |src| STATUS_WANTED.eql? src.status }.map(&:subSource).join ' '
