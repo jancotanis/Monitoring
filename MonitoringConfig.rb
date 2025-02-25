@@ -7,8 +7,8 @@ MONITORING_CFG = 'monitoring.cfg'
 
 # Struct for managing configuration data, including monitoring and SLA details.
 #
-# This struct holds configuration data for a system, such as monitoring settings, SLA information, 
-# ticket creation, notifications, and alerts. It provides utility methods for interacting with 
+# This struct holds configuration data for a system, such as monitoring settings, SLA information,
+# ticket creation, notifications, and alerts. It provides utility methods for interacting with
 # monitoring status and tracking if the object has been "touched" (modified).
 ConfigData = Struct.new(
   :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup,
@@ -32,7 +32,7 @@ ConfigData = Struct.new(
 
   # Checks if any monitoring options are enabled.
   #
-  # This method returns `true` if at least one of the monitoring options (endpoints, connectivity, 
+  # This method returns `true` if at least one of the monitoring options (endpoints, connectivity,
   # backup, or DTC) is enabled, and `false` otherwise.
   #
   # @return [Boolean] `true` if any monitoring setting is enabled, `false` otherwise.
@@ -146,7 +146,7 @@ class MonitoringConfig
   #
   # @return [void]
   def save_config
-    FileUtil.write_file(MONITORING_CFG, YAML.dump(@config.sort_by { |t| t.description.upcase }))
+    FileUtil.write_file(MONITORING_CFG, YAML.dump(@config.sort_by { |tenant| tenant.description.upcase }))
   end
 
   # Loads new tenant configuration entries and adds them to the existing configuration.
@@ -160,24 +160,23 @@ class MonitoringConfig
   # @return [Array] The updated configuration list.
   def load_config(source, tenants)
     # add missing tenants config entries
-    tenants.each do |t|
-      id = t.id
-      description = t.description
-      cfg = ConfigData.new(id, description, [source]) unless by_description(description)
+    tenants.each do |tenant|
+      id = tenant.id
+      description = tenant.description
+
+      cfg = by_description(description) || ConfigData.new(id, description, [source])
       # not found by description
       if cfg
         # check if we have a record with same id
-        if by_id(id)
+        if found = by_id(id)
           # overwrite original item
-          cfg = by_id(id)
+          cfg = found
           puts "Rename tenant [#{cfg.description}] to [#{description}]"
         else
           # not renamed, add it
           puts "Nieuwe tenant [#{description}]"
           @config << cfg
         end
-      else
-        cfg = by_description(description)
       end
       cfg.description = description
       cfg.source << source unless cfg.source.include? source
@@ -212,9 +211,9 @@ class MonitoringConfig
 
         # Write the data for the current company into the report
         report.puts "|#{cfg.description}|#{notifications}" \
-                    "|#{on_off(cfg.create_ticket)}|#{on_off(cfg.monitor_endpoints)}" \
-                    "|#{on_off(cfg.monitor_backup)}|#{on_off(cfg.monitor_connectivity)}" \
-                    "|#{on_off(cfg.monitor_dtc)}|#{services}"
+                    "|#{MonitoringConfig.on_off(cfg.create_ticket)}|#{MonitoringConfig.on_off(cfg.monitor_endpoints)}" \
+                    "|#{MonitoringConfig.on_off(cfg.monitor_backup)}|#{MonitoringConfig.on_off(cfg.monitor_connectivity)}" \
+                    "|#{MonitoringConfig.on_off(cfg.monitor_dtc)}|#{services}"
       end
       puts "- #{report_file} written"
     end
@@ -225,7 +224,7 @@ class MonitoringConfig
   # Retrieves the SLA documentation for a given service key in the configuration.
   #
   # This method checks if the service `key` is included in the configuration's source. If it is,
-  # it searches for the associated SLA. If found, it returns the SLA documentation with the service 
+  # it searches for the associated SLA. If found, it returns the SLA documentation with the service
   # key prefix removed. If no SLA is found, it returns an empty string.
   #
   # @param cfg [Object] The configuration object containing the service details.
@@ -252,10 +251,10 @@ class MonitoringConfig
   def self.first_result(result)
     result.first&.touch
   end
-  
+
   # Converts a boolean value to a human-readable "on" or "" (empty string).
   #
-  # This method takes a boolean value and returns "on" if the value is true, or an empty string 
+  # This method takes a boolean value and returns "on" if the value is true, or an empty string
   # if the value is false. It is useful for representing boolean values in a user-friendly format.
   #
   # @param bool [Boolean] The boolean value to convert.
