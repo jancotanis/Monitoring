@@ -4,6 +4,7 @@ require 'yaml'
 require_relative 'utils'
 
 MONITORING_CFG = 'monitoring.cfg'
+MONITORING_REPORT = 'monitoring.md'
 
 # Struct for managing configuration data, including monitoring and SLA details.
 #
@@ -131,11 +132,13 @@ class MonitoringConfig
   #
   # Unused entries are those that have not been marked as "touched." Each removed entry is logged.
   #
+  # @param silent [Boolean] If silent, no console output given
+  #
   # @return [void]
-  def compact!
+  def compact!(silent = false)
     # remove all unused entries
     @config.reject(&:touched?).each do |removed|
-      puts " * removed customer #{removed.description}"
+      puts " * removed customer #{removed.description}" unless silent
     end
     @config.select!(&:touched?)
   end
@@ -164,10 +167,10 @@ class MonitoringConfig
       id = tenant.id
       description = tenant.description
 
-      cfg = by_description(description) || ConfigData.new(id, description, [source])
       # not found by description
-      if cfg
-        # check if we have a record with same id
+      unless cfg = by_description(description)
+        cfg = ConfigData.new(id, description, [source]) 
+        # check if we have a record with same id (and a different name)
         if found = by_id(id)
           # overwrite original item
           cfg = found
@@ -194,18 +197,19 @@ class MonitoringConfig
   # The data for each company is collected from the `@config` instance variable and each company's
   # configuration is processed to generate the appropriate values for each column.
   #
+  # @param silent [Boolean] If silent, no console output given
+  #
   # @return [void] This method writes directly to a file and does not return any values.
-  def report
+  def report(silent = false)
     keys = %w[CloudAlly Skykick Sophos Veeam Integra365 Zabbix]
-    report_file = 'configuration.md'
 
     # Open the report file and write the headers and company details.
-    File.open(report_file, 'w') do |report|
+    File.open(MONITORING_REPORT, 'w') do |report|
       report.puts "| Company | Notifications | Ticket | Endpoints | Backup | Monitoring | DTC | #{keys.join(' | ')} |"
       report.puts "|:--|:--:|:--:|:--:|:--:|:--:|:--:|#{':--: | ' * keys.count}"
 
       @config.each do |cfg|
-        puts cfg.description
+        puts cfg.description unless silent
         services = keys.map { |key| "#{sla_documentation(cfg, key)}|" }.join
         notifications = cfg.notifications.count if cfg.notifications&.count&.positive?
 
@@ -215,7 +219,7 @@ class MonitoringConfig
                     "|#{MonitoringConfig.on_off(cfg.monitor_backup)}|#{MonitoringConfig.on_off(cfg.monitor_connectivity)}" \
                     "|#{MonitoringConfig.on_off(cfg.monitor_dtc)}|#{services}"
       end
-      puts "- #{report_file} written"
+      puts "- #{MONITORING_REPORT} written" unless silent
     end
   end
 
