@@ -46,9 +46,11 @@ class PersistentCache
       @cache[key]
     else
       # Use the loader if key is not found, store and persist the result
-      value = loader.call
-      store(key, value)
-      value
+      if loader
+        value = loader.call
+        store(key, value)
+        value
+      end
     end
   end
 
