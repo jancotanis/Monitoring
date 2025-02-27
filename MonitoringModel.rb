@@ -44,11 +44,29 @@ MonitoringEndpoint = Struct.new(:id, :type, :hostname, :tenant, :status, :raw_da
   end
 end
 
+# Represents a monitoring incident that occurred on a device.
+#
+# @!attribute [r] source
+#   @return [String] The source of the incident (e.g., monitoring system name).
+# @!attribute [r] device
+#   @return [String] The device associated with the incident.
+# @!attribute [r] start_time
+#   @return [Time] The timestamp when the incident started.
+# @!attribute [r] end_time
+#   @return [Time] The timestamp when the incident ended.
+# @!attribute [r] alert
+#   @return [Object] The alert associated with the incident.
 MonitoringIncident = Struct.new(:source, :device, :start_time, :end_time, :alert) do
+  # Generates a unique incident ID based on the source and alert ID.
+  #
+  # @return [String] The unique incident identifier.
   def incident_id
     "#{source}-#{alert.id}"
   end
 
+  # Returns a formatted string representation of the incident time.
+  #
+  # @return [String] The formatted time range, or a single timestamp if start and end times are the same.
   def time_to_s
     if start_time.eql? end_time
       start_time.to_s
@@ -57,10 +75,16 @@ MonitoringIncident = Struct.new(:source, :device, :start_time, :end_time, :alert
     end
   end
 
+  # Returns a string representation of the endpoint.
+  #
+  # @return [String] The string representation of the endpoint.
   def endpoint_to_s
     to_s
   end
 
+  # Returns a human-readable string describing the incident.
+  #
+  # @return [String] A formatted string containing time, source, severity, and alert description.
   def to_s
     "  #{time_to_s}: #{source} #{alert.severity} alert\n" \
       "   Description: #{alert.description}\n"
