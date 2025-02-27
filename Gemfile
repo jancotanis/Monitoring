@@ -17,3 +17,5 @@ gem 'skykick'
 gem 'veeam'
 gem 'hudu'
 gem 'zabbix_api_gem'
+
+gem 'simplecov', require: false, group: :test
