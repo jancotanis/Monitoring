@@ -125,7 +125,7 @@ module Zabbix
         data = @api.hostgroups
         data.each do |item|
           td = TenantData.new(item.groupid, item.name, nil, item.attributes)
-          @tenants[t.id] = td
+          @tenants[td.id] = td
           # Lazy loading of endpoints
           td.lazy_endpoints_loader(-> { endpoints(td) })
         end
@@ -143,7 +143,7 @@ module Zabbix
       endp = {}
 
       data = @api.hosts({ groupids: [customer.id], output: 'extend', selectInventory: 'extend' })
-      # :id, :type, :hostname, :group, :status, :raw_data, :alerts, :incident_alerts
+      # :id, :type, :hostname, :group, :status, :raw_data, :alerts
       data.each do |item|
         e = endp[item.hostid] = EndpointData.new(item.hostid, 'zabbix item', item.name, customer.id, item.status, item.attributes)
         type = e.property('inventory.type')
