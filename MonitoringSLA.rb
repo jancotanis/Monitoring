@@ -80,11 +80,7 @@ Notification = Struct.new(:task, :interval, :triggered) do
   def to_s
     i = INTERVALS[interval]
     if i
-      time_desc = if i == ONCE
-                    'after date'
-                  else
-                    'last time triggered'
-                  end
+      time_desc = (i == ONCE) ? 'after date' : 'last time triggered'
       "Task '#{task}' to be executed #{i.description}; #{time_desc} #{triggered}"
     else
       "Notification #{task}, invalid interval='#{interval}', triggered=#{triggered}"
@@ -182,13 +178,21 @@ class MonitoringSLA
   #
   # @return [void]
   def report
+    puts report_lines
+  end
+
+  # Generates an array of all notifications all customers and their active notifications.
+  #
+  # @return [String]
+  def report_lines
+    content = []
     @config.entries.each do |cfg|
       next unless cfg.notifications&.count&.positive?
 
-      puts cfg.description
       cfg.notifications.each do |n|
-        puts "- #{n}"
+        content.push("- #{n}")
       end
     end
+    content
   end
 end
