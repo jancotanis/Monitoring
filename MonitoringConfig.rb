@@ -169,7 +169,7 @@ class MonitoringConfig
 
       # not found by description
       unless cfg = by_description(description)
-        cfg = ConfigData.new(id, description, [source]) 
+        cfg = ConfigData.new(id, description, [source])
         # check if we have a record with same id (and a different name)
         if found = by_id(id)
           # overwrite original item

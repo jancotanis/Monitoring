@@ -12,7 +12,6 @@ require_relative 'MonitoringModel'
 # It defines structures for handling tenant data, endpoints, and alerts.
 #
 module Veeam
-
   ##
   # Represents a tenant in the Veeam system.
   #
@@ -64,7 +63,8 @@ module Veeam
   # @attr [Hash] raw_data Additional data related to the alert.
   # @attr [Object] company The company information related to the alert.
   #
-  AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :company) do
+  AlertData = Struct.new(:id, :created, :description, :severity, :category,
+                         :product, :endpoint_id, :endpoint_type, :raw_data, :company) do
     include MonitoringAlert
 
     ##
@@ -73,7 +73,8 @@ module Veeam
     # @return [Veeam::EndpointData] A new endpoint created for the alert.
     #
     def create_endpoint
-      Veeam::EndpointData.new(endpoint_id, property('object.type'), "#{property('object.computerName')}/#{property('object.objectName')}")
+      Veeam::EndpointData.new(endpoint_id, property('object.type'),
+                              "#{property('object.computerName')}/#{property('object.objectName')}")
     end
   end
 
@@ -91,6 +92,7 @@ module Veeam
     # @param [Boolean] log Whether to enable logging (default is true).
     #
     def initialize(host, auth_token, log = true)
+      @tenants = nil
       Veeam.configure do |config|
         config.endpoint = host
         config.access_token = auth_token
@@ -133,9 +135,9 @@ module Veeam
         end
       end
       @endpoints
-    rescue Veeam::VeeamError => e
-      @logger&.error e
-      @logger&.error e.response.to_json
+    rescue Veeam::VeeamError => ex
+      @logger&.error ex
+      @logger&.error ex.response.to_json
     end
 
     ##
@@ -149,9 +151,9 @@ module Veeam
       data = @api.active_alarms
       data.each do |item|
         la = item.lastActivation
-        o = item.object
-        a = AlertData.new(item.instanceUid, la.time, la.message.strip, la.status, o.type, 'veeam', o.objectUid, o.type, item.attributes)
-        @alerts[a.id] = a
+        obj = item.object
+        alert = AlertData.new(item.instanceUid, la.time, la.message.strip, la.status, obj.type, 'veeam', obj.objectUid, obj.type, item.attributes)
+        @alerts[alert.id] = alert
       end
       @alerts
     end

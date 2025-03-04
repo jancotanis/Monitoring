@@ -64,7 +64,8 @@ module CloudAlly
   # @attr [String] endpoint_type The type of the endpoint related to the alert.
   # @attr [Hash] raw_data Additional data related to the alert.
   #
-  AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data) do
+  AlertData = Struct.new(:id, :created, :description, :severity, :category,
+                         :product, :endpoint_id, :endpoint_type, :raw_data) do
     include MonitoringAlert
 
     ##
@@ -75,7 +76,9 @@ module CloudAlly
     #
     def description
       # collect subsources that failed the task
-      failed_sub_sources = raw_data['backupStatus'].select { |src| STATUS_WANTED.eql? src.status }.map(&:subSource).join ' '
+      failed_sub_sources = raw_data['backupStatus'].select { |src|
+                                                             STATUS_WANTED.eql? src.status
+                                                           }.map(&:subSource).join ' '
       "#{endpoint_type}: #{failed_sub_sources}"
     end
 
@@ -105,6 +108,7 @@ module CloudAlly
     # @param [Boolean] log Whether to enable logging (default is true).
     #
     def initialize(client_id, client_secret, user, password, log = true)
+      @tenants = nil
       CloudAlly.configure do |config|
         config.client_id = client_id
         config.client_secret = client_secret
@@ -151,7 +155,7 @@ module CloudAlly
     #
     def endpoints(tenant)
       @endpoints ||= load_endpoints
-      @endpoints.values.select { |e| tenant.eql?(e.tenant) }
+      @endpoints.values.select { |endp| tenant.eql?(endp.tenant) }
     end
 
     ##
@@ -163,7 +167,7 @@ module CloudAlly
     def alerts(tenant = nil)
       @alerts ||= load_alerts
       if tenant
-        @alerts.values.select { |a| tenant.eql?(a.property('userId')) }
+        @alerts.values.select { |alert| tenant.eql?(alert.property('userId')) }
       else
         @alerts.values
       end
@@ -196,8 +200,8 @@ module CloudAlly
       data = @api.partner_status
       data.each do |item|
         alert_id += 1
-        a = create_alert_from_data(alert_id, item)
-        @alerts[alert_id] = a if a
+        alert = create_alert_from_data(alert_id, item)
+        @alerts[alert_id] = alert if alert
       end
       @alerts
     end

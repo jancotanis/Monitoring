@@ -89,17 +89,34 @@ MonitoringIncident = Struct.new(:source, :device, :start_time, :end_time, :alert
   end
 end
 
+
+# Represents customer alerts and creates incidents grouped by device.
+#
+# @!attribute [rw] name
+#   @return [String] The name of the customer.
+# @!attribute [rw] alerts
+#   @return [Array] A list of alerts for the customer.
+# @!attribute [rw] devices
+#   @return [Hash] A hash of devices and their associated incidents.
 CustomerAlerts = Struct.new(:name, :alerts, :devices) do
   attr_accessor :customer, :source
 
+  # Initializes the CustomerAlerts, ensuring alerts and devices are properly set.
+  #
+  # @param [Array] args The arguments to initialize the struct.
   def initialize(*)
     super
     @source = 'Unknown'
     self.alerts ||= []
-    # default entries have empty hash
     self.devices ||= Hash.new { |hsh, key| hsh[key] = {} }
   end
 
+  # Adds an incident to the customer alerts.
+  #
+  # @param [String] device_id The ID of the device.
+  # @param [Object] alert The alert object.
+  # @param [Class] klass The class used to create the incident.
+  # @return [void]
   def add_incident(device_id, alert, klass)
     # contact alerts for same type together to get start end times
     # TODO: not all systems have alert type
@@ -117,6 +134,9 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
     end
   end
 
+  # Generates a report of the customer alerts.
+  #
+  # @return [String, nil] The report string or nil if there are no devices.
   def report
     if devices.count.positive?
       # create mutable string
@@ -134,13 +154,17 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
     rpt
   end
 
+  # Removes reported incidents from the customer alerts.
+  #
+  # @param [Array] reported_alerts The list of reported alerts.
+  # @return [Array] The updated list of reported alerts.
   def remove_reported_incidents(reported_alerts)
     orig = reported_alerts
     count = 0
     source = ''
 
     devices.each do |device_id, incidents|
-      orig += incidents.values.map { |i| "#{i.source}-#{i.alert.id}" }
+      orig += incidents.values.map { |incident| "#{incident.source}-#{incident.alert.id}" }
       incidents.each do |type, incident|
         # backward compatibility, check for reported alerts without prefix
         next unless reported_alerts.include?(incident.incident_id) || reported_alerts.include?(incident.alert.id)
@@ -211,6 +235,8 @@ module MonitoringAlert
   end
 end
 
+##
+# Abstract class for monitorign portals and processing all tenants/alerts
 class AbstractMonitor
   attr_reader :source
 

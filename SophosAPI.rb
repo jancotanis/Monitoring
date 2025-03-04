@@ -11,7 +11,6 @@ require_relative 'MonitoringModel'
 # It defines structures for handling tenant data, endpoints, and alerts.
 #
 module Sophos
-
   ##
   # Represents a tenant in the Sophos system.
   #
@@ -95,14 +94,16 @@ module Sophos
   # @attr [String] endpoint_type The type of the endpoint related to the alert.
   # @attr [Hash] raw_data Additional data related to the alert.
   #
-  AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data) do
+  AlertData = Struct.new(:id, :created, :description, :severity, :category,
+                         :product, :endpoint_id, :endpoint_type, :raw_data) do
     ##
     # Creates a new endpoint associated with the alert.
     #
     # @return [Sophos::EndpointData] A new endpoint created for the alert.
     #
     def create_endpoint
-      Sophos::EndpointData.new(endpoint_id, "#{property('managedAgent.type')}/#{property('product')}", property('managedAgent.name'))
+      Sophos::EndpointData.new(endpoint_id, "#{property('managedAgent.type')}/#{property('product')}",
+                               property('managedAgent.name'))
     end
 
     ##
@@ -129,6 +130,7 @@ module Sophos
     # @param [Boolean] log Whether to enable logging (default is true).
     #
     def initialize(client_id, client_secret, log = true)
+      @tenants = nil
       Sophos.configure do |config|
         config.client_id = client_id
         config.client_secret = client_secret
@@ -148,9 +150,9 @@ module Sophos
         @tenants = {}
         data = @api.tenants
         data.each do |item|
-          t = TenantData.new(item.id, item.showAs, item.apiHost, item.status, item.billingType, item.attributes)
-          @tenants[t.id] = t
-          t.lazy_endpoints_loader(-> { endpoints(t) })
+          tenant = TenantData.new(item.id, item.showAs, item.apiHost, item.status, item.billingType, item.attributes)
+          @tenants[tenant.id] = tenant
+          tenant.lazy_endpoints_loader(-> { endpoints(tenant) })
         end
       end
       @tenants.values
@@ -183,9 +185,9 @@ module Sophos
         endp[item.id] = EndpointData.new(item.id, item.type, item.hostname, group_name, status, item.attributes)
       end
       endp
-    rescue Sophos::SophosError => e
-      @logger&.error e
-      @logger&.error e.response.to_json
+    rescue Sophos::SophosError => ex
+      @logger&.error ex
+      @logger&.error ex.response.to_json
     end
 
     ##
@@ -199,11 +201,11 @@ module Sophos
       customer.clear_endpoint_alerts
       data = @api.client(customer).alerts
       data.each do |item|
-        a = AlertData.new(
+        alert = AlertData.new(
           item.id, item.raisedAt, item.description, item.severity, item.category, item.product,
           item.managedAgent.id, item.managedAgent.type, item.attributes
         )
-        @alerts[a.id] = a
+        @alerts[alert.id] = alert
       end
       @alerts
     end
@@ -220,11 +222,11 @@ module Sophos
       data = @api.client(customer).get('/siem/v1/alerts')
       # :id, :description, :severity, :category, :product, :actions
       data.each do |item|
-        a = AlertData.new(
+        alert = AlertData.new(
           item.id, item.when, item.description, item.severity, item.category, item.product,
           item.data.endpoint_id, item.data.endpoint_type, item.attributes
         )
-        @alerts[a.id] = a
+        @alerts[alert.id] = alert
       end
       @alerts
     end

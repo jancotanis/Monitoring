@@ -11,7 +11,6 @@ require_relative 'MonitoringModel'
 # It defines structures for handling tenant data, endpoints, and alerts.
 #
 module Zabbix
-
   ##
   # Represents a tenant in the Zabbix system.
   #
@@ -65,7 +64,8 @@ module Zabbix
   # @attr [Hash] raw_data Additional alert details.
   # @attr [Hash] event The related event.
   #
-  AlertData = Struct.new(:id, :created, :description, :severity_code, :category, :product, :endpoint_id, :endpoint_type, :raw_data, :event) do
+  AlertData = Struct.new(:id, :created, :description, :severity_code, :category,
+                         :product, :endpoint_id, :endpoint_type, :raw_data, :event) do
     include MonitoringAlert
 
     ##
@@ -96,7 +96,7 @@ module Zabbix
     attr_reader :api
 
     ##
-    # Initializes the Zabbix client with authentication. 
+    # Initializes the Zabbix client with authentication.
     # Use userid and primary key for login information found in https://zabbix-portal/zabbix.php?action=token.list
     #
     # @param [String] host The Zabbix server URL.
@@ -104,6 +104,7 @@ module Zabbix
     # @param [Boolean] log Whether to enable logging.
     #
     def initialize(host, auth_token, log = true)
+      @tenants = nil
       Zabbix.configure do |config|
         config.endpoint = host
         config.access_token = auth_token
@@ -166,18 +167,18 @@ module Zabbix
 
       # :id,:created,:description,:severity_code,:category,:product,:endpoint_id,:endpoint_type,:raw_data,:event
       data.each do |item|
-        a = AlertData.new(
+        alert = AlertData.new(
           item.eventid, @api.zabbix_clock(item.clock), item.name.strip, item.severity, item.object, 'zabbix',
           nil, nil, item.attributes
         )
 
-        event = events_by_id(a.id).first
+        event = events_by_id(alert.id).first
         if event.hosts
-          h = event.hosts.first
-          a.endpoint_id = h.hostid
-          puts "* Host #{a.endpoint_id} exists in multiple Zabbix groups" if event.hosts.count > 1
+          host = event.hosts.first
+          alert.endpoint_id = host.hostid
+          puts "* Host #{alert.endpoint_id} exists in multiple Zabbix groups" if event.hosts.count > 1
         end
-        @alerts[a.id] = a
+        @alerts[alert.id] = alert
       end
       @alerts
     end

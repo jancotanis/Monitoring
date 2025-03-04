@@ -36,8 +36,8 @@ class CVEAlert
 puts url
     @data = parse_json(request_data(url))
     @score = extract_highest_cvss_score(@data)
-  rescue OpenURI::HTTPError => e
-    warn "Failed to fetch CVE data: #{e.message}"
+  rescue OpenURI::HTTPError => ex
+    warn "Failed to fetch CVE data: #{ex.message}"
     # assume 404, this means CVE id has been reserved and information about the vulnerability is not publicly disclosed
     @score = nil
   end
@@ -65,8 +65,8 @@ puts url
   # @return [Hash] The parsed JSON data
   def parse_json(json_str)
     JSON.parse(json_str)
-  rescue JSON::ParserError => e
-    warn "JSON parsing error: #{e.message}"
+  rescue JSON::ParserError => ex
+    warn "JSON parsing error: #{ex.message}"
     {}
   end
 
@@ -79,8 +79,8 @@ puts url
 
     data.dig('containers', 'cna', 'metrics')&.flat_map do |metric|
       metric.values
-            .select { |v| v.is_a?(Hash) && v.key?('baseScore') }
-            .map { |v| v['baseScore'] }
+            .select { |val| val.is_a?(Hash) && val.key?('baseScore') }
+            .map { |val| val['baseScore'] }
     end&.compact&.max || -1
   end
 end
@@ -124,8 +124,8 @@ puts url
     URI.parse(url).open('User-Agent' => "Ruby/#{RUBY_VERSION}",
                         'From' => 'info@monitoring.ncsc',
                         'Referer' => url).read
-  rescue OpenURI::HTTPError => e
-    warn "Failed to fetch advisory: #{e.message}"
+  rescue OpenURI::HTTPError => ex
+    warn "Failed to fetch advisory: #{ex.message}"
     ''
   end
 
@@ -144,7 +144,7 @@ puts url
   # @param text [String] The raw advisory text
   # @return [String] The cleaned advisory content
   def strip_pgp(text)
-    return '' if text.nil?
+    return '' unless text
 
     match = text.match(/-----BEGIN PGP SIGNED MESSAGE-----(.*?)-----BEGIN PGP SIGNATURE-----/m)
     match ? match[1].strip : text

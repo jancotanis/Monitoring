@@ -16,7 +16,7 @@
 # 1.4.7 Fix issue with --sla and add SLA-task ticket tag
 #       refactor codebase
 #
-MONITOR_VERSION = '1.4.6'
+MONITOR_VERSION = '1.4.7'
 
 require 'dotenv'
 require 'optparse'

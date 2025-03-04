@@ -11,7 +11,6 @@ require_relative 'MonitoringModel'
 # It defines structures for handling tenant data, endpoints, and alerts related to backups.
 #
 module Integra365
-
   ##
   # Represents a tenant in the Integra365 system.
   #
@@ -59,7 +58,8 @@ module Integra365
   # @attr [String] tenant_id The ID of the tenant associated with the alert.
   # @attr [Hash] raw_data Additional data related to the alert.
   #
-  AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :tenant_id, :raw_data) do
+  AlertData = Struct.new(:id, :created, :description, :severity, :category,
+                         :product, :endpoint_id, :endpoint_type, :tenant_id, :raw_data) do
     include MonitoringAlert
 
     ##
@@ -87,6 +87,7 @@ module Integra365
     # @param [Boolean] log Whether to enable logging (default is true).
     #
     def initialize(user, password, log = true)
+      @tenants = nil
       Integra365.configure do |config|
         config.username = user
         config.password = password
@@ -142,12 +143,12 @@ module Integra365
           # actual error/warning is under session link for the backup job
           description = "#{item.jobName}\n please check session under backup jobs for a detailed description (https://office365.integra-bcs.nl/backup/index)."
           # :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :tenant_id, :raw_data
-          a = AlertData.new(id, item.lastRun, description, item.lastStatus, 'Job', 'Integra365', id, 'BackupJob', item.organization, item.attributes)
-          @all_alerts[a.id] = a
+          alert = AlertData.new(id, item.lastRun, description, item.lastStatus, 'Job', 'Integra365', id, 'BackupJob', item.organization, item.attributes)
+          @all_alerts[alert.id] = alert
         end
       end
 
-      @alerts = @all_alerts.select { |_k, a| customer_id.nil? || a.tenant_id.eql?(customer_id) }
+      @alerts = @all_alerts.select { |_k, alert| customer_id.nil? || alert.tenant_id.eql?(customer_id) }
     end
   end
 end

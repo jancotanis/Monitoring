@@ -11,7 +11,6 @@ require_relative 'MonitoringModel'
 # It defines structures for handling tenant data, endpoints, and alerts related to backups.
 #
 module Skykick
-
   ##
   # Represents a tenant in the Skykick system.
   #
@@ -60,7 +59,8 @@ module Skykick
   # @attr [String] endpoint_type The type of the endpoint related to the alert.
   # @attr [Hash] raw_data Additional data related to the alert.
   #
-  AlertData = Struct.new(:id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :raw_data) do
+  AlertData = Struct.new(:id, :created, :description, :severity, :category,
+                         :product, :endpoint_id, :endpoint_type, :raw_data) do
     include MonitoringAlert
 
     ##
@@ -88,6 +88,7 @@ module Skykick
     # @param [Boolean] log Whether to enable logging (default is true).
     #
     def initialize(client_id, client_secret, log = true)
+      @tenants = nil
       Skykick.configure do |config|
         config.client_id = client_id
         config.client_secret = client_secret
@@ -139,10 +140,10 @@ module Skykick
         status = item.Status
         next unless 'Active'.eql? status
 
-        a = AlertData.new(
+        alert = AlertData.new(
           item.Id, item.PublishDate, item.Description, item.AlertType, item.Subject, 'Skykick', item.BackupMailboxId, 'Mailbox', item.attributes
         )
-        @alerts[a.id] = a
+        @alerts[alert.id] = alert
       end
       @alerts
     end
