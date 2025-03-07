@@ -37,8 +37,8 @@ puts url
     @data = parse_json(request_data(url))
     @score = extract_highest_cvss_score(@data)
   rescue OpenURI::HTTPError => ex
-    warn "Failed to fetch CVE data: #{ex.message}"
     # assume 404, this means CVE id has been reserved and information about the vulnerability is not publicly disclosed
+    warn "Failed to fetch CVE data: #{ex.message}" unless ex.message['404']
     @score = nil
   end
 

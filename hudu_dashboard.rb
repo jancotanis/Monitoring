@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'utils'
+
 # Defines a set of enumerated constants for specific actions.
 #
 # The `Actions` class inherits from `Enum` and defines a list of action-related constants.
@@ -63,7 +65,7 @@ class Services < Enum
   }.freeze
 
   def self.known_service?(service)
-    KNOWN_SERVICES.include? service.downcase
+    KNOWN_SERVICES.any? { |s| s.casecmp?(service) }
   end
 
   def self.url(service)

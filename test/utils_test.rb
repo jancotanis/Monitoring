@@ -5,6 +5,10 @@ require 'test_helper'
 require 'utils'
 
 TestStruct = Struct.new(:raw_data)
+class Testnum < Enum
+  enum %w[A B C]
+end
+
 
 describe '#2 utils' do
   it '#2.1.1 FileUtils' do
@@ -25,5 +29,14 @@ describe '#2 utils' do
      MyStruct = Struct.new(:name, :age)
      s = MyStruct.new("John", 30)
      assert _(s.to_json).must_equal "{\"name\":\"John\",\"age\":30}", '2.3 json test'
+  end
+  it '#2.4 Enums' do
+    assert _(Testnum::A).must_equal 'A', '2.4 constants A'
+    assert _(Testnum::B).must_equal 'B', '2.4 constants B'
+    assert _(Testnum::C).must_equal 'C', '2.4 constants C'
+    assert _(Testnum.constants.size).must_equal 3, '2.4 3 constants defined'
+    assert_raises(NameError) do
+      Testnum::D
+    end
   end
 end
