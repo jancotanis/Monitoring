@@ -2,7 +2,6 @@
 
 Monitoring scripts for saas solutions
 
-
 ## System Configuration
 
 Use environment variables to setup various SAAS connection parameters. These can also be put on the filesystem using a `.env` file.
@@ -10,6 +9,7 @@ Use environment variables to setup various SAAS connection parameters. These can
 ### Cloudally
 
 Connection to [CloudAlly partner portal api](https://api.cloudally.com/)...
+
 ````
 CLOUDALLY_CLIENT_ID=7685b144-fe1b-4795-b38f-9a7ec6c7a1f8
 CLOUDALLY_CLIENT_SECRET=BdaonZti8jn_i8jn
@@ -20,6 +20,7 @@ CLOUDALLY_PASSWORD=your_password_here
 ### Skykick
 
 Connection to [Skykick partner portal](https://backup.skykick.com/partner/cloud-backup/manager#/)
+
 ````
 SKYKICK_CLIENT_ID=834hdfs-kgsj54rg-hkbvfiu-rve984
 SKYKICK_CLIENT_SECRET=834hdfskgsj54rghkbvfiurve984
@@ -28,6 +29,7 @@ SKYKICK_CLIENT_SECRET=834hdfskgsj54rghkbvfiurve984
 ### Sophos
 
 Connection to [Sophos partner portal](https://https://partners.sophos.com/)
+
 ````
 SOPHOS_CLIENT_ID=834hdfs-kgsj54rg-hkbvfiu-rve984
 SOPHOS_CLIENT_SECRET=834hdfskgsj54rghkbvfiurve984
@@ -36,6 +38,7 @@ SOPHOS_CLIENT_SECRET=834hdfskgsj54rghkbvfiurve984
 ### VEEAM
 
 Connection to VEEAM service provider console. This is vendor specific.
+
 ````
 VEEAM_API_HOST=https://portal.host.com
 VEEAM_API_KEY=834hdfskgsj54rghkbvfiurve984
@@ -44,6 +47,7 @@ VEEAM_API_KEY=834hdfskgsj54rghkbvfiurve984
 ### Integra 365
 
 Connection to Integra 365 provider console.
+
 ````
 INTEGRA365_USER=john.doe@acme.com
 INTEGRA365_PASSWORD=your_password_here
@@ -52,6 +56,7 @@ INTEGRA365_PASSWORD=your_password_here
 ### Zabbix
 
 Connection to ZAbbix servicer api. This is location specific.
+
 ````
 ZABBIX_API_HOST=https://api.your-zabbix-host.com
 ZABBIX_API_KEY=d73e81e7e7e3b5f57f10539defe64c71fa
@@ -60,6 +65,7 @@ ZABBIX_API_KEY=d73e81e7e7e3b5f57f10539defe64c71fa
 ### Helpdesk system
 
 Connection to Zammad, this is vendor specific.
+
 ```
 ZAMMAN_HOST=https://helpdesk.xxxx.nl/
 ZAMMAD_OAUTH_TOKEN=834hdfskgsj54rghkbvfiurve984
@@ -141,16 +147,18 @@ Each customer entry can have a number of notifications. These are triggered on s
 |:--|:--|:--|:--|
 |customer|Customer identifier, this should match description in application configuration file|Text, use quotes '"' when customer name has spaces|`"Ford Motor Company"`|
 |task|Task identifier what to do|Text, use quotes '"' when task name has spaces|`"Monitor XYZ backup"`|
-|interval|What interval do the notifications be triggered. Select from Once, Weekly, Monthly, Quarterly,Yearly|O,W,M,Q,Y| |
+|interval|What interval do the notifications be triggered. Select from Once, Weekly, Monthly, Quarterly,Yearly,Two yearly|O,W,M,Q,Y,T| |
 |triggered|Last time it was triggered, this date can be in the future| YYYY-MM-DD| `2023-01-01` |
 
 
 ## Script run options
 
 Script can be run with ruby interpreter.
+
 ````
 ruby Monitoring.rb [options]
 ````
+
 Some additional options apply
 
 |Parameter|Description|
@@ -164,11 +172,13 @@ Some additional options apply
 ### Examples
 
 Add weekly reminder for backup check for customer COAS. This is triggered next time the monitoring runs.
+
 ````
 ruby Monitoring.rb -n COAS,"Check week backup",W
 ````
 
 Add reminder to destroy backup tapes for COAS. This is triggered once on/after 31 December 2023 .
+
 ````
 ruby Monitoring.rb -n COAS,"Destroy old backup tapes",O,2023-12-31
 ````

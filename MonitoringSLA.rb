@@ -46,6 +46,9 @@ HALF_YEARLY = Interval.new('Halfyearly', 182)
 # @return [Interval] Represents a yearly task (every 365 days).
 YEARLY = Interval.new('Yearly', 365)
 
+# @return [Interval] Represents a yearly task (every 365 days).
+TWO_YEARLY = Interval.new('Twoyearly', 730)
+
 # A hash mapping interval codes to their corresponding interval objects.
 # Each code is the first character of the interval's description.
 # @return [Hash{String => Interval}]
@@ -56,7 +59,8 @@ INTERVALS = {
   BIMONTHLY.code => BIMONTHLY,
   QUARTERLY.code => QUARTERLY,
   HALF_YEARLY.code => HALF_YEARLY,
-  YEARLY.code => YEARLY
+  YEARLY.code => YEARLY,
+  TWO_YEARLY.code => TWO_YEARLY
 }.freeze
 
 # An array of all available interval codes.
@@ -189,6 +193,7 @@ class MonitoringSLA
     @config.entries.each do |cfg|
       next unless cfg.notifications&.count&.positive?
 
+      content.push(cfg.description)
       cfg.notifications.each do |n|
         content.push("- #{n}")
       end

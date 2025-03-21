@@ -46,11 +46,9 @@ class VeeamMonitor < AbstractMonitor
       if customer_alerts.any?
         customer.alerts = customer_alerts
         customer_alerts.each_value do |a|
-          unless a.severity.eql? RESOLVED
-            endpoint_id = a.endpoint_id
-            create_endpoint_from_alert(customer, a) unless customer.endpoints[endpoint_id]
-            customer.endpoints[endpoint_id]&.alerts&.push(a)
-          end
+          endpoint_id = a.endpoint_id
+          create_endpoint_from_alert(customer, a) unless customer.endpoints[endpoint_id]
+          customer.endpoints[endpoint_id]&.alerts&.push(a)
         end
       end
     end
@@ -80,8 +78,11 @@ class VeeamMonitor < AbstractMonitor
         # group alerts by customer
         if a.severity.eql? RESOLVED
           # resolved alert, maybe remove from reported_alerts
-          if cfg.reported_alerts.include? "#{VEEAM}-#{a.id}"
-            @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{a.id})"
+          @report.puts "  #{a.created} #{a.severity} #{a.description} #{a.id}"
+          veeam_id = "#{VEEAM}-#{a.id}"
+          if cfg.reported_alerts.include? veeam_id
+            cfg.reported_alerts.delete(veeam_id)
+            @report.puts "  remove resolved alert #{a.created} #{a.severity} #{a.description} (#{veeam_id})"
           end
         else
           customer_alerts.add_incident(a.endpoint_id, a, VeeamBackupIncident)

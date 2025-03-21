@@ -15,8 +15,9 @@
 # 1.4.6 Cache both cve and ncsc scores
 # 1.4.7 Fix issue with --sla and add SLA-task ticket tag
 #       refactor codebase
+# 1.5.0 Fix issue not removing resolved veeam alerts and add two yearly sla option
 #
-MONITOR_VERSION = '1.4.7'
+MONITOR_VERSION = '1.5.0'
 
 require 'dotenv'
 require 'optparse'
@@ -71,7 +72,7 @@ def get_options(config, sla)
     end
     opts.on(
       '-n [customer,task,interval[,date]]', '--notification [customer,task,interval[,date]]', Array,
-      'Add customer notification of list them if no arguments given'
+      "Add customer notification. Interval types: #{INTERVALS.keys.join(', ')}"
     ) do |arg|
       if arg
         sla.add_interval_notification(arg[0].to_s.strip, arg[1].to_s.strip, arg[2].to_s.strip, arg[3])
