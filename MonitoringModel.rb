@@ -271,8 +271,6 @@ class AbstractMonitor
     FileUtil.write_file("#{source.downcase}-tenants.json", @client.tenants.to_json)
   end
 
-  protected
-
   # Collect all required data to monitor
   #
   def collect_data

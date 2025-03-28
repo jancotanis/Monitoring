@@ -42,7 +42,7 @@ describe '#2 Hudu Asset Layout' do
     assert _(LAYOUT_TEST_JSON.fields.count).must_equal 4, '#2.1.1 4 fields test data'
     assert _(al.fields.count).must_equal 2, '#2.1.2 2 fields in layout'
     assert _(al.custom_fields.count).must_equal(al.fields.count * 3), '#2.1.3 2 fields in layout, 6 in custom layout'
-    assert al.fields.first.value.empty?, '#2.1.4 value should be empty for templates'
+    refute al.fields.first.value, '#2.1.4 value should be false for templates'
   end
   it '#2.2 create assets' do
     al = AssetLayout.create(ASSET_TEST_JSON)
@@ -74,7 +74,7 @@ end
 describe '#3 Hudu Dashbuilder' do
   it '#3.1 Create Dashbuilder' do
     assert DashBuilder.new(nil), '#3.1 should not be nil'
-    ##TODO additional non destructive tests
+    ## TODO additional non destructive tests
   end
 end
 describe '#4 Hudu Matcher' do

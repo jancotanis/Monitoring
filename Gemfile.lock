@@ -18,8 +18,10 @@ GEM
     integra365 (0.2.0)
       faraday
       wrapi (>= 0.2.0)
+    mocha (2.7.1)
+      ruby2_keywords (>= 0.0.5)
     optparse (0.6.0)
-    rexml (3.4.0)
+    rexml (3.4.1)
     rss (0.3.1)
       rexml
     ruby2_keywords (0.0.5)
@@ -38,7 +40,7 @@ GEM
     veeam (0.2.0)
       faraday
       wrapi (>= 0.2.0)
-    wrapi (0.4.6)
+    wrapi (0.4.8)
       faraday
     zabbix_api_gem (0.3.3)
       faraday
@@ -55,6 +57,7 @@ DEPENDENCIES
   faraday
   hudu
   integra365
+  mocha
   optparse
   rss
   simplecov

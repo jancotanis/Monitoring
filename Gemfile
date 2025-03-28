@@ -19,3 +19,4 @@ gem 'hudu'
 gem 'zabbix_api_gem'
 
 gem 'simplecov', require: false, group: :test
+gem 'mocha', require: false, group: :test
