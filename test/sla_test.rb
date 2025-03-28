@@ -2,9 +2,7 @@
 
 require 'test_helper'
 require 'securerandom'
-
 require 'MonitoringSLA'
-
 
 describe '#3 SLA periods' do
   it '#3.1 weekly' do
@@ -36,22 +34,22 @@ describe '#4 Notification' do
   it '#4.1 yearly' do
     TASK = 'Do something'
     DATE = '2025-02-04'
-    n = Notification.new(TASK,MONTHLY.code,DATE)
+    notifications = Notification.new(TASK,MONTHLY.code, DATE)
 
-    assert n.to_s["Task '#{TASK}'"], '4.1.1 task description'
-    assert n.to_s["executed #{MONTHLY.description}"], '4.1.2 task interval'
-    assert n.to_s["last time triggered #{DATE}"], '4.1.3 task trigger'
+    assert notifications.to_s["Task '#{TASK}'"], '4.1.1 task description'
+    assert notifications.to_s["executed #{MONTHLY.description}"], '4.1.2 task interval'
+    assert notifications.to_s["last time triggered #{DATE}"], '4.1.3 task trigger'
 
-    n = Notification.new(TASK,ONCE.code,DATE)
-    assert n.to_s["after date #{DATE}"], '4.1.4 task trigger once'
+    notification = Notification.new(TASK,ONCE.code, DATE)
+    assert notification.to_s["after date #{DATE}"], '4.1.4 task trigger once'
 
-    n = Notification.new(TASK,'?',DATE)
-    assert n.to_s["invalid interval='?'"], '4.1.5 invalid interval'
+    notification = Notification.new(TASK, '?', DATE)
+    assert notification.to_s["invalid interval='?'"], '4.1.5 invalid interval'
   end
 end
 describe '#5 SLA' do
   it '#5.1 SLA Instance' do
-    sla = MonitoringSLA.new(nil)
+    MonitoringSLA.new(nil)
   end
   it '#5.2 SLA no config items/report' do
     FUTURE = Date.parse('2099-01-01')

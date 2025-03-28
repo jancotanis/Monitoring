@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-
 require 'persistent_cache'
 
 TEST_CACHE_NAME = 'test.yaml'
@@ -14,7 +13,7 @@ describe '#1 cache ' do
     cache = PersistentCache.new(TEST_CACHE_NAME)
     # Store a new value
     cache.store(:user_1, JOHN)
-    
+
     # Fetch a value from the cache or load it using a loader
     user = cache.fetch(:user_1) do
       flunk '1.1.2 Unexpected cache call'

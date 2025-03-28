@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-#require 'Date'
 require 'utils'
 
 TestStruct = Struct.new(:raw_data)
 class Testnum < Enum
   enum %w[A B C]
 end
-
 
 describe '#2 utils' do
   it '#2.1.1 FileUtils' do
@@ -26,9 +24,9 @@ describe '#2 utils' do
     assert value(t.property('main_item.stats.a')).must_equal '8', '2.2.1 nested property'
   end
   it '#2.3 Struct.json' do
-     MyStruct = Struct.new(:name, :age)
-     s = MyStruct.new("John", 30)
-     assert _(s.to_json).must_equal "{\"name\":\"John\",\"age\":30}", '2.3 json test'
+    MyStruct = Struct.new(:name, :age)
+    struct = MyStruct.new('John', 30)
+    assert _(struct.to_json).must_equal '{"name":"John","age":30}', '2.3 json test'
   end
   it '#2.4 Enums' do
     assert _(Testnum::A).must_equal 'A', '2.4 constants A'

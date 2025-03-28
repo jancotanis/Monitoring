@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-#require 'Date'
 require 'MonitoringConfig'
-#require 'MonitoringSLA'
 
 TenantMock = Struct.new(:id, :description, :endpoints, :trial?)
 
@@ -32,7 +30,6 @@ describe '#1 config' do
   it '#1.2 find by name' do
     begin
       company = 'VDH Company B.V.'
-#      @cfg.load_config('Test', [])
       assert value(@cfg.by_description(company).description).must_equal company, '1.2.1 check find by name'
     end
   end
@@ -44,16 +41,14 @@ describe '#1 config' do
     end
   end
   it '#1.4 check absent config file' do
-    begin
-      tmp = "#{MONITORING_CFG}.test"
-      File.delete(tmp) if File.exist?(tmp)
-      File.rename(MONITORING_CFG, tmp)
-      cfg = MonitoringConfig.new
-      assert _(cfg.entries).must_equal [], '1.4 empty config entries'
-      File.delete(MONITORING_CFG) if File.exist?(MONITORING_CFG)
-      # back to normal
-      File.rename(tmp, MONITORING_CFG)
-    end
+    tmp = "#{MONITORING_CFG}.test"
+    File.delete(tmp) if File.exist?(tmp)
+    File.rename(MONITORING_CFG, tmp)
+    cfg = MonitoringConfig.new
+    assert _(cfg.entries).must_equal [], '1.4 empty config entries'
+    File.delete(MONITORING_CFG) if File.exist?(MONITORING_CFG)
+    # back to normal
+    File.rename(tmp, MONITORING_CFG)
   end
   it '#1.5 run report' do
     # touch remaining code
@@ -69,7 +64,7 @@ describe '#1 config' do
     count = @cfg.entries.count
     @cfg.compact!
     assert _(@cfg.entries.count).must_equal count, '1.6.1 compact should not differ'
-    
+
     # add none touched entry
     @cfg.load_config('test', [TenantMock.new(ID, 'untouched entry')])
 
@@ -84,4 +79,3 @@ describe '#1 config' do
     assert _(@cfg.entries.count).must_equal count, '1.6.4 compact should be equal again'
   end
 end
-
