@@ -33,12 +33,11 @@ class CVEAlert
   # Fetches and processes the CVE data from the MITRE API.
   def fetch_data
     url = json_url
-puts url
-    @data = parse_json(request_data(url))
-    @score = extract_highest_cvss_score(@data)
-  rescue OpenURI::HTTPError => ex
+    @data = parse_json(CVEAlert.request_data(url))
+    @score = CVEAlert.extract_highest_cvss_score(@data)
+  rescue OpenURI::HTTPError => e
     # assume 404, this means CVE id has been reserved and information about the vulnerability is not publicly disclosed
-    warn "Failed to fetch CVE data: #{ex.message}" unless ex.message['404']
+    warn "Failed to fetch CVE data: #{e.message}" unless e.message['404']
     @score = nil
   end
 
@@ -53,7 +52,7 @@ puts url
   #
   # @param url [String] The API URL
   # @return [String] The raw JSON response
-  def request_data(url)
+  def self.request_data(url)
     URI.parse(url).open('User-Agent' => "Ruby/#{RUBY_VERSION}",
                         'From' => 'info@monitoring.ncsc',
                         'Referer' => url).read
@@ -74,7 +73,7 @@ puts url
   #
   # @param data [Hash] The parsed CVE data
   # @return [Float] The highest CVSS score found, or -1 if unavailable
-  def extract_highest_cvss_score(data)
+  def self.extract_highest_cvss_score(data)
     return -1 unless data
 
     data.dig('containers', 'cna', 'metrics')&.flat_map do |metric|
@@ -110,10 +109,9 @@ class NCSCTextAdvisory
   # Fetches and processes the advisory text from the NCSC website.
   def load_text_advisory
     url = text_url
-puts url
     data = fetch_data(url)
-    @advisory = strip_pgp(data)
-    @cve = parse_cve_ids(@advisory)
+    @advisory = NCSCTextAdvisory.strip_pgp(data)
+    @cve = NCSCTextAdvisory.parse_cve_ids(@advisory)
   end
 
   # Fetches data from the given URL.
@@ -124,8 +122,8 @@ puts url
     URI.parse(url).open('User-Agent' => "Ruby/#{RUBY_VERSION}",
                         'From' => 'info@monitoring.ncsc',
                         'Referer' => url).read
-  rescue OpenURI::HTTPError => ex
-    warn "Failed to fetch advisory: #{ex.message}"
+  rescue OpenURI::HTTPError => e
+    warn "Failed to fetch advisory: #{e.message}"
     ''
   end
 
@@ -133,7 +131,7 @@ puts url
   #
   # @param text [String] The advisory text
   # @return [Array<String>] List of CVE IDs
-  def parse_cve_ids(text)
+  def self.parse_cve_ids(text)
     return [] unless text
 
     text.scan(/CVE-\d{4}-\d{4,5}/).uniq
@@ -143,7 +141,7 @@ puts url
   #
   # @param text [String] The raw advisory text
   # @return [String] The cleaned advisory content
-  def strip_pgp(text)
+  def self.strip_pgp(text)
     return '' unless text
 
     match = text.match(/-----BEGIN PGP SIGNED MESSAGE-----(.*?)-----BEGIN PGP SIGNATURE-----/m)

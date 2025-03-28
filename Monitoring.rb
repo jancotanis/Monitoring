@@ -35,7 +35,6 @@ require_relative 'MonitoringSLA'
 require_relative 'MonitoringDTC'
 require_relative 'MonitoringNCSC'
 
-
 def file_age(name)
   (Time.now - File.ctime(name)) / (24 * 3600)
 end
@@ -112,8 +111,8 @@ end
 
 def monitors_do(report, config, options, &block)
   create_monitors(report, config, options) unless @monitors
-  @monitors.each do |m|
-    block.call m
+  @monitors.each do |mon|
+    block.call mon
   end
 end
 
@@ -125,16 +124,15 @@ end
 def run_monitors(report, config, options)
   customer_alerts = {}
 
-  monitors_do(report, config, options) do |m|
-    customer_alerts = m.run(customer_alerts)
+  monitors_do(report, config, options) do |mon|
+    customer_alerts = mon.run(customer_alerts)
   rescue Faraday::Error => e
-    puts "** Error running #{m.class.name}"
+    puts "** Error running #{mon.class.name}"
     puts e
     puts e.response[:body] if e.response
   end
   customer_alerts
 end
-
 
 puts "Monitor v#{MONITOR_VERSION} - #{Time.now}", ''
 

@@ -77,8 +77,8 @@ module CloudAlly
     def description
       # collect subsources that failed the task
       failed_sub_sources = raw_data['backupStatus'].select { |src|
-                                                             STATUS_WANTED.eql? src.status
-                                                           }.map(&:subSource).join ' '
+        STATUS_WANTED.eql? src.status
+      }.map(&:subSource).join ' '
       "#{endpoint_type}: #{failed_sub_sources}"
     end
 
@@ -164,7 +164,8 @@ module CloudAlly
     # Retrieves all alerts associated with a given tenant.
     #
     # @param [TenantData, NilClass] tenant The tenant object to fetch the alerts for. If nil, returns all alerts.
-    # @return [Array<AlertData>] A list of alerts associated with the given tenant, or all alerts if no tenant is provided.
+    # @return [Array<AlertData>] A list of alerts associated with the given tenant,
+    #                            or all alerts if no tenant is provided.
     #
     def alerts(tenant = nil)
       @alerts ||= load_alerts

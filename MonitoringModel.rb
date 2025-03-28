@@ -89,7 +89,6 @@ MonitoringIncident = Struct.new(:source, :device, :start_time, :end_time, :alert
   end
 end
 
-
 # Represents customer alerts and creates incidents grouped by device.
 #
 # @!attribute [rw] name
@@ -123,10 +122,9 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
     alert_type = alert.type
 
     device_alerts = devices[alert.endpoint_id]
-    if incident = device_alerts[alert_type]
+    if (incident = device_alerts[alert_type])
       # update end date & alert
       incident.end_time = alert.created
-      #incident.alert = alert
     else
       instance = klass.new(device_id, alert.created, alert.created, alert)
       device_alerts[alert_type] = instance
@@ -247,7 +245,7 @@ class AbstractMonitor
     @config = config
     @log = log
     @all_alerts = {}
-    @tenants = @client.tenants.sort_by { |t| t.description.upcase }
+    @tenants = @client.tenants.sort_by { |tnt| tnt.description.upcase }
     @config.load_config(source, @tenants)
   end
 
@@ -283,7 +281,7 @@ class AbstractMonitor
 
   # Check if tenant config should be monitored
   #
-  def monitor_tenant?(cfg)
+  def monitor_tenant?(_cfg)
     raise NotImplementedError, 'You must implement this method'
   end
 

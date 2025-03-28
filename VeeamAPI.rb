@@ -135,9 +135,9 @@ module Veeam
         end
       end
       @endpoints
-    rescue Veeam::VeeamError => ex
-      @logger&.error ex
-      @logger&.error ex.response.to_json
+    rescue Veeam::VeeamError => e
+      @logger&.error e
+      @logger&.error e.response.to_json
     end
 
     ##

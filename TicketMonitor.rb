@@ -125,7 +125,7 @@ class TicketMonitor < AbstractMonitor
         if (config = config_by_mail(ticket.created_by)) && config.monitor_backup
           ## update watchdog for last found message
           config.last_backup = DateTime.parse(ticket.created_at)
-puts "Domain found for '#{config.description}', last backup #{config.last_backup}"
+          puts "Domain found for '#{config.description}', last backup #{config.last_backup}"
           # process succeeded/failed and move/close message
           if result == TicketCheck::FAILED
             ## move ticket to inbox to resolve
@@ -158,12 +158,12 @@ puts "Domain found for '#{config.description}', last backup #{config.last_backup
   end
 
   def add_article(ticket, text)
-    a = ticket.article(
+    article = ticket.article(
       type: 'note',
       subject: 'Ticket Monitoring Script',
       body: text
     )
-    a.save
+    article.save
   end
 
   def config_by_mail(mail_address)

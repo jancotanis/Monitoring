@@ -255,7 +255,6 @@ def create_hudu_client(log)
   client
 end
 
-
 puts "HuduSync v#{HSYNC_VERSION} - #{Time.now}"
 
 config = MonitoringConfig.new

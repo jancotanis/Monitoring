@@ -128,7 +128,8 @@ module Integra365
     ##
     # Retrieves all alerts associated with a specific customer.
     #
-    # @param [String, NilClass] customer_id The customer ID for which alerts are being fetched. If nil, all alerts are fetched.
+    # @param [String, NilClass] customer_id The customer ID for which alerts are being fetched.
+    #                           If nil, all alerts are fetched.
     # @return [Hash] A hash of alert IDs mapped to alert objects.
     #
     def alerts(customer_id = nil)
