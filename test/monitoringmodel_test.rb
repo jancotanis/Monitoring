@@ -1,16 +1,20 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-
 require 'MonitoringModel'
 
 SOURCE = 'MiniTest'
+TEST_ALERT_DESC = 'Test alert'
+HOST = 'server1.example.com'
+
 class TestIncident < MonitoringIncident
   def initialize(device = nil, start_time = nil, end_time = nil, alert = nil)
     super(SOURCE, device, start_time, end_time, alert)
   end
 end
+
 Alert = Struct.new(:id, :description, :severity, :type, :endpoint_id, :created)
+
 TEST_ALERT = Alert.new(1, 'Test alert', 'high')
 TEST_ENDPOINT = MonitoringEndpoint.new(1, 'test-type', 'test.io', 'test-tenant', 'ok')
 
@@ -40,17 +44,6 @@ end
 
 class MockAlert
   include MonitoringAlert
-
-  attr_accessor :description
-
-  def initialize(description)
-    @description = description
-  end
-end
-
-class MockAlert
-  include MonitoringAlert
-
   attr_accessor :description, :endpoint_id, :created
 
   def initialize(description, endpoint_id, created)
@@ -60,7 +53,7 @@ class MockAlert
   end
 
   def create_endpoint
-    MonitoringEndpoint.new(endpoint_id, 'Server', 'server1.example.com', 'Tenant1', 'active', nil, [])
+    MonitoringEndpoint.new(endpoint_id, 'Server', HOST, 'Tenant1', 'active', nil, [])
   end
 end
 
@@ -125,7 +118,7 @@ describe '#3 CustomerAlerts' do
     time = Time.new
     ca = CustomerAlerts.new('Company')
     ep = TEST_ENDPOINT
-    alert = Alert.new(1, 'Test alert', 'High', 'Test-type', ep.id, Time.new)
+    alert = Alert.new(1, TEST_ALERT_DESC, 'High', 'Test-type', ep.id, Time.new)
     ca.add_incident(ep.id, alert, TestIncident)
 
     assert _(ca.devices.count).must_equal 1, '3.2.2 cs new devices'
@@ -133,23 +126,23 @@ describe '#3 CustomerAlerts' do
     assert _(ca.devices[ep.id][alert.type].start_time).must_equal alert.created, '3.2.3 cs incident times equal'
 
     # check endtime change for new alert
-    alert2 = Alert.new(2, 'Test alert', 'High', 'Test-type', ep.id, time + (24 * 60 * 60))
+    alert2 = Alert.new(2, TEST_ALERT_DESC, 'High', 'Test-type', ep.id, time + (24 * 60 * 60))
     ca.add_incident(ep.id, alert2, TestIncident)
     assert _(ca.devices[ep.id].count).must_equal 1, '3.2.4 cs incident added to device'
     assert _(ca.devices[ep.id][alert.type].start_time).must_equal alert.created, '3.2.3 cs incident times equal'
     assert _(ca.devices[ep.id][alert.type].end_time).must_equal alert2.created, '3.2.3 cs incident end tiem updated'
 
     # check new alert type
-    alert3 = Alert.new(3, 'Test alert', 'High', 'Test-type2', ep.id, time)
+    alert3 = Alert.new(3, TEST_ALERT_DESC, 'High', 'Test-type2', ep.id, time)
     ca.add_incident(ep.id, alert3, TestIncident)
     assert _(ca.devices[ep.id].count).must_equal 2, '3.2.5 cs incident added to device'
   end
   it '#3.3 remove reported incidents' do
     ca = CustomerAlerts.new('Company')
     ep = TEST_ENDPOINT
-    alert = Alert.new(1, 'Test alert', 'High', 'Test-type', ep.id, Time.new)
+    alert = Alert.new(1, TEST_ALERT_DESC, 'High', 'Test-type', ep.id, Time.new)
     ca.add_incident(ep.id, alert, TestIncident)
-    alert2 = Alert.new(2, 'Test alert', 'High', 'Test-type2', ep.id, Time.new)
+    alert2 = Alert.new(2, TEST_ALERT_DESC, 'High', 'Test-type2', ep.id, Time.new)
     ca.add_incident(ep.id, alert2, TestIncident)
 
     ca.remove_reported_incidents([])
@@ -164,7 +157,7 @@ describe '#3 CustomerAlerts' do
   it '#3.4 report' do
     ca = CustomerAlerts.new('Company')
     ep = TEST_ENDPOINT
-    alert = Alert.new(1, 'Test alert', 'High', 'Test-type', ep.id, Time.new)
+    alert = Alert.new(1, TEST_ALERT_DESC, 'High', 'Test-type', ep.id, Time.new)
     assert ca.report.nil?, '3.4.0 empty report'
 
     ca.add_incident(ep.id, alert, TestIncident)
@@ -232,7 +225,7 @@ describe AbstractMonitor do
       _(endpoint).must_be_instance_of MonitoringEndpoint
       _(endpoint.id).must_equal endpoint_id
       _(tenant.endpoints[endpoint_id]).must_equal endpoint
-      _(endpoint.hostname).must_equal 'server1.example.com'
+      _(endpoint.hostname).must_equal HOST
       _(endpoint.type).must_equal 'Server'
     end
 
@@ -251,7 +244,7 @@ end
 
 describe MonitoringTenant do
   let(:tenant) { MockTenant.new('Tenant1') }
-  let(:endpoint1) { MonitoringEndpoint.new(1, 'Server', 'server1.example.com', 'Tenant1', 'active', nil, []) }
+  let(:endpoint1) { MonitoringEndpoint.new(1, 'Server', HOST, 'Tenant1', 'active', nil, []) }
   let(:endpoint2) { MonitoringEndpoint.new(2, 'Database', 'db1.example.com', 'Tenant1', 'active', nil, []) }
 
   before do

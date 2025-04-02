@@ -129,7 +129,7 @@ def run_monitors(report, config, options)
   rescue Faraday::Error => e
     puts "** Error running #{mon.class.name}"
     puts e
-    puts e.response[:body] if e.response
+    puts e.response&.dig(:body)
   end
   customer_alerts
 end

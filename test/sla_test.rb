@@ -4,6 +4,14 @@ require 'test_helper'
 require 'securerandom'
 require 'MonitoringSLA'
 
+TASK = 'Do something'
+DATE = '2025-02-04'
+FUTURE = Date.parse('2099-01-01')
+PAST = Date.parse('2000-01-01')
+CUSTOMER_A = 'Customer A'
+UNKNOWN_CUSTOMER = 'Unknown Customer'
+BACKUP_TASK = 'Backup task'
+
 describe '#3 SLA periods' do
   it '#3.1 weekly' do
     assert !WEEKLY.due?(Date.today)
@@ -32,9 +40,7 @@ describe '#3 SLA periods' do
 end
 describe '#4 Notification' do
   it '#4.1 yearly' do
-    TASK = 'Do something'
-    DATE = '2025-02-04'
-    notifications = Notification.new(TASK,MONTHLY.code, DATE)
+    notifications = Notification.new(TASK, MONTHLY.code, DATE)
 
     assert notifications.to_s["Task '#{TASK}'"], '4.1.1 task description'
     assert notifications.to_s["executed #{MONTHLY.description}"], '4.1.2 task interval'
@@ -52,9 +58,6 @@ describe '#5 SLA' do
     MonitoringSLA.new(nil)
   end
   it '#5.2 SLA no config items/report' do
-    FUTURE = Date.parse('2099-01-01')
-    PAST = Date.parse('2000-01-01')
-
     cfg = MonitoringConfig.new
 
     # to clear config entries, untouch and compact because entries is viewonly...
@@ -93,7 +96,8 @@ describe MonitoringSLA do
   before do
     # Mock configuration setup
     @mock_notifications = []
-    @config_entry = Struct.new(:description, :notifications, :create_ticket).new('Customer A', @mock_notifications, false)
+    @config_entry = Struct.new(:description, :notifications, :create_ticket)\
+                    .new(CUSTOMER_A, @mock_notifications, false)
     @config = Minitest::Mock.new
     @config = Object.new
     @config.stubs(:entries).returns([@config_entry])
@@ -103,19 +107,19 @@ describe MonitoringSLA do
 
   describe '#load_periodic_alerts' do
     it 'triggers due notifications based on their intervals' do
-      notification = Notification.new('Backup task', 'W', Date.today - 8)
+      notification = Notification.new(BACKUP_TASK, 'W', Date.today - 8)
       @config_entry.notifications << notification
 
       alerts = @sla.load_periodic_alerts
 
       _(alerts.size).must_equal 1
-      _(alerts.first.notification.task).must_equal 'Backup task'
+      _(alerts.first.notification.task).must_equal BACKUP_TASK
       _(alerts.first.interval).must_equal WEEKLY
       _(alerts.first.description).must_match(/to be executed Weekly/)
     end
 
     it 'does not trigger notifications that are not yet due' do
-      notification = Notification.new('Backup task', 'W', Date.today - 3)
+      notification = Notification.new(BACKUP_TASK, 'W', Date.today - 3)
       @config_entry.notifications << notification
 
       alerts = @sla.load_periodic_alerts
@@ -137,7 +141,7 @@ describe MonitoringSLA do
     it 'does not trigger notifications with invalid intervals' do
       notification = Notification.new('Invalid interval task', 'Z', Date.today)
       @config_entry.notifications << notification
-      @config.stubs(:by_description).with('Unknown Customer').returns(nil)
+      @config.stubs(:by_description).with(UNKNOWN_CUSTOMER).returns(nil)
 
       alerts = @sla.load_periodic_alerts
 
@@ -146,59 +150,59 @@ describe MonitoringSLA do
   end
   describe '#add_interval_notification' do
     before do
-      @config.stubs(:by_description).with('Customer A').returns(@config_entry)
+      @config.stubs(:by_description).with(CUSTOMER_A).returns(@config_entry)
       @config.stubs(:save_config).returns(nil)
     end
 
     it 'adds a valid interval notification with a correct date' do
       date = '2024-01-01'
-      @sla.add_interval_notification('Customer A', 'Backup check', 'W', date)
+      @sla.add_interval_notification(CUSTOMER_A, 'Backup check', 'W', date)
 
-      _( @mock_notifications.size ).must_equal 1
+      _(@mock_notifications.size).must_equal 1
       notification = @mock_notifications.first
-      _( notification.task ).must_equal 'Backup check'
-      _( notification.interval ).must_equal 'W'
-      _( notification.triggered ).must_equal Date.parse(date)
+      _(notification.task).must_equal 'Backup check'
+      _(notification.interval).must_equal 'W'
+      _(notification.triggered).must_equal Date.parse(date)
       _(@config_entry.create_ticket).must_equal true
     end
     it 'adds a valid interval notification without a date' do
-      @sla.add_interval_notification('Customer A', 'Database backup', 'M')
+      @sla.add_interval_notification(CUSTOMER_A, 'Database backup', 'M')
 
-      _( @mock_notifications.size ).must_equal 1
+      _(@mock_notifications.size).must_equal 1
       notification = @mock_notifications.first
-      _( notification.task ).must_equal 'Database backup'
-      _( notification.interval ).must_equal 'M'
-      _( notification.triggered ).must_be_nil
+      _(notification.task).must_equal 'Database backup'
+      _(notification.interval).must_equal 'M'
+      _(notification.triggered).must_be_nil
     end
 
     it 'does not add a notification with an invalid interval' do
       invalid_interval = 'Z'
       out, _ = capture_io do
-        @sla.add_interval_notification('Customer A', 'Invalid task', invalid_interval)
+        @sla.add_interval_notification(CUSTOMER_A, 'Invalid task', invalid_interval)
       end
 
-      _( @mock_notifications ).must_be_empty
-      _( out ).must_include "'#{invalid_interval}' is not a valid interval"
+      _(@mock_notifications).must_be_empty
+      _(out).must_include "'#{invalid_interval}' is not a valid interval"
     end
 
     it 'does not add a notification if the customer is not found' do
       # Mock a "nil" response for a missing customer
-      @config.stubs(:by_description).with('Unknown Customer').returns(nil)
+      @config.stubs(:by_description).with(UNKNOWN_CUSTOMER).returns(nil)
       out, _ = capture_io do
-        @sla.add_interval_notification('Unknown Customer', 'Task', 'W')
+        @sla.add_interval_notification(UNKNOWN_CUSTOMER, 'Task', 'W')
       end
 
-      _( out ).must_include "customer 'Unknown Customer' not found in configuration"
+      _( out ).must_include "customer '#{UNKNOWN_CUSTOMER}' not found in configuration"
     end
 
     it 'handles invalid date parsing and displays an error message' do
       invalid_date = 'invalid-date'
       out, _ = capture_io do
-        @sla.add_interval_notification('Customer A', 'Task with bad date', 'W', invalid_date)
+        @sla.add_interval_notification(CUSTOMER_A, 'Task with bad date', 'W', invalid_date)
       end
 
-      _( @mock_notifications ).must_be_empty
-      _( out ).must_include "'#{invalid_date}' is not a valid date"
+      _(@mock_notifications).must_be_empty
+      _(out).must_include "'#{invalid_date}' is not a valid date"
     end
   end
 end

@@ -54,10 +54,11 @@ describe '#3 NCSCFeed' do
   it '#3.3 test check vulnerability description' do
     cfg = MonitoringConfig.new
     feed = FeedNCSC.new(cfg)
-    company = cfg.entries.select { |comp| comp.monitor_dtc }.first
+    company = cfg.entries.select(&:monitor_dtc).first
     list = feed.get_vulnerabilities_list
     assert list.any?, '3.3.1 should be new items'
     vulnerability = list.first
-    assert vulnerability.description[company.description], "3.3.2 should include dtc sla company: #{company.description}"
+    assert vulnerability.description[company.description],
+           "3.3.2 should include dtc sla company: #{company.description}"
   end
 end
