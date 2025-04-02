@@ -237,7 +237,8 @@ describe AbstractMonitor do
     end
 
     it 'returns the existing endpoint if already present in tenant' do
-      existing_endpoint = MonitoringEndpoint.new(alert.endpoint_id, 'Server', 'existing.example.com', 'Tenant1', 'active', nil, [])
+      existing_endpoint = MonitoringEndpoint.new(alert.endpoint_id, 'Server',
+                                                 'existing.example.com', 'Tenant1', 'active', nil, [])
       tenant.endpoints[alert.endpoint_id] = existing_endpoint
 
       result_endpoint = monitor.create_endpoint_from_alert(tenant, alert)

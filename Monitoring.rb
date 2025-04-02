@@ -163,7 +163,12 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
     cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
     monitoring_report = cl.report
 
-    ticketer.create_ticket("Monitoring: #{cl.name}", monitoring_report, Ticketer::PRIO_NORMAL, cl.source) if monitoring_report
+    ticketer.create_ticket(
+      "Monitoring: #{cl.name}",
+      monitoring_report,
+      Ticketer::PRIO_NORMAL,
+      cl.source
+    ) if monitoring_report
   end
 
   a = sla.load_periodic_alerts
@@ -184,7 +189,12 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
              else
                Ticketer::PRIO_NORMAL
              end
-      _ticket = ticketer.create_ticket("Monitoring: #{vulnerability.title}", vulnerability.description, prio, feed.source)
+      _ticket = ticketer.create_ticket(
+        "Monitoring: #{vulnerability.title}",
+        vulnerability.description,
+        prio,
+        feed.source
+      )
     end
   end
 

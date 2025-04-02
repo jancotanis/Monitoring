@@ -73,6 +73,7 @@ ZAMMAD_OAUTH_TOKEN=834hdfskgsj54rghkbvfiurve984
 ZAMMAD_GROUP=Monitoring
 ZAMMAD_CUSTOMER=john.doe@acme.com
 ```
+
 A ticket is created and the following fields are populated:
 
 |Field|Description|value|
@@ -87,13 +88,14 @@ A ticket is created and the following fields are populated:
 
 ## Application configuration
 
-Application configuration is stored in `monitoring.cfg`. The document will be automatically
-extended based on the entries within the various SAAS services. The entries will be merged
-based on the account description. For each entry you may select if malware detection and/or
-backups needs to be checked.
+Application configuration is stored in `monitoring.cfg`. The document will be
+automatically extended based on the entries within the various SAAS services.
+The entries will be merged based on the account description. For each entry
+you may select if malware detection and/or backups needs to be checked.
 
-Currently malware is only supported for Sophos portal. This also scans for connection issues
-in VPN tunnels. Backup checks are supported for VEEAM, Skykick and CloudAlly.
+Currently malware is only supported for Sophos portal. This also scans for
+connection issues in VPN tunnels. Backup checks are supported for VEEAM, 
+Skykick, Integra365 and CloudAlly.
 
 This is a yaml formatted file with the following structure:
 

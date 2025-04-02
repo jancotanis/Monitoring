@@ -86,21 +86,21 @@ describe '#4 Hudu Matcher' do
   end
   it '#4.2 Create no matches' do
     portal = Portal.new([PortalCompany.new('d')])
-    hudu = ['a', 'b', 'c'].inject([]) { |a,o| a.push(HuduCompany.new(o)) }
+    hudu = ['a', 'b', 'c'].inject([]) { |a, o| a.push(HuduCompany.new(o)) }
     matcher = Matcher.new(hudu, portal)
     assert _(matcher.matches.count).must_equal 0, '#4.2.1 no matches'
     assert _(matcher.nonmatches.count).must_equal hudu.count, '#4.2.2 all nonmatches'
   end
   it '#4.3 Create single matches' do
-    portal = Portal.new( [PortalCompany.new('a'), PortalCompany.new('d')] )
-    hudu = ['a', 'b', 'c'].inject([]) { |a,o| a.push(HuduCompany.new(o)) }
+    portal = Portal.new([PortalCompany.new('a'), PortalCompany.new('d')])
+    hudu = ['a', 'b', 'c'].inject([]) { |a, o| a.push(HuduCompany.new(o)) }
     matcher = Matcher.new(hudu, portal)
     assert _(matcher.matches.count).must_equal 1, '#4.3.1 single matches'
     assert _(matcher.nonmatches.count).must_equal(hudu.count - 1), '#4.3.2 all nonmatches'
   end
   it '#4.4 Create single and partial matches' do
-    portal = Portal.new( [PortalCompany.new('a'), PortalCompany.new('d')] )
-    hudu = ['a', 'b', 'c', 'partial found'].inject([]) { |a,o| a.push(HuduCompany.new(o)) }
+    portal = Portal.new([PortalCompany.new('a'), PortalCompany.new('d')])
+    hudu = ['a', 'b', 'c', 'partial found'].inject([]) { |a, o| a.push(HuduCompany.new(o)) }
     matcher = Matcher.new(hudu, portal)
     assert _(matcher.matches.count).must_equal 2, '#4.4.1 single matches'
     assert _(matcher.nonmatches.count).must_equal(hudu.count - 2), '#4.4.2 all nonmatches'

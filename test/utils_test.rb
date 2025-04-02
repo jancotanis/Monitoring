@@ -10,13 +10,16 @@ end
 
 describe '#2 utils' do
   it '#2.1.1 FileUtils' do
-    assert value(FileUtil.daily_file_name('error.log')).must_equal "error-#{FileUtil.timestamp}.log", '2.1.1 daily name'
+    assert value(FileUtil.daily_file_name('error.log')).must_equal("error-#{FileUtil.timestamp}.log"),
+           '2.1.1 daily name'
   end
   it '#2.1.2 FileUtils' do
-    assert value(FileUtil.daily_module_name('')).must_equal "string-#{FileUtil.timestamp}.log", '2.1.2 daily module name'
+    assert value(FileUtil.daily_module_name('')).must_equal("string-#{FileUtil.timestamp}.log"),
+           '2.1.2 daily module name'
   end
   it '#2.2 Struct' do
-    string = '{"id":"id-0", "desc":{"someKey":"someValue","anotherKey":"value"},"main_item":{"stats":{"a":8,"b":12,"c":10}}}'
+    string = '{"id":"id-0", "desc":{"someKey":"someValue","anotherKey":"value"},'\
+             '"main_item":{"stats":{"a":8,"b":12,"c":10}}}'
     t = TestStruct.new(JSON.parse(string))
     assert value(t.property('key')).must_equal '', '2.2.1 property not exist'
     assert value(t.property('id')).must_equal 'id-0', '2.2.1 property '

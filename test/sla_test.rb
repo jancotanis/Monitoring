@@ -40,7 +40,7 @@ describe '#4 Notification' do
     assert notifications.to_s["executed #{MONTHLY.description}"], '4.1.2 task interval'
     assert notifications.to_s["last time triggered #{DATE}"], '4.1.3 task trigger'
 
-    notification = Notification.new(TASK,ONCE.code, DATE)
+    notification = Notification.new(TASK, ONCE.code, DATE)
     assert notification.to_s["after date #{DATE}"], '4.1.4 task trigger once'
 
     notification = Notification.new(TASK, '?', DATE)
