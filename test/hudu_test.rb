@@ -53,8 +53,8 @@ describe '#2 Hudu Asset Layout' do
     asset = al.fields.first
 
     assert _(asset.value).must_equal("#{asset.label}:#{Actions::ENABLED}"), '#2.2.4 custom field/value equal'
-    assert _(asset.note).must_equal("#{asset.label}:#{Actions::NOTE}"), '#2.2.4 custom field/value equal'
-    assert _(asset.url).must_equal("#{asset.label}:#{Actions::URL}"), '#2.2.4 custom field/value equal'
+    assert _(asset.note).must_equal("#{asset.label}:#{Actions::NOTE}"), '#2.2.5 custom field/value equal'
+    assert _(asset.url).must_equal("#{asset.label}:#{Actions::URL}"), '#2.2.6 custom field/value equal'
 
     custom_fields = al.custom_fields
     custom_fields.each do |field|
@@ -71,10 +71,68 @@ describe '#2 Hudu Asset Layout' do
     end
   end
 end
-describe '#3 Hudu Dashbuilder' do
-  it '#3.1 Create Dashbuilder' do
-    assert DashBuilder.new(nil), '#3.1 should not be nil'
-    ## TODO additional non destructive tests
+describe DashBuilder do
+  let(:client) { mock('client') }
+  let(:builder) { DashBuilder.new(client) }
+  let(:asset) { mock('asset') }
+  let(:layout) { mock('AssetLayout') }
+  let(:service_enabled) { mock('service_enabled') }
+  let(:service_disabled) { mock('service_disabled') }
+
+  before do
+    AssetLayout.stubs(:create).with(asset).returns(layout)
+    asset.stubs(:company_name).returns('Company name')
+    service_enabled.stubs(:type).returns(Actions::ENABLED)
+    service_enabled.stubs(:label).returns('Monitoring')
+    service_enabled.stubs(:value).returns('Active')
+    service_enabled.stubs(:note).returns('All systems operational')
+    service_enabled.stubs(:url).returns('http://example.com')
+
+    service_disabled.stubs(:type).returns('DISABLED')
+
+    layout.stubs(:fields).returns([service_enabled, service_disabled])
+  end
+
+  describe '#create_dash_from_asset' do
+    it 'posts an entry for enabled services' do
+      expected_dash = {
+        'title' => 'Monitoring',
+        'company_name' => asset.company_name,
+        'content_link' => 'http://example.com',
+        'shade' => 'success',
+        'message' => 'All systems operational'
+      }
+
+      client.expects(:api_url).with('magic_dash').returns('http://api.example.com/magic_dash')
+      client.expects(:post).with('http://api.example.com/magic_dash', expected_dash)
+
+      builder.create_dash_from_asset(asset)
+    end
+
+    it 'skips services that are not enabled' do
+      service_enabled.stubs(:type).returns('DISABLED')
+      client.expects(:post).never
+
+      builder.create_dash_from_asset(asset)
+    end
+
+    it 'sets grey color and default message if service value and note are empty' do
+      service_enabled.stubs(:value).returns('')
+      service_enabled.stubs(:note).returns('')
+
+      expected_dash = {
+        'title' => 'Monitoring',
+        'company_name' => asset.company_name,
+        'content_link' => 'http://example.com',
+        'shade' => 'grey',
+        'message' => Services::NO_SERVICE_TEXT
+      }
+
+      client.expects(:api_url).with('magic_dash').returns('http://api.example.com/magic_dash')
+      client.expects(:post).with('http://api.example.com/magic_dash', expected_dash)
+
+      builder.create_dash_from_asset(asset)
+    end
   end
 end
 describe '#4 Hudu Matcher' do

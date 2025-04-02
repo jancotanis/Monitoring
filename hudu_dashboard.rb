@@ -81,7 +81,7 @@ LayoutField = Struct.new(:label, :value, :note, :url, :type)
 
 # Represents an asset layout which contains fields associated with an asset.
 # Provides methods for managing fields, adding new fields, and updating them.
-AssetLayout = Struct.new(:asset, :fields) do
+AssetLayout = Struct.new(:asset) do
   # Initializes a new AssetLayout instance.
   # @param asset [Object] The asset associated with this layout.
   def initialize(asset)
