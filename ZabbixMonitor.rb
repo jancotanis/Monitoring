@@ -82,7 +82,7 @@ class ZabbixMonitor < AbstractMonitor
       ep.alerts.each do |a|
         # group alerts by customer
         if a.severity_code >= Z_MINIMUM_SEVERITY
-          customer_alerts.add_incident(a.endpoint_id, a, ZabbixIncident)
+          customer_alerts.add_incident(ep, a, ZabbixIncident)
           @report.puts "  #{a.created} #{a.severity} #{a.description} "
         end
       end

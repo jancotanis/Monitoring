@@ -112,11 +112,11 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
 
   # Adds an incident to the customer alerts.
   #
-  # @param [String] device_id The ID of the device.
+  # @param [String] device The device/endpoint object or id if not available.
   # @param [Object] alert The alert object.
   # @param [Class] klass The class used to create the incident.
   # @return [void]
-  def add_incident(device_id, alert, klass)
+  def add_incident(device, alert, klass)
     # contact alerts for same type together to get start end times
     # TODO: not all systems have alert type
     alert_type = alert.type
@@ -126,7 +126,7 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
       # update end date & alert
       incident.end_time = alert.created
     else
-      instance = klass.new(device_id, alert.created, alert.created, alert)
+      instance = klass.new(device, alert.created, alert.created, alert)
       device_alerts[alert_type] = instance
       @source = instance.source
     end
