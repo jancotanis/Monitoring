@@ -111,7 +111,7 @@ class SyncServices
         next unless field.label.downcase[test]
 
         set_value = set_new_value?(service, portal)
-        changes ||= has_changes?(field.value, set_value)
+        changes ||= has_changes?(service, field.value, set_value)
         field.value = set_value
 
         # This overwrites existing notes...
@@ -140,7 +140,7 @@ class SyncServices
   # @param new_value [Object] The new value.
   #
   # @return [Boolean] True if there are changes, false otherwise.
-  def has_changes?(original_value, new_value)
+  def has_changes?(service, original_value, new_value)
     return false if original_value == new_value
 
     puts "- #{service} service turning #{onoff(new_value)}, was #{onoff(original_value)}"
