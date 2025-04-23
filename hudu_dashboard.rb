@@ -178,7 +178,7 @@ class DashBuilder
     layout.fields.each do |service|
       next unless Actions::ENABLED.eql?(service.type)
 
-      colour = service.value.to_s.empty? ? 'grey' : 'success'
+      colour = service.value ? 'success' : 'gray'
       message = service.note.to_s.empty? ? Services::NO_SERVICE_TEXT : service.note
 
       dash = dash_structure(service.label, asset.company_name, colour, message, service.url)
