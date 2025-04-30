@@ -97,7 +97,7 @@ describe MonitoringSLA do
     # Mock configuration setup
     @mock_notifications = []
     @config_entry = Struct.new(:description, :notifications, :create_ticket)\
-                    .new(CUSTOMER_A, @mock_notifications, false)
+                          .new(CUSTOMER_A, @mock_notifications, false)
     @config = Minitest::Mock.new
     @config = Object.new
     @config.stubs(:entries).returns([@config_entry])
@@ -192,7 +192,7 @@ describe MonitoringSLA do
         @sla.add_interval_notification(UNKNOWN_CUSTOMER, 'Task', 'W')
       end
 
-      _( out ).must_include "customer '#{UNKNOWN_CUSTOMER}' not found in configuration"
+      _(out).must_include "customer '#{UNKNOWN_CUSTOMER}' not found in configuration"
     end
 
     it 'handles invalid date parsing and displays an error message' do

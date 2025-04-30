@@ -7,11 +7,14 @@ require 'hudu_matcher'
 
 KNOWN_SERVICE = Services::SKYKICK
 UNKNOWN_SERVICE = 'mykick'
+EXAMPLE_COM = 'http://example.com'
+DASH_API = 'http://api.example.com/magic_dash'
 
 PortalCompany = Struct.new(:description, :touched) do
   def touch
     touched = true
   end
+
   def touched?
     touched
   end
@@ -86,7 +89,7 @@ describe DashBuilder do
     service_enabled.stubs(:label).returns('Monitoring')
     service_enabled.stubs(:value).returns('Active')
     service_enabled.stubs(:note).returns('All systems operational')
-    service_enabled.stubs(:url).returns('http://example.com')
+    service_enabled.stubs(:url).returns(EXAMPLE_COM)
 
     service_disabled.stubs(:type).returns('DISABLED')
 
@@ -98,13 +101,13 @@ describe DashBuilder do
       expected_dash = {
         'title' => 'Monitoring',
         'company_name' => asset.company_name,
-        'content_link' => 'http://example.com',
+        'content_link' => EXAMPLE_COM,
         'shade' => 'success',
         'message' => 'All systems operational'
       }
 
-      client.expects(:api_url).with('magic_dash').returns('http://api.example.com/magic_dash')
-      client.expects(:post).with('http://api.example.com/magic_dash', expected_dash)
+      client.expects(:api_url).with('magic_dash').returns(DASH_API)
+      client.expects(:post).with(DASH_API, expected_dash)
 
       builder.create_dash_from_asset(asset)
     end
@@ -123,13 +126,13 @@ describe DashBuilder do
       expected_dash = {
         'title' => 'Monitoring',
         'company_name' => asset.company_name,
-        'content_link' => 'http://example.com',
+        'content_link' => EXAMPLE_COM,
         'shade' => 'grey',
         'message' => Services::NO_SERVICE_TEXT
       }
 
-      client.expects(:api_url).with('magic_dash').returns('http://api.example.com/magic_dash')
-      client.expects(:post).with('http://api.example.com/magic_dash', expected_dash)
+      client.expects(:api_url).with('magic_dash').returns(DASH_API)
+      client.expects(:post).with(DASH_API, expected_dash)
 
       builder.create_dash_from_asset(asset)
     end
