@@ -71,6 +71,17 @@ module Integra365
       # endpoint is a backup job
       Integra365::EndpointData.new(id, 'BackupJob', property('jobName').to_s)
     end
+    
+    ##
+    # Creates unque id for alert. Alerts have no unique id and by adding timestamp these get unique per day
+    #
+    # @attr [String] name of tenant that is backedup
+    # @attr [String] timestamp
+    # @return [String] Daily id
+    #
+    def self.create_id(tenant, timestamp)
+      "#{tenant}:#{timestamp}"
+    end
   end
 
   ##
@@ -140,7 +151,7 @@ module Integra365
         data = @api.backup_job_reporting
         data.each do |item|
           # make alerts unique by adding incident datetime
-          id = "#{item.organization}:#{item.lastRun}"
+          id = AlertData.create_id(item.organization, item.lastRun)
           # actual error/warning is under session link for the backup job
           description = "#{item.jobName}\n please check session under backup jobs for a detailed description (https://office365.integra-bcs.nl/backup/index)."
           # :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :tenant_id, :raw_data

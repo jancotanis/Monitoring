@@ -2,6 +2,7 @@
 
 require 'dotenv'
 require 'json'
+require 'time'
 
 require_relative 'utils'
 require_relative 'Integra365API'
@@ -116,8 +117,15 @@ class Integra365Monitor < AbstractMonitor
         severity = a.severity
         next if severity.eql?('Resolved')
 
-        customer_alerts.add_incident(a.endpoint_id, a, IntegraBackupIncident)
-        @report.puts "  #{a.created} #{severity} #{a.description} "
+        if id = reported_yesterday(cfg.reported_alerts, a)
+          # replace with today's (last) id
+          cfg.reported_alerts.delete(id)
+          id = IntegraBackupIncident.new(nil, a.created, a.created, a).incident_id
+          cfg.reported_alerts << "#{INTEGRA}-#{a.id}"
+        else
+          customer_alerts.add_incident(a.endpoint_id, a, IntegraBackupIncident)
+          @report.puts "  #{a.created} #{severity} #{a.description} "
+        end
       end
     end
   end
@@ -135,5 +143,18 @@ class Integra365Monitor < AbstractMonitor
       create_endpoint_from_alert(customer, a) unless customer.endpoints[endpoint_id]
       customer.endpoints[endpoint_id]&.alerts&.push(a)
     end
+  end
+  
+
+  # Due to problem with unique alert ids for Integra we need to check  if this incident was reported yesterday.
+  #
+  # @param reported_alerts [Array] Array of incident ids
+  # @param alert [Object] The alert that is reported from the integra api.
+  #
+  def reported_yesterday(reported_alerts, alert)
+    yesterday = (Time.parse(alert.created) - 86400).strftime('%Y-%m-%d')
+
+    id_prefix = "#{INTEGRA}-#{Integra365::AlertData.create_id(alert.tenant_id, yesterday)}"
+    _found = reported_alerts.find { |reported_id| reported_id.start_with?(id_prefix) }
   end
 end

@@ -17,8 +17,9 @@
 #       refactor codebase
 # 1.5.0 Fix issue not removing resolved veeam alerts and add two yearly sla option
 # 1.5.1 Fix issue showing device object instead of id for zabbix
+# 1.6.0 Suppres integra issues which happened yesterday also
 #
-MONITOR_VERSION = '1.5.1'
+MONITOR_VERSION = '1.6.0'
 
 require 'dotenv'
 require 'optparse'
