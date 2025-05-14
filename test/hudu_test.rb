@@ -120,14 +120,14 @@ describe DashBuilder do
     end
 
     it 'sets grey color and default message if service value and note are empty' do
-      service_enabled.stubs(:value).returns('')
+      service_enabled.stubs(:value).returns(nil)
       service_enabled.stubs(:note).returns('')
 
       expected_dash = {
         'title' => 'Monitoring',
         'company_name' => asset.company_name,
         'content_link' => EXAMPLE_COM,
-        'shade' => 'grey',
+        'shade' => 'gray',
         'message' => Services::NO_SERVICE_TEXT
       }
 

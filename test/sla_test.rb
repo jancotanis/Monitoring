@@ -93,6 +93,8 @@ describe '#5 SLA' do
   end
 end
 describe MonitoringSLA do
+    let(:config) { mock('config') }
+    let(:sla) { MonitoringSLA.new(config) }
   before do
     # Mock configuration setup
     @mock_notifications = []
@@ -203,6 +205,50 @@ describe MonitoringSLA do
 
       _(@mock_notifications).must_be_empty
       _(out).must_include "'#{invalid_date}' is not a valid date"
+    end
+
+  end
+  describe '#report_lines' do
+    it 'returns report lines for configs with notifications' do
+      cfg1 = mock('cfg1')
+      cfg1.stubs(:notifications).returns(['Alert 1', 'Alert 2'])
+      cfg1.stubs(:description).returns('Customer A')
+
+      cfg2 = mock('cfg2')
+      cfg2.stubs(:notifications).returns([])
+      cfg2.stubs(:description).returns('Customer B')
+
+      cfg3 = mock('cfg3')
+      cfg3.stubs(:notifications).returns(['Only One'])
+      cfg3.stubs(:description).returns('Customer C')
+
+      config.stubs(:entries).returns([cfg1, cfg2, cfg3])
+
+      expected = [
+        'Customer A',
+        '- Alert 1',
+        '- Alert 2',
+        'Customer C',
+        '- Only One'
+      ]
+
+      assert_equal expected, sla.report_lines
+    end
+
+    it 'returns an empty array if no config entries have notifications' do
+      cfg = mock('cfg')
+      cfg.stubs(:notifications).returns([])
+      config.stubs(:entries).returns([cfg])
+
+      assert_equal [], sla.report_lines
+    end
+
+    it 'skips configs with nil notifications' do
+      cfg = mock('cfg')
+      cfg.stubs(:notifications).returns(nil)
+      config.stubs(:entries).returns([cfg])
+
+      assert_equal [], sla.report_lines
     end
   end
 end

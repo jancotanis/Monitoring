@@ -9,6 +9,7 @@ class FeedNCSC < MonitoringNCSC
     # prohibit changes to file system
   end
 
+  # override so all feeditems are new
   def cache_name
     'ncsc-test.yml'
   end

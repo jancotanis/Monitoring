@@ -29,7 +29,7 @@ Vulnerability = Struct.new(:feed_item, :companies, :high_priority?) do
   # @return [String] Detailed vulnerability description.
   def description
     companies_list = companies.map(&:description).join("\n- ")
-    "#{feed_item.title}\n#{feed_item.link}\n\n" \
+    "#{title}\n#{feed_item.link}\n\n" \
       "*** Controleer de klanten met een SLA en onderneem aktie binnen 72 uur (3 werkdagen)\n" \
       "- #{companies_list}"
   end
