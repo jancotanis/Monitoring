@@ -43,6 +43,8 @@ class Struct
     else
       ''
     end
+  rescue NameError
+    ''
   end
 end
 
