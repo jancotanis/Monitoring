@@ -18,8 +18,9 @@
 # 1.5.0 Fix issue not removing resolved veeam alerts and add two yearly sla option
 # 1.5.1 Fix issue showing device object instead of id for zabbix
 # 1.6.0 Suppres integra issues which happened yesterday also
+# 1.6.1 Fix issue with missing agents data in Sophos; remove obsolete rename of feedcache 
 #
-MONITOR_VERSION = '1.6.0'
+MONITOR_VERSION = '1.6.1'
 
 require 'dotenv'
 require 'optparse'

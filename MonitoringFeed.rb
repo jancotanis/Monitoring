@@ -56,10 +56,6 @@ class MonitoringFeed
     @source = source
     @last_time = Time.new(0)
 
-    # Backwards compatibility: rename old cache files
-    old_cache_name = "./monitor#{@feedcache}alerts.yml"
-    File.rename(old_cache_name, cache_name) if File.file?(old_cache_name)
-
     # Load cache if it exists, or initialize it
     if File.file?(cache_name)
       @last_time = File.mtime(cache_name)

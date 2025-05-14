@@ -201,11 +201,14 @@ module Sophos
       customer.clear_endpoint_alerts
       data = @api.client(customer).alerts
       data.each do |item|
+        managed_agent = item.managedAgent
         alert = AlertData.new(
           item.id, item.raisedAt, item.description, item.severity, item.category, item.product,
-          item.managedAgent.id, item.managedAgent.type, item.attributes
+          managed_agent['id'] ||'unknown', managed_agent['type'] ||'unknown', item.attributes
         )
         @alerts[alert.id] = alert
+      rescue => e
+        puts e, data.to_json
       end
       @alerts
     end
