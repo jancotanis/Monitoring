@@ -148,14 +148,25 @@ module Integra365
       unless @all_alerts
         @all_alerts = {}
 
-        data = @api.backup_job_reporting
-        data.each do |item|
-          # make alerts unique by adding incident datetime
-          id = AlertData.create_id(item.organization, item.lastRun)
+        jobs = @api.backup_jobs
+        jobs.each do |job|
+          # get sessions and list 
+          sessions = @api.backup_job_sessions(job.id)
+
+          last_session = sessions.first
+          list = @api.backup_job_session(job.id, last_session.id).list
+          # extract error/warning messages
+          message = list
+          .select { |item| [Integra365::SessionListTypes::ERROR, Integra365::SessionListTypes::WARNING].include?(item.type) }
+          .map { |item| item.message }
+          .join("\n")
+
+
+          id = last_session.id
           # actual error/warning is under session link for the backup job
-          description = "#{item.jobName}\n please check session under backup jobs for a detailed description (https://office365.integra-bcs.nl/backup/index)."
+          description = "#{job.jobName}: #{message}"
           # :id, :created, :description, :severity, :category, :product, :endpoint_id, :endpoint_type, :tenant_id, :raw_data
-          alert = AlertData.new(id, item.lastRun, description, item.lastStatus, 'Job', 'Integra365', id, 'BackupJob', item.organization, item.attributes)
+          alert = AlertData.new(id, job.lastRun, description, job.lastStatus, 'Job', 'Integra365', job.id, 'BackupJob', job.tenant, job.attributes)
           @all_alerts[alert.id] = alert
         end
       end

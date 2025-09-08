@@ -19,8 +19,10 @@
 # 1.5.1 Fix issue showing device object instead of id for zabbix
 # 1.6.0 Suppres integra issues which happened yesterday also
 # 1.6.1 Fix issue with missing agents data in Sophos; remove obsolete rename of feedcache 
+# 1.7   Use Integra session api to get better error in ticket
+#       Refactor monitoring notifications
 #
-MONITOR_VERSION = '1.6.1'
+MONITOR_VERSION = '1.7'
 
 require 'dotenv'
 require 'optparse'

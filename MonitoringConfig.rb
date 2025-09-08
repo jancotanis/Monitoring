@@ -2,6 +2,7 @@
 
 require 'yaml'
 require_relative 'utils'
+require_relative 'monitoring_notification'
 
 MONITORING_CFG = 'monitoring.cfg'
 MONITORING_REPORT = 'monitoring.md'
