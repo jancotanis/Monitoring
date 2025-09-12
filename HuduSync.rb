@@ -3,7 +3,7 @@
 #
 # 1.0	Initial version of monitoring coas saas vendor portals
 #
-HSYNC_VERSION = '1.0.3'
+HSYNC_VERSION = '1.1.0'
 
 require 'dotenv/load'
 require 'optparse'
@@ -31,7 +31,7 @@ class SyncServices
     @matcher = matcher
     @refresh = refresh
     @dash    = DashBuilder.new(@client)
-    @layout  = @client.asset_layouts.select { |al| LAYOUT.eql? al.name }.first
+    @layout  = @client.asset_layouts({name: LAYOUT}).first
     @assets  = @client.assets({ asset_layout_id: @layout.id })
     @assets_by_id = @assets.to_h { |o| [o.company_id, o] }
   rescue Hudu::HuduError => e
@@ -75,6 +75,7 @@ class SyncServices
 
     puts "Updating #{hudu.name}"
     asset.fields = asset_layout.custom_fields
+
     @client.update_company_asset(asset)
     @dash.create_dash_from_asset(asset)
   end
@@ -215,6 +216,10 @@ def get_options(_config)
       puts '- Cleaning dashes'
       options[:clean] = true
     end
+    opts.on('-f name', '--filter name', 'Filter on company name') do |name|
+      puts "- Filtering on '#{name}'"
+      options[:filter] = name.downcase
+    end
     opts.on('-r', '--refresh', 'Recreate all dashes') do |_arg|
       puts '- Refresh dashes'
       options[:refresh] = true
@@ -247,7 +252,6 @@ def create_hudu_client(log)
   Hudu.configure do |config|
     config.endpoint = ENV.fetch('HUDU_API_HOST').downcase
     config.api_key = ENV.fetch('HUDU_API_KEY')
-    config.page_size = 500
     config.logger = log if log
   end
   client = Hudu.client
@@ -266,7 +270,11 @@ if options[:clean]
   dash_cleanup(client, config.entries)
 else
   puts 'Loading HUDU companies...'
-  companies = client.companies
+  if options[:filter]
+    companies = client.companies.select {|company| company.name.downcase[options[:filter]]}
+  else
+    companies = client.companies
+  end
 
   FileUtil.write_file('hudu-companies.txt', companies.map(&:name))
   puts "- Found #{companies.count} companies"
