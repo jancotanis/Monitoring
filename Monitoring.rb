@@ -21,12 +21,18 @@
 # 1.6.1 Fix issue with missing agents data in Sophos; remove obsolete rename of feedcache 
 # 1.7   Use Integra session api to get better error in ticket
 #       Refactor monitoring notifications
+# 1.8   Switch ticketer to DigiProcess
+#       Add Huntres portal to report vulnerabilities
+#       NinjaOne to get all organizations for reporting
+#       Add option to list portal sources
 #
-MONITOR_VERSION = '1.7'
+MONITOR_VERSION = '1.8'
 
+$LOAD_PATH.unshift File.expand_path('../apies/wrapi/lib', __dir__)
 require 'dotenv'
 require 'optparse'
 require_relative 'Ticketer'
+require_relative 'digi_process_ticketer'
 require_relative 'utils'
 require_relative 'MonitoringConfig'
 require_relative 'SophosMonitor'
@@ -161,10 +167,11 @@ config = MonitoringConfig.new
 sla = MonitoringSLA.new(config)
 options = get_options(config, sla)
 feeds = [MonitoringDTC.new(config), MonitoringNCSC.new(config)]
-ticketer = Ticketer.new(options)
+ticketer = DigiProcessTicketer.new(options)
 
 File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
   report_tenants(report, config, options) if options[:tenants]
+  report_sources(report, config, options) if options[:sources]
 
   customer_alerts = run_monitors(report, config, options)
   # create ticket

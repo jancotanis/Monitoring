@@ -56,15 +56,51 @@ INTEGRA365_PASSWORD=your_password_here
 
 ### Zabbix
 
-Connection to ZAbbix servicer api. This is location specific.
+Connection to Zabbix service api. This is location specific.
 
 ````console
 ZABBIX_API_HOST=https://api.your-zabbix-host.com
 ZABBIX_API_KEY=d73e81e7e7e3b5f57f10539defe64c71fa
 ````
 
+### Huntress
+
+Connection to Huntress portal api.
+
+````console
+HUNTRESS_API_KEY=<api key>
+HUNTRESS_API_SECRET=<api secret>
+````
+
+### NinjaOne
+
+Connection to NinjaOne portal api. Setup an API key under Administration|Apps|API and [[+ Add client app]].
+
+### NinjaOne configuration
+
+Use the following API settings in ninjaOne:
+
+|Setting|Value|
+|:--|:--|
+|Application platform|Application platform API Services (machine-to-machine)|
+|Name |name of the app using this api connect|
+|Redirect URIs|`https://localhost`|
+|Scopes|`Monitoring`, `Management`, `Control`|
+|Allowed granttypes|`Client credentials`|
+
+### Environment configuration or .env
+
+Add the following environment settings
+````console
+NINJA1_HOST=https://<yourhostname>.rmmservice.eu
+NINJA1_CLIENT_ID=<client_id>
+NINJA1_CLIENT_SECRET=<client_secret>
+````
+
 ### Helpdesk system
 
+#### Zammad
+ 
 Connection to Zammad, this is vendor specific.
 
 ```console
@@ -76,15 +112,37 @@ ZAMMAD_CUSTOMER=john.doe@acme.com
 
 A ticket is created and the following fields are populated:
 
-|Field|Description|value|
-|:--|:--|:--|
-|Title|`Monitoring <customer name>`||
-|State|`new`||
-|Group|`ZAMMAD_GROUP` environment setting||
-|Priority|Default prio `2 normal` for DTC alerts it can be `3 high` when certain keywords are within the text||
-|Customer|`ZAMMAD_CUSTOMER` environment setting||
-|Article|Text of the monitored system||
-|Tags|For DTC alerts the tag `DTC` is included||
+|Field|Description|
+|:--|:--|
+|Title|`Monitoring <customer name>`|
+|State|`new`|
+|Group|`ZAMMAD_GROUP` environment setting|
+|Priority|Default prio `2 normal` for DTC alerts it can be `3 high` when certain keywords are within the text|
+|Customer|`ZAMMAD_CUSTOMER` environment setting|
+|Article|Text of the monitored system|
+|Tags|For DTC alerts the tag `DTC` is included|
+
+#### Digiprocess
+ 
+Connection to Digiprocess ERP system
+
+```console
+DIGIPROCESS_SECRET=<secret>
+DIGIPROCESS_WEBHOOK=<webhook>
+DIGIPROCESS_RELATION_NUMBER=<id>
+DIGIPROCESS_RELATION_EMAIL=<or contact email>
+DIGIPROCESS_SOURCE=<Monitoring>
+```
+
+A ticket is created and the following fields are populated:
+
+|Field|Description|
+|:--|:--|
+|Title|`Monitoring <customer name>`|
+|State|Default state configured in digiprocess|
+|Customer|relation number of relation for email contact|
+|Article|Text of the monitored system|
+|Ticket type|One of the portal source or DTC alerts the tag `DTC` is included|
 
 ## Application configuration
 
