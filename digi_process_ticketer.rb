@@ -5,7 +5,6 @@ require_relative 'utils'
 
 # Ticketer is a class that creates tickets in DigiProcess via the hooks API.
 class DigiProcessTicketer
-  TICKET_SOURCE = 'Monitor Script'
   TICKET_STATUS = 'Aangemaakt'
   PRIO_NORMAL = nil
   attr_reader :client
@@ -38,7 +37,7 @@ class DigiProcessTicketer
       # ticket_status: TICKET_STATUS not set so use default
       content = {
         ticket_type: ticket_type,
-        ticket_source: TICKET_SOURCE,
+        ticket_source: @source,
         title: title,
         description: text
       }
