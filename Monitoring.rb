@@ -76,7 +76,7 @@ def get_options(config, sla)
     end
     opts.on(
       '-n [customer,task,interval[,date]]', '--notification [customer,task,interval[,date]]', Array,
-      "Add customer notification. Interval types: #{INTERVALS.keys.join(', ')}; Whne no parametrers given, notifications are listed."
+      "Add customer notification. Interval types: #{INTERVALS.keys.join(', ')}; When no parametrers given, notifications are listed."
     ) do |arg|
       if arg
         sla.add_interval_notification(arg[0].to_s.strip, arg[1].to_s.strip, arg[2].to_s.strip, arg[3])
