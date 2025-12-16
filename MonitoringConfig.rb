@@ -203,7 +203,7 @@ class MonitoringConfig
   #
   # @return [void] This method writes directly to a file and does not return any values.
   def report(silent = false)
-    keys = %w[CloudAlly Skykick Sophos Veeam Integra365 Zabbix]
+    keys = %w[CloudAlly Huntress Integra365 NinjaOne Skykick Sophos Veeam Zabbix]
 
     # Open the report file and write the headers and company details.
     File.open(MONITORING_REPORT, 'w') do |report|
