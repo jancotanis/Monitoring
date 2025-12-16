@@ -16,6 +16,8 @@ gem 'integra365'
 gem 'skykick'
 gem 'veeam'
 gem 'hudu'
+gem 'huntress'
+gem 'ninjaone'
 gem 'zabbix_api_gem'
 
 gem 'simplecov', require: false, group: :test

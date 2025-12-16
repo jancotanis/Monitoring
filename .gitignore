@@ -15,7 +15,8 @@
 *.json
 *.yml
 configuration.*
-monitoring.cfg
+*.cfg
+*.bat
 
 # Used by dotenv library to load environment variables.
 .env
