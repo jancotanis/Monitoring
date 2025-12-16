@@ -116,7 +116,8 @@ class MonitoringConfig
   #
   # @return [ConfigData, nil] The matching configuration entry, or nil if not found
   def by_description(desc)
-    result = @config.select { |cfg| cfg.description.upcase.eql?(desc.upcase) }
+    desc = desc.strip.upcase
+    result = @config.select { |cfg| cfg.description.upcase.strip.eql?(desc) }
     MonitoringConfig.first_result(result)
   end
 
