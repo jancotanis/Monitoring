@@ -66,6 +66,11 @@ def get_options(config, sla)
     end
     opts.on('-t', '--tenants', 'Report all tenants to json') do |arg|
       options[:tenants] = arg
+      exit(0)
+    end
+    opts.on('--sources', 'Report all monitoring sources') do |arg|
+      options[:sources] = arg
+      exit(0)
     end
     opts.on('-c', '--compact', 'Compact config file based on tenants') do |arg|
       puts '- compacting configuration is on'
@@ -124,6 +129,13 @@ end
 def report_tenants(report, config, options)
   puts '- report tenants'
   monitors_do(report, config, options, &:report_tenants)
+end
+
+def report_sources(report, config, options)
+  puts '- report sources'
+  monitors_do(report, config, options) do |mon|
+    puts mon.source
+  end
 end
 
 def run_monitors(report, config, options)
