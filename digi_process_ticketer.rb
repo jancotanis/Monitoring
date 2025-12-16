@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 require 'logger'
 require 'faraday'
+require_relative 'utils'
 
 # Ticketer is a class that creates tickets in DigiProcess via the hooks API.
 class DigiProcessTicketer
   TICKET_SOURCE = 'Monitor Script'
-  TICKET_TYPE = 'Storing A'
   TICKET_STATUS = 'Aangemaakt'
   PRIO_NORMAL = nil
   attr_reader :client
@@ -17,11 +17,11 @@ class DigiProcessTicketer
     @secret         = ENV.fetch('DIGIPROCESS_SECRET')
     @web_hook       = ENV.fetch('DIGIPROCESS_WEBHOOK')
     @source         = ENV.fetch('DIGIPROCESS_SOURCE')
-    @customer_id    = ENV.fetch('DIGIPROCESS_RELATION_NUMBER')        # The customer associated with tickets
-    @customer_email = ENV.fetch('DIGIPROCESS_RELATION_EMAIL')         # The customer associated with tickets
+    @customer_id    = ENV['DIGIPROCESS_RELATION_NUMBER']        # The customer associated with tickets
+    @customer_email = ENV['DIGIPROCESS_RELATION_EMAIL']         # The customer associated with tickets
+    @logger = Logger.new(FileUtil.daily_file_name('digi_process.log')) if options[:log]
     setup_connection
     @debug = 'DEBUG'.eql? ENV.fetch('MONITORING')    # Enable debug mode
-    @logger = options[:log]
   end
 
   # Creates a new ticket in Zammad.
@@ -30,21 +30,21 @@ class DigiProcessTicketer
   # @param text [String] The body text of the ticket.
   # @param ticket_prio [String] (optional) The priority of the ticket (default: PRIO_NORMAL).
   # @param ticket_type [String, nil] (optional) A tag to categorize the ticket.
-  # @return [ZammadAPI::Object, nil] The created ticket object, or nil if in debug mode.
-  def create_ticket(title, text, ticket_prio = PRIO_NORMAL, ticket_type = nil)
+  # @return The created ticket object, or nil if in debug mode.
+  def create_ticket(title, text, ticket_prio = PRIO_NORMAL, ticket_type)
     ticket = nil
     unless @debug
       # ticket_prio, ticket group, customer hardcoded?
+      # ticket_status: TICKET_STATUS not set so use default
       content = {
-        relation_number: @customer_id,
-        relation_email: @customer_email,
         ticket_type: ticket_type,
-#        ticket_source: TICKET_SOURCE,
-#        ticket_status: TICKET_STATUS, - use default
+        ticket_source: TICKET_SOURCE,
         title: title,
         description: text
       }
-puts content.to_json 
+      content[:relation_number] = @customer_id if @customer_id
+      content[:relation_email]  = @customer_email if  @customer_email
+
       ticket = @connection.post('', content)
     end
     ticket
@@ -65,7 +65,7 @@ puts content.to_json
   def setup_logger(connection, logger)
     connection.response :logger, logger, { headers: true, bodies: true } do |log|
       # Filter sensitive information from JSON content, such as passwords and access tokens.
-      # log.filter(/("DPE-Webhook-Secret":")(.+?)(".*)/, '\1[REMOVED]\3')
+      log.filter(/("DPE-Webhook-Secret":")(.+?)(".*)/, '\1[REMOVED]\3')
     end
   end
 
