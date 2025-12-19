@@ -149,10 +149,13 @@ class NCSCTextAdvisory
   end
 
   # Constructs the advisory text URL.
+  # Original url  not supported and is client side redirected
+  #   "https://advisories.ncsc.nl/advisory?id=#{@id}&format=plain"
   #
   # @return [String] The formatted advisory URL
   def text_url
-    "https://advisories.ncsc.nl/advisory?id=#{@id}&format=plain"
+    year = @id.split('-')[1]   
+    "https://advisories.ncsc.nl/#{year}/#{@id.downcase}.txt"
   end
 end
 
