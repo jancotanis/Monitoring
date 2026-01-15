@@ -6,7 +6,6 @@ require_relative 'utils'
 # Ticketer is a class that creates tickets in DigiProcess via the hooks API.
 class DigiProcessTicketer
   TICKET_STATUS = 'Aangemaakt'
-  PRIO_NORMAL = nil
   attr_reader :client
 
   # Initializes a new Ticketer instance.
@@ -27,10 +26,10 @@ class DigiProcessTicketer
   #
   # @param title [String] The title of the ticket.
   # @param text [String] The body text of the ticket.
-  # @param ticket_prio [String] (optional) The priority of the ticket (default: PRIO_NORMAL).
+  # @param ticket_prio [String] The priority of the ticket, currently not used.
   # @param ticket_type [String, nil] (optional) A tag to categorize the ticket.
   # @return The created ticket object, or nil if in debug mode.
-  def create_ticket(title, text, ticket_prio = PRIO_NORMAL, ticket_type)
+  def create_ticket(title, text, ticket_prio, ticket_type, ticket_template = nil)
     ticket = nil
     unless @debug
       # ticket_prio, ticket group, customer hardcoded?
@@ -43,9 +42,12 @@ class DigiProcessTicketer
       }
       content[:relation_number] = @customer_id if @customer_id
       content[:relation_email]  = @customer_email if  @customer_email
+      content[:ticket_template] = ticket_template if  ticket_template
 
       ticket = @connection.post('', content)
     end
+    puts "Ticket created: #{title}/#{ticket_prio}"
+    puts text
     ticket
   end
   
