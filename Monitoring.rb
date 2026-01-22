@@ -117,14 +117,17 @@ end
 
 def create_monitors(report, config, options)
   @monitors = []
+  monitor_classes = [SophosMonitor, NinjaOneMonitor, HuntressMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor]
+  puts "\n[*] Initializing #{monitor_classes.length} monitors..."
 
-  [SophosMonitor, NinjaOneMonitor, HuntressMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor].each do |klass|
+  monitor_classes.each do |klass|
     @monitors << klass.new(report, config, options[:log])
+    puts "    ✓ #{klass.name.gsub('Monitor', '')}"
   rescue Faraday::Error => e
-    puts "** Error instantiating #{klass.name}"
-    puts e
+    puts "    ✗ Error initializing #{klass.name}: #{e.message}"
     puts e.response[:body] if e.response
   end
+  puts ''
 end
 
 def monitors_do(report, config, options, &block)
@@ -148,14 +151,21 @@ end
 
 def run_monitors(report, config, options)
   customer_alerts = {}
+  puts "[*] Running monitors..."
 
   monitors_do(report, config, options) do |mon|
+    start_time = Time.now
+    print "    → #{mon.source.ljust(20)} "
     customer_alerts = mon.run(customer_alerts)
+    elapsed = (Time.now - start_time).round(2)
+    puts "✓ (#{elapsed}s)"
   rescue Faraday::Error => e
+    puts "✗ Error"
     puts "** Error running #{mon.class.name}"
     puts e
     puts e.response&.dig(:body)
   end
+  puts ''
   customer_alerts
 end
 
@@ -174,8 +184,11 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
   report_sources(report, config, options) if options[:sources]
 
   customer_alerts = run_monitors(report, config, options)
+  
   # create ticket
+  puts "[*] Processing alerts and creating tickets..."
   last = ''
+  tickets_created = 0
   sorted = customer_alerts.values.sort_by { |cl| cl.customer.description.upcase }
   sorted.each do |cl|
     # we have alerts
@@ -189,25 +202,38 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
     cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
     monitoring_report = cl.report
 
-    ticketer.create_ticket(
-      "Monitoring: #{cl.name}",
-      monitoring_report,
-      Ticketer::PRIO_NORMAL,
-      cl.source
-    ) if monitoring_report
+    if monitoring_report
+      if ticketer.create_ticket(
+          "Monitoring: #{cl.name}",
+          monitoring_report,
+          Ticketer::PRIO_NORMAL,
+          cl.source
+        )
+        tickets_created += 1
+      end
+    end
   end
 
+  puts "\n[*] Processing SLA notifications..."
+  sla_tickets = 0
   a = sla.load_periodic_alerts
   a.each do |notification|
     next unless notification.config.create_ticket
 
-    ticketer.create_ticket(
+    if ticketer.create_ticket(
       "#{notification.config.description}: #{notification.notification.task}",
       notification.description, Ticketer::PRIO_NORMAL,
       'SLA-task'
     )
+      sla_tickets += 1
+    end
   end
+  puts "    ✓ #{sla_tickets} SLA notifications" if sla_tickets > 0
+
+  puts "\n[*] Processing security feeds (DTC/NCSC)..."
+  feed_tickets = 0
   feeds.each do |feed|
+    puts "    → #{feed.source}"
     a = feed.get_vulnerabilities_list
     a.each do |vulnerability|
       prio = if vulnerability.high_priority?
@@ -221,10 +247,17 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
         prio,
         feed.source
       )
+      feed_tickets += 1 if _ticket
     end
+    puts "    ✓ #{a.length} vulnerabilities" if a.length > 0
   end
 
   # update list of alerts
   config.compact! if options[:compact]
   config.save_config
+  
+  puts "\n[✓] Monitoring complete!"
+  puts "    Alerts: #{customer_alerts.values.sum { |cl| cl.alerts.length }} total"
+  puts "    Tickets: #{tickets_created} monitoring + #{sla_tickets} SLA + #{feed_tickets} security feeds"
+  puts ''
 end
