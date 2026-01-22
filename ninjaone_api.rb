@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+$LOAD_PATH.unshift File.expand_path('../apies/ninjaone/lib', __dir__)
 require 'ninjaone'
 require 'logger'
 
@@ -66,26 +67,12 @@ module NinjaOne
     include MonitoringAlert
 
     ##
-    # Provides a description for the alert.
-    # This method collects the sub-sources that failed the task based on the status.
-    #
-    # @return [String] The description of the failed sub-sources in the task.
-    #
-    def description
-      ""
-#      details = raw_data['details']
-#      "\n"+details.map { |k, v| "#{k}: #{v}" unless v.to_s.strip.empty? }
-#                  .compact
-#                  .join("\n")
-    end
-
-    ##
     # Creates a new endpoint associated with the alert.
     #
     # @return [Huntress::EndpointData] A new endpoint created for the alert.
     #
     def create_endpoint
-#      NinjaOne::EndpointData.new(endpoint_id, category, endpoint_type)
+      NinjaOne::EndpointData.new(endpoint_id, category, endpoint_type)
     end
   end
 
@@ -108,6 +95,7 @@ module NinjaOne
       @tenants = nil
       @endpoints = nil
       @alerts = nil
+      @backup_alerts = nil
       NinjaOne.configure do |config|
         config.endpoint = host
         config.client_id = client_id
@@ -157,6 +145,17 @@ module NinjaOne
     end
 
     ##
+    # Load endpoint by id.
+    #
+    # @param [integer] id The id of the endpoint.
+    # @return [Array<EndpointData>] The endpoint or nil if not found.
+    #
+    def endpoint(id)
+      @endpoints ||= load_endpoints
+      @endpoints[id]
+    end
+
+    ##
     # Retrieves all alerts associated with a given tenant.
     #
     # @param [TenantData, NilClass] tenant The tenant object to fetch the alerts for. If nil, returns all alerts.
@@ -169,6 +168,22 @@ module NinjaOne
         @alerts.values.select { |alert| tenant.eql?(alert.tenant) }
       else
         @alerts.values
+      end
+    end
+
+    ##
+    # Retrieves all alerts associated with a given tenant.
+    #
+    # @param [TenantData, NilClass] tenant The tenant object to fetch the alerts for. If nil, returns all alerts.
+    # @return [Array<AlertData>] A list of alerts associated with the given tenant,
+    #                            or all alerts if no tenant is provided.
+    #
+    def backup_alerts(tenant = nil)
+      @backup_alerts ||= load_backup_alerts
+      if tenant
+        @backup_alerts.values.select { |alert| tenant.eql?(alert.tenant) }
+      else
+        @backup_alerts.values
       end
     end
 
@@ -190,7 +205,7 @@ module NinjaOne
     end
 
     ##
-    # Loads all alerts for the Huntress system.
+    # Loads all alerts for the NinjaOne system.
     #
     # @return [Hash] A hash of alert IDs mapped to alert objects.
     #
@@ -205,6 +220,32 @@ module NinjaOne
 #        @alerts[item.id] = alert
 #      end
       @alerts
+    end
+
+    ##
+    # Loads all alerts for the NinjaOne system.
+    #
+    # @return [Hash] A hash of alert IDs mapped to alert objects.
+    #
+    def load_backup_alerts
+      @backup_alerts = {}
+      # get all failed backup jobs
+      data = @api.backup_jobs(sf:"status = FAILED")
+      data.each do |item|
+          if endpoint = endpoint(item.deviceId)
+            type_description = endpoint.to_s
+          else
+            type_description = 'did not fetch endpoint type'
+          end
+          alert = AlertData.new(
+                  item.jobId, Time.at(item.jobStartTime).to_datetime, item.planName, item.jobStatus, 'backup',
+                  'NinjaOne Backup', item.deviceId, type_description, item.organizationId, item.attributes
+                ) 
+        # assuem oldest first
+        @backup_alerts[item.jobId] = alert
+      end
+
+      @backup_alerts
     end
   end
 end

@@ -37,7 +37,8 @@ class NinjaOneMonitor < AbstractMonitor
 
   # Monitor when backup is on
   def monitor_tenant?(cfg)
-    cfg.monitor_endpoints
+    #cfg.monitor_endpoints
+    cfg.monitor_backup
   end
 
   def collect_data
@@ -54,12 +55,17 @@ class NinjaOneMonitor < AbstractMonitor
 
       customer.alerts = customer_alerts
       customer_alerts.each do |a|
-
         endpoint_id = a.endpoint_id
         create_endpoint_from_alert(customer, a) unless customer.endpoints[endpoint_id]
         customer.endpoints[endpoint_id]&.alerts&.push(a)
       end
     end
+  end
+
+  # Collect all alerts
+  #
+  def collect_alerts(tenant)
+    @client.backup_alerts(tenant.id)
   end
 
   # Processes alerts for a single customer and adds them to all_alerts.
@@ -68,7 +74,7 @@ class NinjaOneMonitor < AbstractMonitor
   # @param all_alerts [Hash] The hash storing all alerts.
   #
   def process_customer_alerts(customer, all_alerts)
-    return
+
     description = customer.description
     cfg = @config.by_description(description)
     return unless monitor_tenant?(cfg)
