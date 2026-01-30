@@ -30,20 +30,19 @@ class DigiProcessTicketer
   # @param ticket_type [String, nil] (optional) A tag to categorize the ticket.
   # @return The created ticket object, or nil if in debug mode.
   def create_ticket(title, text, ticket_prio, ticket_type, ticket_template = nil)
-    ticket = nil
+    ticket = content = {
+      ticket_type: ticket_type,
+      ticket_source: @source,
+      title: title,
+      description: text
+    }
+    content[:relation_number] = @customer_id if @customer_id
+    content[:relation_email]  = @customer_email if  @customer_email
+    content[:ticket_template] = ticket_template if  ticket_template
+
     unless @debug
       # ticket_prio, ticket group, customer hardcoded?
       # ticket_status: TICKET_STATUS not set so use default
-      content = {
-        ticket_type: ticket_type,
-        ticket_source: @source,
-        title: title,
-        description: text
-      }
-      content[:relation_number] = @customer_id if @customer_id
-      content[:relation_email]  = @customer_email if  @customer_email
-      content[:ticket_template] = ticket_template if  ticket_template
-
       ticket = @connection.post('', content)
     end
     puts "Ticket created: #{title}/#{ticket_prio}"
@@ -59,7 +58,6 @@ class DigiProcessTicketer
       connection.response :json, content_type: /\bjson$/
       connection.use Faraday::Request::UrlEncoded
       setup_logger(connection, @logger) if @logger
-#      connection.use WrAPI::RateThrottleMiddleware, limit: rate_limit, period: rate_period if rate_limit && rate_period
     end
   end
   
