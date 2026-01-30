@@ -25,8 +25,9 @@
 #       Add Huntres portal to report vulnerabilities
 #       NinjaOne to get all organizations for reporting
 #       Add option to list portal sources
+# 1.9   Use NinjaOne to monitor backups
 #
-MONITOR_VERSION = '1.8'
+MONITOR_VERSION = '1.9'
 
 $LOAD_PATH.unshift File.expand_path('../apies/wrapi/lib', __dir__)
 require 'dotenv'
