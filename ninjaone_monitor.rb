@@ -9,7 +9,7 @@ require_relative 'MonitoringConfig'
 require_relative 'MonitoringModel'
 
 NINJAONE = 'NinjaOne'
-class CyberIncident < MonitoringIncident
+class NinjaIncident < MonitoringIncident
   def initialize(device = nil, start_time = nil, end_time = nil, alert = nil)
     super(NINJAONE, device, start_time, end_time, alert)
   end
@@ -92,7 +92,7 @@ class NinjaOneMonitor < AbstractMonitor
         ep.alerts.each do |a|
           # group alerts by customer
           unless a.severity.eql? 'closed'
-            customer_alerts.add_incident(a.endpoint_id, a, CyberIncident)
+            customer_alerts.add_incident(a.endpoint_id, a, NinjaIncident)
             @report.puts "  #{a.created} #{a.severity} #{a.description} "
           end
         end
