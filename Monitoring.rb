@@ -151,14 +151,15 @@ end
 
 def run_monitors(report, config, options)
   customer_alerts = {}
-  puts "[*] Running monitors..."
-
+  first = true
   monitors_do(report, config, options) do |mon|
+    puts "[*] Running monitors..." if first
     start_time = Time.now
     print "    → #{mon.source.ljust(20)} "
     customer_alerts = mon.run(customer_alerts)
     elapsed = (Time.now - start_time).round(2)
     puts "✓ (#{elapsed}s)"
+    first = false
   rescue Faraday::Error => e
     puts "✗ Error"
     puts "** Error running #{mon.class.name}"
