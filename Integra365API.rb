@@ -152,6 +152,7 @@ module Integra365
         jobs.each do |job|
           # get sessions and list 
           sessions = @api.backup_job_sessions(job.id)
+          next if sessions.count.zero?
 
           last_session = sessions.first
           list = @api.backup_job_session(job.id, last_session.id).list
