@@ -71,7 +71,7 @@ module Integra365
       # endpoint is a backup job
       Integra365::EndpointData.new(id, 'BackupJob', property('jobName').to_s)
     end
-    
+
     ##
     # Creates unque id for alert. Alerts have no unique id and by adding timestamp these get unique per day
     #
@@ -150,18 +150,17 @@ module Integra365
 
         jobs = @api.backup_jobs
         jobs.each do |job|
-          # get sessions and list 
+          # get sessions and list
           sessions = @api.backup_job_sessions(job.id)
-          next if sessions.count.zero?
+          next if sessions.none?
 
           last_session = sessions.first
           list = @api.backup_job_session(job.id, last_session.id).list
           # extract error/warning messages
           message = list
-          .select { |item| [Integra365::SessionListTypes::ERROR, Integra365::SessionListTypes::WARNING].include?(item.type) }
-          .map { |item| item.message }
-          .join("\n")
-
+                    .select { |item| [Integra365::SessionListTypes::ERROR, Integra365::SessionListTypes::WARNING].include?(item.type) }
+                    .map(&:message)
+                    .join("\n")
 
           id = last_session.id
           # actual error/warning is under session link for the backup job

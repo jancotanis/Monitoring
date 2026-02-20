@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'logger'
 require 'faraday'
 require_relative 'utils'
@@ -49,8 +50,8 @@ class DigiProcessTicketer
     puts text
     ticket
   end
-  
-  def setup_connection()
+
+  def setup_connection
     @connection = Faraday::Connection.new(url: "https://erp.digi-process.nl/webhook_gateway_integrations/delegate/#{@web_hook}") do |connection|
       connection.use Faraday::Response::RaiseError
       connection.adapter Faraday.default_adapter
@@ -60,12 +61,11 @@ class DigiProcessTicketer
       setup_logger(connection, @logger) if @logger
     end
   end
-  
+
   def setup_logger(connection, logger)
     connection.response :logger, logger, { headers: true, bodies: true } do |log|
       # Filter sensitive information from JSON content, such as passwords and access tokens.
       log.filter(/("DPE-Webhook-Secret":")(.+?)(".*)/, '\1[REMOVED]\3')
     end
   end
-
 end

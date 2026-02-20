@@ -185,9 +185,9 @@ module Sophos
         endp[item.id] = EndpointData.new(item.id, item.type, item.hostname, group_name, status, item.attributes)
       end
       endp
-    rescue Sophos::SophosError => ex
-      @logger&.error ex
-      @logger&.error ex.response.to_json
+    rescue Sophos::SophosError => e
+      @logger&.error e
+      @logger&.error e.response.to_json
     end
 
     ##
@@ -204,10 +204,10 @@ module Sophos
         managed_agent = item.managedAgent
         alert = AlertData.new(
           item.id, item.raisedAt, item.description, item.severity, item.category, item.product,
-          managed_agent['id'] ||'unknown', managed_agent['type'] ||'unknown', item.attributes
+          managed_agent['id'] || 'unknown', managed_agent['type'] || 'unknown', item.attributes
         )
         @alerts[alert.id] = alert
-      rescue => e
+      rescue StandardError => e
         puts e, data.to_json
       end
       @alerts

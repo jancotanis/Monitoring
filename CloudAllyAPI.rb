@@ -76,9 +76,9 @@ module CloudAlly
     #
     def description
       # collect subsources that failed the task
-      failed_sub_sources = raw_data['backupStatus'].select { |src|
+      failed_sub_sources = raw_data['backupStatus'].select do |src|
         STATUS_WANTED.eql? src.status
-      }.map(&:subSource).join ' '
+      end.map(&:subSource).join ' '
       "#{endpoint_type}: #{failed_sub_sources}"
     end
 
@@ -219,7 +219,7 @@ module CloudAlly
     #
     def create_alert_from_data(alert_id, item)
       not_actives = item.backupStatus.select { |si| STATUS_WANTED.eql?(si.status) }
-      return unless not_actives.count.positive?
+      return unless not_actives.any?
 
       # return new instance
       AlertData.new(

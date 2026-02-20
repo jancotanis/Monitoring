@@ -46,12 +46,10 @@ class Matcher
       name = company.name.downcase
 
       # No exact match found and skip 'test' company
-      if mon.nil? && !'test'.eql?(name)
-        if mon = partial_match(monitoring.entries, name)&.first
-          puts " Partial match found: #{company.name} / #{mon.description}" if mon
-          puts "* Duplicate match for #{mon.description}" if mon.touched?
-          mon.touch
-        end
+      if mon.nil? && !'test'.eql?(name) && (mon = partial_match(monitoring.entries, name)&.first)
+        puts " Partial match found: #{company.name} / #{mon.description}" if mon
+        puts "* Duplicate match for #{mon.description}" if mon.touched?
+        mon.touch
       end
 
       if mon

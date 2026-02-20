@@ -31,7 +31,7 @@ class SyncServices
     @matcher = matcher
     @refresh = refresh
     @dash    = DashBuilder.new(@client)
-    @layout  = @client.asset_layouts({name: LAYOUT}).first
+    @layout  = @client.asset_layouts({ name: LAYOUT }).first
     @assets  = @client.assets({ asset_layout_id: @layout.id })
     @assets_by_id = @assets.to_h { |o| [o.company_id, o] }
   rescue Hudu::HuduError => e
@@ -112,11 +112,11 @@ class SyncServices
         next unless field.label.downcase[test]
 
         set_value = set_new_value?(service, portal)
-        changes ||= has_changes?(service, field.value, set_value)
+        changes ||= changes?(service, field.value, set_value)
         field.value = set_value
 
         # This overwrites existing notes...
-        changes ||= update_field_note(field, service, portal, set_value)
+        changes ||= update_field_note?(field, service, portal, set_value)
         field.url = Services.url(service) if set_value || field.url.to_s.empty?
       end
     end
@@ -124,7 +124,7 @@ class SyncServices
   end
 
   # New method for updating the field note
-  def update_field_note(field, service, portal, set_value)
+  def update_field_note?(field, service, portal, set_value)
     if set_value
       note = field.note
       field.note = get_note(service, portal)
@@ -141,7 +141,7 @@ class SyncServices
   # @param new_value [Object] The new value.
   #
   # @return [Boolean] True if there are changes, false otherwise.
-  def has_changes?(service, original_value, new_value)
+  def changes?(service, original_value, new_value)
     return false if original_value == new_value
 
     puts "- #{service} service turning #{onoff(new_value)}, was #{onoff(original_value)}"
@@ -240,7 +240,7 @@ def dash_cleanup(client, companies)
     m = dashboards.select { |dash| dash.title.downcase.include? test }
     m.each do |dashboard|
       matches = companies.select { |company| dashboard.title.include?(company[:description]) }
-      if matches.count.positive?
+      if matches.any?
         puts dashboard.title
         client.delete(client.api_url("magic_dash/#{dashboard.id}"))
       end
@@ -270,11 +270,11 @@ if options[:clean]
   dash_cleanup(client, config.entries)
 else
   puts 'Loading HUDU companies...'
-  if options[:filter]
-    companies = client.companies.select {|company| company.name.downcase[options[:filter]]}
-  else
-    companies = client.companies
-  end
+  companies = if options[:filter]
+                client.companies.select { |company| company.name.downcase[options[:filter]] }
+              else
+                client.companies
+              end
 
   FileUtil.write_file('hudu-companies.txt', companies.map(&:name))
   puts "- Found #{companies.count} companies"

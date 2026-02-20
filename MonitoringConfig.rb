@@ -170,10 +170,10 @@ class MonitoringConfig
       description = tenant.description
 
       # not found by description
-      unless cfg = by_description(description)
+      unless (cfg = by_description(description))
         cfg = ConfigData.new(id, description, [source])
         # check if we have a record with same id (and a different name)
-        if found = by_id(id)
+        if (found = by_id(id))
           # overwrite original item
           cfg = found
           puts "Rename tenant [#{cfg.description}] to [#{description}]"
@@ -246,27 +246,29 @@ class MonitoringConfig
     sla.gsub("#{key}-", '')
   end
 
-  # Returns the first result and marks it as "touched".
-  #
-  # This method retrieves the first element from the provided result collection and invokes
-  # the `touch` method on it (if the element exists). The first element is then returned.
-  #
-  # @param result [Array] The collection of results from which the first element is fetched.
-  #
-  # @return [Object, nil] The first element of the result collection, or `nil` if the collection is empty.
-  def self.first_result(result)
-    result.first&.touch
-  end
+  class << self
+    # Returns the first result and marks it as "touched".
+    #
+    # This method retrieves the first element from the provided result collection and invokes
+    # the `touch` method on it (if the element exists). The first element is then returned.
+    #
+    # @param result [Array] The collection of results from which the first element is fetched.
+    #
+    # @return [Object, nil] The first element of the result collection, or `nil` if the collection is empty.
+    def first_result(result)
+      result.first&.touch
+    end
 
-  # Converts a boolean value to a human-readable "on" or "" (empty string).
-  #
-  # This method takes a boolean value and returns "on" if the value is true, or an empty string
-  # if the value is false. It is useful for representing boolean values in a user-friendly format.
-  #
-  # @param bool [Boolean] The boolean value to convert.
-  #
-  # @return [String] "on" if the boolean is true, or an empty string if the boolean is false.
-  def self.on_off(bool)
-    bool ? 'on' : ''
+    # Converts a boolean value to a human-readable "on" or "" (empty string).
+    #
+    # This method takes a boolean value and returns "on" if the value is true, or an empty string
+    # if the value is false. It is useful for representing boolean values in a user-friendly format.
+    #
+    # @param bool [Boolean] The boolean value to convert.
+    #
+    # @return [String] "on" if the boolean is true, or an empty string if the boolean is false.
+    def on_off(bool)
+      bool ? 'on' : ''
+    end
   end
 end

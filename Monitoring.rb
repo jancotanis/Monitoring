@@ -18,7 +18,7 @@
 # 1.5.0 Fix issue not removing resolved veeam alerts and add two yearly sla option
 # 1.5.1 Fix issue showing device object instead of id for zabbix
 # 1.6.0 Suppres integra issues which happened yesterday also
-# 1.6.1 Fix issue with missing agents data in Sophos; remove obsolete rename of feedcache 
+# 1.6.1 Fix issue with missing agents data in Sophos; remove obsolete rename of feedcache
 # 1.7   Use Integra session api to get better error in ticket
 #       Refactor monitoring notifications
 # 1.8   Switch ticketer to DigiProcess
@@ -154,7 +154,7 @@ def run_monitors(report, config, options)
   customer_alerts = {}
   first = true
   monitors_do(report, config, options) do |mon|
-    puts "[*] Running monitors..." if first
+    puts '[*] Running monitors...' if first
     start_time = Time.now
     print "    → #{mon.source.ljust(20)} "
     customer_alerts = mon.run(customer_alerts)
@@ -162,7 +162,7 @@ def run_monitors(report, config, options)
     puts "✓ (#{elapsed}s)"
     first = false
   rescue Faraday::Error => e
-    puts "✗ Error"
+    puts '✗ Error'
     puts "** Error running #{mon.class.name}"
     puts e
     puts e.response&.dig(:body)
@@ -186,9 +186,9 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
   report_sources(report, config, options) if options[:sources]
 
   customer_alerts = run_monitors(report, config, options)
-  
+
   # create ticket
-  puts "[*] Processing alerts and creating tickets..."
+  puts '[*] Processing alerts and creating tickets...'
   last = ''
   tickets_created = 0
   sorted = customer_alerts.values.sort_by { |cl| cl.customer.description.upcase }
@@ -204,16 +204,14 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
     cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
     monitoring_report = cl.report
 
-    if monitoring_report
-      if ticketer.create_ticket(
-          "Monitoring: #{cl.name}",
-          monitoring_report,
-          Ticketer::PRIO_NORMAL,
-          cl.source
-        )
-        tickets_created += 1
-      end
-    end
+    next unless monitoring_report && ticketer.create_ticket(
+      "Monitoring: #{cl.name}",
+      monitoring_report,
+      Ticketer::PRIO_NORMAL,
+      cl.source
+    )
+
+    tickets_created += 1
   end
 
   puts "\n[*] Processing SLA notifications..."
@@ -222,15 +220,15 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
   a.each do |notification|
     next unless notification.config.create_ticket
 
-    if ticketer.create_ticket(
+    next unless ticketer.create_ticket(
       "#{notification.config.description}: #{notification.notification.task}",
       notification.description, Ticketer::PRIO_NORMAL,
       'SLA-task'
     )
-      sla_tickets += 1
-    end
+
+    sla_tickets += 1
   end
-  puts "    ✓ #{sla_tickets} SLA notifications" if sla_tickets > 0
+  puts "    ✓ #{sla_tickets} SLA notifications" if sla_tickets.positive?
 
   puts "\n[*] Processing security feeds (DTC/NCSC)..."
   feed_tickets = 0
@@ -243,21 +241,21 @@ File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
              else
                Ticketer::PRIO_NORMAL
              end
-      _ticket = ticketer.create_ticket(
+      ticket = ticketer.create_ticket(
         "Monitoring: #{vulnerability.title}",
         vulnerability.description,
         prio,
         feed.source
       )
-      feed_tickets += 1 if _ticket
+      feed_tickets += 1 if ticket
     end
-    puts "    ✓ #{a.length} vulnerabilities" if a.length > 0
+    puts "    ✓ #{a.length} vulnerabilities" if a.length.positive?
   end
 
   # update list of alerts
   config.compact! if options[:compact]
   config.save_config
-  
+
   puts "\n[✓] Monitoring complete!"
   puts "    Alerts: #{customer_alerts.values.sum { |cl| cl.alerts.length }} total"
   puts "    Tickets: #{tickets_created} monitoring + #{sla_tickets} SLA + #{feed_tickets} security feeds"

@@ -44,6 +44,7 @@ end
 
 class MockAlert
   include MonitoringAlert
+
   attr_accessor :description, :endpoint_id, :created
 
   def initialize(description, endpoint_id, created)
@@ -76,10 +77,10 @@ describe '#1 MonitoringIncident' do
     assert _(i.time_to_s).must_equal time.to_s, '1.1 simple moment in time'
 
     time = Time.new - (24 * 60 * 60)
-    time_2 = Time.new
+    time2 = Time.new
 
-    i = MonitoringIncident.new(SOURCE, nil, time, time_2, nil)
-    assert _(i.time_to_s).must_equal "#{time} - #{time_2}", '1.2 time interval'
+    i = MonitoringIncident.new(SOURCE, nil, time, time2, nil)
+    assert _(i.time_to_s).must_equal "#{time} - #{time2}", '1.2 time interval'
   end
   it '#1.2 test id' do
     time = Time.new

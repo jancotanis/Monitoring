@@ -93,12 +93,12 @@ describe '#5 SLA' do
   end
 end
 describe MonitoringSLA do
-    let(:config) { mock('config') }
-    let(:sla) { MonitoringSLA.new(config) }
+  let(:config) { mock('config') }
+  let(:sla) { MonitoringSLA.new(config) }
   before do
     # Mock configuration setup
     @mock_notifications = []
-    @config_entry = Struct.new(:description, :notifications, :create_ticket)\
+    @config_entry = Struct.new(:description, :notifications, :create_ticket)
                           .new(CUSTOMER_A, @mock_notifications, false)
     @config = Minitest::Mock.new
     @config = Object.new
@@ -206,7 +206,6 @@ describe MonitoringSLA do
       _(@mock_notifications).must_be_empty
       _(out).must_include "'#{invalid_date}' is not a valid date"
     end
-
   end
   describe '#report_lines' do
     it 'returns report lines for configs with notifications' do

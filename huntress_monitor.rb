@@ -16,7 +16,7 @@ class CyberIncident < MonitoringIncident
   end
 
   def endpoint_to_s
-    # TODO check if good desc
+    # TODO: check if good desc
     alert.endpoint_type.to_s
   end
 end
@@ -50,7 +50,7 @@ class HuntressMonitor < AbstractMonitor
 
       customer_alerts = collect_alerts(customer)
       # add active alerts to customer record
-      next unless customer_alerts.count.positive?
+      next unless customer_alerts.any?
 
       customer.alerts = customer_alerts
       customer_alerts.each do |a|
@@ -81,14 +81,14 @@ class HuntressMonitor < AbstractMonitor
     @report.puts '', description
     # walk through all endpoint elerts
     customer.endpoints.each_value do |ep|
-      if ep.alerts.any?
-        @report.puts "- Endpoint #{ep}"
-        ep.alerts.each do |a|
-          # group alerts by customer
-          unless a.severity.eql? 'closed'
-            customer_alerts.add_incident(a.endpoint_id, a, CyberIncident)
-            @report.puts "  #{a.created} #{a.severity} #{a.description} "
-          end
+      next unless ep.alerts.any?
+
+      @report.puts "- Endpoint #{ep}"
+      ep.alerts.each do |a|
+        # group alerts by customer
+        unless a.severity.eql? 'closed'
+          customer_alerts.add_incident(a.endpoint_id, a, CyberIncident)
+          @report.puts "  #{a.created} #{a.severity} #{a.description} "
         end
       end
     end

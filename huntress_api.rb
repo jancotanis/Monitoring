@@ -75,9 +75,9 @@ module Huntress
     #
     def description
       details = raw_data['details']
-      "\n"+details.map { |k, v| "#{k}: #{v}" unless v.to_s.strip.empty? }
-                  .compact
-                  .join("\n")
+      details.map { |k, v| "#{k}: #{v}" unless v.to_s.strip.empty? }
+             .compact
+             .join("\n")
     end
 
     ##
@@ -128,7 +128,7 @@ module Huntress
         @tenants = {}
         data = @api.organizations
         data.each do |item|
-          @tenants[item.id] = TenantData.new(item.id, item.name, item.incident_reports_count > 0, item.attributes)
+          @tenants[item.id] = TenantData.new(item.id, item.name, item.incident_reports_count.positive?, item.attributes)
         end
       end
       @tenants.values
@@ -199,13 +199,12 @@ module Huntress
       data = @api.signals
       data.each do |item|
         alert = AlertData.new(
-                  item.id, item.created_at, item.name, item.status,
-                  item.type, item.type, item.entity.id, item.entity.name, item.organization.id, item.attributes
-                ) 
+          item.id, item.created_at, item.name, item.status,
+          item.type, item.type, item.entity.id, item.entity.name, item.organization.id, item.attributes
+        )
         @alerts[item.id] = alert
       end
       @alerts
     end
-
   end
 end

@@ -110,14 +110,14 @@ class Integra365Monitor < AbstractMonitor
     @report.puts '', description
     # Process all endpoint alerts
     customer.endpoints.each_value do |ep|
-      next unless ep.alerts.count.positive?
+      next unless ep.alerts.any?
 
       @report.puts "- Endpoint #{ep}"
       ep.alerts.each do |a|
         severity = a.severity
         next if severity.eql?('Resolved')
 
-        if id = reported_yesterday(cfg.reported_alerts, a)
+        if (id = reported_yesterday(cfg.reported_alerts, a))
           # replace with today's (last) id
           cfg.reported_alerts.delete(id)
           id = IntegraBackupIncident.new(nil, a.created, a.created, a).incident_id
@@ -144,7 +144,6 @@ class Integra365Monitor < AbstractMonitor
       customer.endpoints[endpoint_id]&.alerts&.push(a)
     end
   end
-  
 
   # Due to problem with unique alert ids for Integra we need to check  if this incident was reported yesterday.
   #
@@ -152,7 +151,7 @@ class Integra365Monitor < AbstractMonitor
   # @param alert [Object] The alert that is reported from the integra api.
   #
   def reported_yesterday(reported_alerts, alert)
-    yesterday = (Time.parse(alert.created) - 86400).strftime('%Y-%m-%d')
+    yesterday = (Time.parse(alert.created) - 86_400).strftime('%Y-%m-%d')
 
     id_prefix = "#{INTEGRA}-#{Integra365::AlertData.create_id(alert.tenant_id, yesterday)}"
     _found = reported_alerts.find { |reported_id| reported_id.start_with?(id_prefix) }

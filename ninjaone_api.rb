@@ -12,7 +12,6 @@ require_relative 'MonitoringModel'
 # It defines structures for handling tenant data, endpoints, and alerts related to security incidents.
 #
 module NinjaOne
-
   ##
   # Represents an organization in the NinjaOne system.
   #
@@ -216,7 +215,7 @@ module NinjaOne
 #        alert = AlertData.new(
 #                  item.id, item.created_at, item.name, item.status,
 #                  item.type, item.type, item.entity.id, item.entity.name, item.organization.id, item.attributes
-#                ) 
+#                )
 #        @alerts[item.id] = alert
 #      end
       @alerts
@@ -230,17 +229,17 @@ module NinjaOne
     def load_backup_alerts
       @backup_alerts = {}
       # get all failed backup jobs
-      data = @api.backup_jobs(sf:"status = FAILED")
+      data = @api.backup_jobs(sf: 'status = FAILED')
       data.each do |item|
-          if endpoint = endpoint(item.deviceId)
-            type_description = endpoint.to_s
-          else
-            type_description = 'did not fetch endpoint type'
-          end
-          alert = AlertData.new(
-                  item.jobId, Time.at(item.jobStartTime).to_datetime, item.planName, item.jobStatus, 'backup',
-                  'NinjaOne Backup', item.deviceId, type_description, item.organizationId, item.attributes
-                ) 
+        type_description = if (endpoint = endpoint(item.deviceId))
+                             endpoint.to_s
+                           else
+                             'did not fetch endpoint type'
+                           end
+        alert = AlertData.new(
+          item.jobId, Time.at(item.jobStartTime).to_datetime, item.planName, item.jobStatus, 'backup',
+          'NinjaOne Backup', item.deviceId, type_description, item.organizationId, item.attributes
+        )
         # assuem oldest first
         @backup_alerts[item.jobId] = alert
       end
