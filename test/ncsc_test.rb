@@ -38,6 +38,19 @@ describe '#2 NCSCTextAdvisory' do
     advisory = NCSCTextAdvisory.new('XXX-2025-001')
     assert _(advisory.cve).must_equal [], '2.2. NCSC xxx does not exist'
   end
+  it '#2.3 test NCSC-2026-0071 vendor_products includes Cisco' do
+    advisory = NCSCTextAdvisory.new('NCSC-2026-0071')
+    assert _(advisory.cve.any?).must_equal true, '2.3.1 NCSC-2026-0071 should have CVEs'
+
+    vendor_products = advisory.vendor_products
+    assert _(vendor_products.key?('Cisco')).must_equal true, '2.3.2 should have Cisco vendor'
+
+    cisco_products = vendor_products['Cisco']
+    assert _(cisco_products.include?('Cisco Catalyst SD-WAN Manager')).must_equal true,
+           '2.3.3 should include Cisco Catalyst SD-WAN Manager'
+    assert _(cisco_products.include?('Cisco Catalyst SD-WAN')).must_equal true,
+           '2.3.4 should include Cisco Catalyst SD-WAN'
+  end
 end
 describe '#3 NCSCFeed' do
   it '#3.1 test Feed Advisory fro new from now ' do

@@ -28,6 +28,58 @@ class CVEAlert
     fetch_data
   end
 
+  # Returns the list of affected vendors from the CVE data.
+  #
+  # @return [Array<String>] List of vendor names
+  def vendors
+    return [] unless @data['containers']&.dig('cna', 'affected')
+
+    @data['containers']['cna']['affected'].map { |a| a['vendor'] }.compact.uniq
+  end
+
+  # Returns the list of affected products from the CVE data.
+  #
+  # @return [Array<Hash>] List of product info hashes with :vendor, :product, :cpes keys
+  def products
+    return [] unless @data['containers']&.dig('cna', 'affected')
+
+    @data['containers']['cna']['affected'].map do |affected|
+      {
+        vendor: affected['vendor'],
+        product: affected['product'],
+        cpes: affected['cpes'] || []
+      }
+    end
+  end
+
+  # Returns a hash with vendor names as keys and arrays of affected products as values.
+  #
+  # @return [Hash{String => Array<String>}] Hash mapping vendor name to list of product names
+  def vendor_products
+    return {} unless @data['containers']&.dig('cna', 'affected')
+
+    result = {}
+    @data['containers']['cna']['affected'].each do |affected|
+      vendor = affected['vendor']
+      product = affected['product']
+      next if vendor.nil? || product.nil?
+
+      result[vendor] ||= []
+      result[vendor] << product unless result[vendor].include?(product)
+    end
+    result
+  end
+
+  # Returns the CVE description.
+  #
+  # @return [String] CVE description or empty string
+  def description
+    return '' unless @data['containers']&.dig('cna', 'descriptions')
+
+    desc = @data['containers']['cna']['descriptions'].find { |d| d['lang'] == 'en' }
+    desc ? desc['value'] : ''
+  end
+
   private
 
   # Fetches and processes the CVE data from the MITRE API.
@@ -36,7 +88,6 @@ class CVEAlert
     @data = parse_json(CVEAlert.request_data(url))
     @score = CVEAlert.extract_highest_cvss_score(@data)
   rescue OpenURI::HTTPError => e
-    # assume 404, this means CVE id has been reserved and information about the vulnerability is not publicly disclosed
     warn "Failed to fetch CVE data: #{e.message}" unless e.message['404']
     @score = nil
   end
@@ -92,7 +143,7 @@ end
 #   puts advisory.advisory  # Full advisory text
 #   puts advisory.cve       # Extracted CVE IDs
 class NCSCTextAdvisory
-  attr_reader :id, :advisory, :cve
+  attr_reader :id, :advisory, :cve, :title
 
   # Initializes the class and loads the advisory.
   #
@@ -101,7 +152,25 @@ class NCSCTextAdvisory
     @id = id.upcase
     @advisory = ''
     @cve = []
+    @title = ''
     load_text_advisory
+  end
+
+  # Returns unique vendor/products from all CVEs in this advisory.
+  #
+  # @return [Hash{String => Array<String>}] Hash mapping vendor name to list of product names
+  def vendor_products
+    result = {}
+    @cve.each do |cve_id|
+      cve = CVEAlert.new(cve_id)
+      cve.vendor_products.each do |vendor, products|
+        result[vendor] ||= []
+        products.each do |product|
+          result[vendor] << product unless result[vendor].include?(product)
+        end
+      end
+    end
+    result
   end
 
   private
@@ -112,6 +181,18 @@ class NCSCTextAdvisory
     data = fetch_data(url)
     @advisory = NCSCTextAdvisory.strip_pgp(data)
     @cve = NCSCTextAdvisory.parse_cve_ids(@advisory)
+    @title = NCSCTextAdvisory.parse_title(@advisory)
+  end
+
+  # Extracts the title from the advisory text.
+  #
+  # @param text [String] The advisory text
+  # @return [String] The extracted title or empty string
+  def self.parse_title(text)
+    return '' unless text
+
+    match = text.match(/Titel\s*:\s*(.+?)(?:\n|$)/m)
+    match ? match[1].strip : ''
   end
 
   # Fetches data from the given URL.
@@ -154,7 +235,7 @@ class NCSCTextAdvisory
   #
   # @return [String] The formatted advisory URL
   def text_url
-    year = @id.split('-')[1]   
+    year = @id.split('-')[1]
     "https://advisories.ncsc.nl/#{year}/#{@id.downcase}.txt"
   end
 end
