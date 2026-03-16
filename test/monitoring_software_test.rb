@@ -2,13 +2,12 @@
 
 # Tests for MonitoringSoftware module - software indexing and search functionality
 
-require 'test_helper'
+require 'fileutils'
+require 'ostruct'
 
+require 'test_helper'
 require 'monitoring_software'
 
-require 'fileutils'
-
-require 'ostruct'
 
 TEST_CACHE_FILE = 'test-software-index.json'
 
@@ -531,6 +530,51 @@ describe '#7 MonitoringSoftware' do
       assert_equal 2, result['Org A'].keys.count
       assert_includes result['Org A'], 'Microsoft Corporation'
       assert_includes result['Org A'], 'Adobe Inc'
+    end
+  end
+
+  describe '#7.15 update_from_api tests' do
+    it '#7.15.1 update_from_api builds index with devices and organizations' do
+      mock_devices = [
+        { 'id' => 37, 'organizationId' => 8 },
+        { 'id' => 48, 'organizationId' => 8 },
+        { 'id' => 49, 'organizationId' => 9 }
+      ]
+
+      mock_software = [
+        { 'name' => 'AdobeAcrobatReaderCoreApp', 'publisher' => 'Adobe Acrobat Reader', 'deviceId' => 37 },
+        { 'name' => 'AdobeAcrobatReaderCoreApp', 'publisher' => 'Adobe Acrobat Reader', 'deviceId' => 48 },
+        { 'name' => 'AdobeAcrobatReaderCoreApp', 'publisher' => 'Adobe Acrobat Reader', 'deviceId' => 49 }
+      ]
+
+      mock_api = Object.new.tap do |api|
+        api.define_singleton_method(:devices) { mock_devices }
+        api.define_singleton_method(:queries_software) { mock_software }
+      end
+
+      mock_client = Object.new.tap do |c|
+        c.define_singleton_method(:api) { mock_api }
+      end
+
+      indexer = MonitoringSoftware::SoftwareIndexer.new(mock_client)
+      indexer.update_from_api
+
+      assert indexer.index, 'Index should be built'
+      assert_equal 1, indexer.index.keys.count, 'Should have 1 publisher'
+
+      adobe_data = indexer.index['Adobe Acrobat Reader']
+      assert adobe_data, 'Adobe publisher should exist'
+
+      acrobat = adobe_data['AdobeAcrobatReaderCoreApp']
+      assert acrobat, 'AdobeAcrobatReaderCoreApp should exist'
+      assert_equal 3, acrobat['devices'].length, 'Should have 3 devices'
+      assert acrobat['devices'].include?(37), 'Should include device 37'
+      assert acrobat['devices'].include?(48), 'Should include device 48'
+      assert acrobat['devices'].include?(49), 'Should include device 49'
+
+      assert_equal 2, acrobat['organizations'].length, 'Should have 2 organizations'
+      assert acrobat['organizations'].include?(8), 'Should include organization 8'
+      assert acrobat['organizations'].include?(9), 'Should include organization 9'
     end
   end
 end
