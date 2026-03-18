@@ -26,6 +26,7 @@
 #       NinjaOne to get all organizations for reporting
 #       Add option to list portal sources
 # 1.9   Use NinjaOne to monitor backups
+# 1.9.1 Suppress cloudally alerts older than 30 days due to artifical ids not being unique.
 #
 MONITOR_VERSION = '1.9'
 

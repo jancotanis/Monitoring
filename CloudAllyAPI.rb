@@ -212,6 +212,7 @@ module CloudAlly
     ##
     # Creates an alert from the provided data.
     # Filters the alerts for those with the "FAILED" status and generates an alert object.
+    # Only includes alerts from the last 30 days.
     #
     # @param [Integer] alert_id The ID for the new alert.
     # @param [Object] item The item containing backup status data.
@@ -221,11 +222,25 @@ module CloudAlly
       not_actives = item.backupStatus.select { |si| STATUS_WANTED.eql?(si.status) }
       return unless not_actives.any?
 
+      return unless within_last_30_days?(item.lastBackupAttemptDate)
+
       # return new instance
       AlertData.new(
         alert_id, item.lastBackupAttemptDate, not_actives.first.error, not_actives.first.status,
         item.source, item.source, item.taskId, item.entityName, item.attributes
       )
+    end
+
+    private
+
+    def within_last_30_days?(date_string)
+      return true unless date_string
+
+      parsed = DateTime.parse(date_string)
+      days_ago = (DateTime.now - parsed).to_i
+      days_ago <= 30
+    rescue Date::Error
+      true
     end
   end
 end
