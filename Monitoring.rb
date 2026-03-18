@@ -28,7 +28,7 @@
 # 1.9   Use NinjaOne to monitor backups
 # 1.9.1 Suppress cloudally alerts older than 30 days due to artifical ids not being unique.
 #
-MONITOR_VERSION = '1.9'
+MONITOR_VERSION = '1.9.1'
 
 $LOAD_PATH.unshift File.expand_path('../apies/wrapi/lib', __dir__)
 require 'dotenv'
