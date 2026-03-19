@@ -132,7 +132,8 @@ module CloudAlly
         @tenants = {}
         data = @api.partner_users
         data.each do |item|
-          @tenants[item.id] = TenantData.new(item.id, item.name, item.status, item.discount.to_s, item.attributes)
+          name = item.name.gsub(/\s+\d+$/, '').strip
+          @tenants[item.id] = TenantData.new(item.id, name, item.status, item.discount.to_s, item.attributes)
         end
       end
       @tenants.values
