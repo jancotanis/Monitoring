@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'yaml'
 require 'rss'
 require 'open-uri'
 require 'json'

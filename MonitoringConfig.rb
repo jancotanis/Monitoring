@@ -89,8 +89,8 @@ class MonitoringConfig
   # @return [void]
   def initialize
     if File.file?(MONITORING_CFG)
-      @config = YAML.load_file(MONITORING_CFG)
-      @config.each(&:untouch)
+      @config = YAML.load_file(MONITORING_CFG, permitted_classes: [ConfigData, Notification, Date, Symbol, Time, DateTime])
+      @config.each(&:untouch) if @config.respond_to?(:each)
     else
       @config = []
     end

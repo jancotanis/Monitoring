@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'json'
-require 'yaml'
 
 require_relative 'utils'
 require_relative 'ZabbixAPI'
