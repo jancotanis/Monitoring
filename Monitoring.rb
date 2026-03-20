@@ -28,6 +28,7 @@
 # 1.9   Use NinjaOne to monitor backups
 # 1.9.1 Suppress cloudally alerts older than 30 days due to artifical ids not being unique.
 # 1.9.2 Fix data issue in CloudAlly portal
+# 1.9.3 Compatible with ruby 3.2
 #
 MONITOR_VERSION = '1.9.2'
 
