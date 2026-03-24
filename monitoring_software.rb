@@ -130,7 +130,7 @@ module MonitoringSoftware
 
       puts "Looking up #{cve_id}..."
 
-      cve = CVEAlert.new(cve_id)
+      cve = CVEAlert.get(cve_id)
 
       if cve.score.nil?
         puts "Error: CVE #{cve_id} not found or has no public details."

@@ -17,6 +17,16 @@ require_relative 'persistent_cache'
 class CVEAlert
   attr_reader :data, :score
 
+  @cache = {}
+
+  def self.get(id)
+    @cache[id.upcase] ||= new(id)
+  end
+
+  def self.clear_cache
+    @cache = {}
+  end
+
   # Initializes the class and loads CVE data.
   #
   # @param id [String] The CVE ID
@@ -114,8 +124,8 @@ class CVEAlert
   # @return [Hash] The parsed JSON data
   def parse_json(json_str)
     JSON.parse(json_str)
-  rescue JSON::ParserError => ex
-    warn "JSON parsing error: #{ex.message}"
+  rescue JSON::ParserError => e
+    warn "JSON parsing error: #{e.message}"
     {}
   end
 
@@ -161,7 +171,7 @@ class NCSCTextAdvisory
   def vendor_products
     result = {}
     @cve.each do |cve_id|
-      cve = CVEAlert.new(cve_id)
+      cve = CVEAlert.get(cve_id)
       cve.vendor_products.each do |vendor, products|
         result[vendor] ||= []
         products.each do |product|
@@ -319,7 +329,7 @@ class MonitoringNCSC < MonitoringFeed
 
       ncsc.cve.each do |cve_id|
         scores << @cve_cache.fetch(cve_id) do
-          CVEAlert.new(cve_id).score
+          CVEAlert.get(cve_id).score
         end
       end
 
