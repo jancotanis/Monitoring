@@ -5,12 +5,10 @@ require 'json'
 require_relative 'ninjaone_api'
 
 module MonitoringSoftware
-
   CACHE_FILE = 'software-index.json'
 
   class SoftwareIndexer
-
-    attr_reader :index
+    attr_reader :index, :index_updated_at
 
     def initialize(client = nil)
       @index = nil
@@ -106,11 +104,17 @@ module MonitoringSoftware
     end
 
     def save_index
-      File.write(CACHE_FILE, JSON.pretty_generate(@index))
+      index_to_save = @index.dup
+      index_to_save['__metadata'] = {
+        'updated_at' => Time.now.iso8601
+      }
+      File.write(CACHE_FILE, JSON.pretty_generate(index_to_save))
     end
 
     def search(publisher: nil, product: nil)
       load_index
+
+      @index_updated_at = @index.dig('__metadata', 'updated_at')
 
       results = []
 
