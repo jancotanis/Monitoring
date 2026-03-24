@@ -100,9 +100,9 @@ class MonitoringFeed
       guid = item.link
       next if @alerts.include?(guid)
 
-      if report_item?(item)
+      if (vulnerability = create_vulnerability(item))
         @alerts << guid
-        vulnerabilities << Vulnerability.new(item, @companies, high_priority?(item)) if item.pubDate > since
+        vulnerabilities << vulnerability if item.pubDate > since
       end
     end
 
@@ -127,9 +127,9 @@ class MonitoringFeed
   # criteria for determining suppression of items.
   #
   # @param item [RSS::Rss::Channel::Item] The RSS item to evaluate.
-  # @return [Boolean] `true` the item will be reported.
-  def report_item?(_item)
-    true
+  # @return [Vulnerability] the item will be reported or nil if does not fit the criteria.
+  def create_vulnerability(item)
+    Vulnerability.new(item, @companies, high_priority?(item))
   end
 
   def update_cache

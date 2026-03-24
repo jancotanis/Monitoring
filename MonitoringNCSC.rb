@@ -6,6 +6,7 @@ require 'json'
 require_relative 'utils'
 require_relative 'MonitoringFeed'
 require_relative 'persistent_cache'
+require_relative 'software_index'
 
 # class CVEAlert retrieves CVE details from the MITRE CVE API
 # and extracts the highest CVSS base score.
@@ -249,6 +250,26 @@ class NCSCTextAdvisory
   end
 end
 
+class NCSCVulnerability < Vulnerability
+  # Define software products which can be returned as company list
+  attr_writer :products
+
+  # Returns a formatted list software products.
+  #
+  # @return [String] Company descriptions joined by newlines.
+  def companies_list
+    if @products&.any?
+      @products.map do |company, publishers|
+        "#{company}\n" + publishers.map { |publisher, software| "  - Publisher '#{publisher}': #{software.join(', ')}" }.join("\n")
+      end.join("\n- ")
+    elsif @products
+      'Geen software gevonden voor deze producent.'
+    else
+      super
+    end
+  end
+end
+
 # A specialized monitoring class for fetching and analyzing NCSC advisories via RSS.
 #
 # The `MonitoringNCSC` class extends the functionality of `MonitoringFeed` to monitor
@@ -271,6 +292,7 @@ class MonitoringNCSC < MonitoringFeed
   def initialize(config)
     @cve_cache = PersistentCache.new('./cve-scores.yml')
     @ncsc_cache = PersistentCache.new('./ncsv-scores.yml')
+    @software_index = MonitoringSoftware::SoftwareIndexer.new
     super(config, 'https://advisories.ncsc.nl/rss/advisories', 'NCSC')
   end
 
@@ -314,18 +336,19 @@ class MonitoringNCSC < MonitoringFeed
 
   # Determines if an item is to be reported based on its associated CVE scores.
   #
-  # @param item [Object] The item containing a link with an NCSC advisory ID.
-  # @return [Boolean] True if the highest CVSS score is 9 or above (which is CRITICAL), otherwise false.
-  def report_item?(item)
+  # @param item [RSS::Rss::Channel::Item] The item containing a link with an NCSC advisory ID.
+  # @return [Vulnerability] if the highest CVSS score is 9 or above (which is CRITICAL), otherwise false.
+  def create_vulnerability(item)
     # Extract NCSC advisory ID from the item's link
     id = item.link[/id=(NCSC-\d{4}-\d{4})/, 1]
-
+    products = nil
     # get cached score
     # start with -1 so we have a number
     scores = [-1]
     score = @ncsc_cache.fetch(id) do
       # Fetch the NCSC advisory details
       ncsc = NCSCTextAdvisory.new(id)
+      products = vendor_product_list(ncsc)
 
       ncsc.cve.each do |cve_id|
         scores << @cve_cache.fetch(cve_id) do
@@ -343,6 +366,15 @@ class MonitoringNCSC < MonitoringFeed
     end
 
     # Return true if the highest score is CUTOFF_SCORE or above
-    [-1, score].compact.max >= CUTOFF_SCORE
+    return unless [-1, score].compact.max >= CUTOFF_SCORE
+
+    v = NCSCVulnerability.new(item, @companies, high_priority?(item))
+    v.products = products if products
+    v
+  end
+
+  def vendor_product_list(ncsc)
+    p = ncsc.vendor_products
+    @software_index.tenant_software(@companies.map(&:description), p.keys)
   end
 end
