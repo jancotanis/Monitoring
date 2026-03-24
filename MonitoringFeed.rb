@@ -21,6 +21,13 @@ Vulnerability = Struct.new(:feed_item, :companies, :high_priority?) do
     feed_item.title
   end
 
+  # Returns a formatted list of company descriptions.
+  #
+  # @return [String] Company descriptions joined by newlines.
+  def companies_list
+    companies.map(&:description).join("\n- ")
+  end
+
   # Provides a detailed description of the vulnerability.
   #
   # Includes the feed item's title, link, and a list of affected companies,
@@ -28,7 +35,6 @@ Vulnerability = Struct.new(:feed_item, :companies, :high_priority?) do
   #
   # @return [String] Detailed vulnerability description.
   def description
-    companies_list = companies.map(&:description).join("\n- ")
     "#{title}\n#{feed_item.link}\n\n" \
       "*** Controleer de klanten met een SLA en onderneem aktie binnen 72 uur (3 werkdagen)\n" \
       "- #{companies_list}"
