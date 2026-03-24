@@ -141,12 +141,7 @@ module MonitoringSoftware
       puts "Description: #{cve.description[0..200]}#{'...' if cve.description.length > 200}"
       puts
 
-      client = NinjaOne::ClientWrapper.new(
-        ENV.fetch('NINJA1_HOST'),
-        ENV.fetch('NINJA1_CLIENT_ID'),
-        ENV.fetch('NINJA1_CLIENT_SECRET'),
-        false
-      )
+      client = indexer.client
 
       affected_products = cve.products
 
@@ -220,12 +215,7 @@ module MonitoringSoftware
         exit
       end
 
-      client = NinjaOne::ClientWrapper.new(
-        ENV.fetch('NINJA1_HOST'),
-        ENV.fetch('NINJA1_CLIENT_ID'),
-        ENV.fetch('NINJA1_CLIENT_SECRET'),
-        false
-      )
+      client = indexer.client
 
       indexer.load_index
 
