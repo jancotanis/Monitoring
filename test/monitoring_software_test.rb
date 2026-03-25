@@ -8,7 +8,6 @@ require 'ostruct'
 require 'test_helper'
 require 'monitoring_software'
 
-
 TEST_CACHE_FILE = 'test-software-index.json'
 
 MOCK_INDEX = {
@@ -286,7 +285,8 @@ describe '#7 MonitoringSoftware' do
         new_indexer = MonitoringSoftware::SoftwareIndexer.new
         loaded = new_indexer.load_index
 
-        assert_equal MOCK_INDEX.keys.sort, loaded.keys.sort
+        loaded_keys = loaded.keys.reject { |k| k == '__metadata' }
+        assert_equal MOCK_INDEX.keys.sort, loaded_keys.sort
         assert_equal 2, loaded['Microsoft Corporation'].keys.count
       ensure
         FileUtils.rm_f(TEST_CACHE_FILE)
