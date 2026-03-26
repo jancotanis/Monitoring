@@ -29,8 +29,9 @@
 # 1.9.1 Suppress cloudally alerts older than 30 days due to artifical ids not being unique.
 # 1.9.2 Fix data issue in CloudAlly portal
 # 1.9.3 Compatible with ruby 3.2
+# 1.10  show ncsc affected products for companies
 #
-MONITOR_VERSION = '1.9.2'
+MONITOR_VERSION = '1.10'
 
 require 'dotenv'
 require 'optparse'
@@ -51,49 +52,95 @@ require_relative 'MonitoringSLA'
 require_relative 'MonitoringDTC'
 require_relative 'MonitoringNCSC'
 
-def file_age(name)
-  (Time.now - File.ctime(name)) / (24 * 3600)
-end
+module Monitoring
+  class CLI
+    MONITOR_CLASSES = [SophosMonitor, NinjaOneMonitor, HuntressMonitor, VeeamMonitor,
+                       SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor].freeze
 
-def garbage_collect(days = nil)
-  days ||= 90
-  puts "- removing log files older #{days.to_i} days"
-  Dir.glob(['*.json', '*.txt', '*.yml', '.log']).each do |filename|
-    if file_age(filename) > days
-      puts "  #{filename}"
-      File.delete(filename)
+    def self.run(args)
+      new.run(args)
     end
-  end
-end
 
-def get_options(config, sla)
-  options = {}
-  o = OptionParser.new do |opts|
-    opts.banner = 'Usage: Monitor.rb [options]'
+    def run(_args)
+      puts "Monitor v#{MONITOR_VERSION} - #{Time.now}", ''
 
-    opts.on('-s', '--sla', 'Report customer SLAs to configuration.md') do |_arg|
-      config.report
-      exit(0)
+      Dotenv.load
+      @config = MonitoringConfig.new
+      @sla = MonitoringSLA.new(@config)
+      @options = parse_options(@config, @sla)
+      @feeds = [MonitoringDTC.new(@config), MonitoringNCSC.new(@config)]
+      @ticketer = DigiProcessTicketer.new(@options)
+
+      File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
+        report_tenants(report) if @options[:tenants]
+        report_sources(report) if @options[:sources]
+
+        customer_alerts = run_monitors(report)
+
+        process_alerts(customer_alerts)
+        process_sla_notifications
+        process_security_feeds
+
+        @config.compact! if @options[:compact]
+        @config.save_config
+
+        puts "\n[✓] Monitoring complete!"
+        puts "    Alerts: #{customer_alerts.values.sum { |cl| cl.alerts.length }} total"
+        puts "    Tickets: #{@tickets_created} monitoring + #{@sla_tickets} SLA + #{@feed_tickets} security feeds"
+        puts ''
+      end
     end
-    opts.on('-t', '--tenants', 'Report all tenants to json') do |arg|
-      options[:tenants] = arg
-      exit(0)
+
+    private
+
+    def parse_options(config, sla)
+      options = {}
+      opt_parser = build_option_parser(config, sla, options)
+      opt_parser.parse!
+      options
+    rescue OptionParser::ParseError => e
+      puts "ERROR: #{e}\n\n"
+      puts opt_parser
+      exit(-1)
     end
-    opts.on('--sources', 'Report all monitoring sources') do |arg|
-      options[:sources] = arg
-      exit(0)
+
+    def build_option_parser(config, sla, options)
+      OptionParser.new do |opts|
+        opts.banner = 'Usage: Monitor.rb [options]'
+
+        opts.on('-s', '--sla', 'Report customer SLAs to configuration.md') do
+          config.report
+          exit(0)
+        end
+        opts.on('-t', '--tenants', 'Report all tenants to json') do
+          options[:tenants] = true
+        end
+        opts.on('--sources', 'Report all monitoring sources') do
+          options[:sources] = true
+        end
+        opts.on('-c', '--compact', 'Compact config file based on tenants') do
+          puts '- compacting configuration is on'
+          options[:compact] = true
+        end
+        opts.on('-g[N]', '--garbagecollect[=N]', Float, 'Remove all files older than N days, default is 90 days') do |arg|
+          garbage_collect(arg)
+        end
+        opts.on('-n [customer,task,interval[,date]]', '--notification [customer,task,interval[,date]]', Array,
+                "Add customer notification. Interval types: #{INTERVALS.keys.join(', ')}; When no parametrers given, notifications are listed.") do |arg|
+          handle_notification_arg(sla, arg)
+        end
+        opts.on('-l', '--log', 'Log http requests') do |log|
+          puts '- API logging turned on'
+          options[:log] = log
+        end
+        opts.on_tail('-h', '-?', '--help', opts.banner) do
+          puts opts
+          exit(0)
+        end
+      end
     end
-    opts.on('-c', '--compact', 'Compact config file based on tenants') do |arg|
-      puts '- compacting configuration is on'
-      options[:compact] = arg
-    end
-    opts.on('-g[N]', '--garbagecollect[=N]', Float, 'Remove all files older than N days, default is 90 days') do |arg|
-      garbage_collect(arg)
-    end
-    opts.on(
-      '-n [customer,task,interval[,date]]', '--notification [customer,task,interval[,date]]', Array,
-      "Add customer notification. Interval types: #{INTERVALS.keys.join(', ')}; When no parametrers given, notifications are listed."
-    ) do |arg|
+
+    def handle_notification_arg(sla, arg)
       if arg
         sla.add_interval_notification(arg[0].to_s.strip, arg[1].to_s.strip, arg[2].to_s.strip, arg[3])
       else
@@ -101,165 +148,131 @@ def get_options(config, sla)
       end
       exit(0)
     end
-    opts.on('-l', '--log', 'Log http requests') do |log|
-      puts '- API logging turned on'
-      options[:log] = log
+
+    def garbage_collect(days = nil)
+      days ||= 90
+      puts "- removing log files older #{days.to_i} days"
+      Dir.glob(['*.json', '*.txt', '*.yml', '.log']).each do |filename|
+        if file_age(filename) > days
+          puts "  #{filename}"
+          File.delete(filename)
+        end
+      end
     end
-    opts.on_tail('-h', '-?', '--help', opts.banner) do
-      puts opts
-      exit(0)
+
+    def file_age(name)
+      (Time.now - File.ctime(name)) / (24 * 3600)
+    end
+
+    def create_monitors(report)
+      @created_monitors ||= begin
+        puts "\n[*] Initializing #{MONITOR_CLASSES.length} monitors..."
+
+        MONITOR_CLASSES.map do |klass|
+          puts "    ✓ #{klass.name.gsub('Monitor', '')}"
+          klass.new(report, @config, @options[:log])
+        rescue Faraday::Error => e
+          puts "    ✗ Error initializing #{klass.name}: #{e.message}"
+          puts e.response[:body] if e.response
+          nil
+        end.compact.tap { puts '' }
+      end
+    end
+
+    def run_monitors(report)
+      customer_alerts = {}
+      first = true
+      create_monitors(report).each do |mon|
+        puts '[*] Running monitors...' if first
+        start_time = Time.now
+        print "    -> #{mon.source.ljust(20)} "
+        customer_alerts = mon.run(customer_alerts)
+        elapsed = (Time.now - start_time).round(2)
+        puts "✓ (#{elapsed}s)"
+        first = false
+      rescue Faraday::Error => e
+        puts '✗ Error'
+        puts "** Error running #{mon.class.name}"
+        puts e
+        puts e.response&.dig(:body)
+      end
+      puts ''
+      customer_alerts
+    end
+
+    def report_tenants(report)
+      puts '- report tenants'
+      create_monitors(report).each(&:report_tenants)
+    end
+
+    def report_sources(report)
+      puts '- report sources'
+      create_monitors(report).each { |mon| puts mon.source }
+    end
+
+    def process_alerts(customer_alerts)
+      puts '[*] Processing alerts and creating tickets...'
+      last = ''
+      @tickets_created = 0
+      sorted = customer_alerts.values.sort_by { |cl| cl.customer.description.upcase }
+      sorted.each do |cl|
+        cfg = @config.by_description(cl.customer.description)
+        next unless cfg.create_ticket
+
+        puts cfg.description unless last.eql? cfg.description
+        last = cfg.description
+        cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
+        monitoring_report = cl.report
+
+        next unless monitoring_report && @ticketer.create_ticket(
+          "Monitoring: #{cl.name}",
+          monitoring_report,
+          Ticketer::PRIO_NORMAL,
+          cl.source
+        )
+
+        @tickets_created += 1
+      end
+    end
+
+    def process_sla_notifications
+      puts "\n[*] Processing SLA notifications..."
+      @sla_tickets = 0
+      a = @sla.load_periodic_alerts
+      a.each do |notification|
+        next unless notification.config.create_ticket
+
+        next unless @ticketer.create_ticket(
+          "#{notification.config.description}: #{notification.notification.task}",
+          notification.description, Ticketer::PRIO_NORMAL,
+          'SLA-task'
+        )
+
+        @sla_tickets += 1
+      end
+      puts "    ✓ #{@sla_tickets} SLA notifications" if @sla_tickets.positive?
+    end
+
+    def process_security_feeds
+      puts "\n[*] Processing security feeds (DTC/NCSC)..."
+      @feed_tickets = 0
+      @feeds.each do |feed|
+        puts "    -> #{feed.source}"
+        a = feed.get_vulnerabilities_list
+        a.each do |vulnerability|
+          prio = vulnerability.high_priority? ? Ticketer::PRIO_HIGH : Ticketer::PRIO_NORMAL
+          ticket = @ticketer.create_ticket(
+            "Monitoring: #{vulnerability.title}",
+            vulnerability.description,
+            prio,
+            feed.source
+          )
+          @feed_tickets += 1 if ticket
+        end
+        puts "    ✓ #{a.length} vulnerabilities" if a.length.positive?
+      end
     end
   end
-  o.parse!
-  options
-rescue OptionParser::ParseError => e
-  puts "ERROR: #{e}\n\n"
-  puts o
-  exit(-1)
 end
 
-def create_monitors(report, config, options)
-  @monitors = []
-  monitor_classes = [SophosMonitor, NinjaOneMonitor, HuntressMonitor, VeeamMonitor, SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor]
-  puts "\n[*] Initializing #{monitor_classes.length} monitors..."
-
-  monitor_classes.each do |klass|
-    @monitors << klass.new(report, config, options[:log])
-    puts "    ✓ #{klass.name.gsub('Monitor', '')}"
-  rescue Faraday::Error => e
-    puts "    ✗ Error initializing #{klass.name}: #{e.message}"
-    puts e.response[:body] if e.response
-  end
-  puts ''
-end
-
-def monitors_do(report, config, options, &block)
-  create_monitors(report, config, options) unless @monitors
-  @monitors.each do |mon|
-    block.call mon
-  end
-end
-
-def report_tenants(report, config, options)
-  puts '- report tenants'
-  monitors_do(report, config, options, &:report_tenants)
-end
-
-def report_sources(report, config, options)
-  puts '- report sources'
-  monitors_do(report, config, options) do |mon|
-    puts mon.source
-  end
-end
-
-def run_monitors(report, config, options)
-  customer_alerts = {}
-  first = true
-  monitors_do(report, config, options) do |mon|
-    puts '[*] Running monitors...' if first
-    start_time = Time.now
-    print "    → #{mon.source.ljust(20)} "
-    customer_alerts = mon.run(customer_alerts)
-    elapsed = (Time.now - start_time).round(2)
-    puts "✓ (#{elapsed}s)"
-    first = false
-  rescue Faraday::Error => e
-    puts '✗ Error'
-    puts "** Error running #{mon.class.name}"
-    puts e
-    puts e.response&.dig(:body)
-  end
-  puts ''
-  customer_alerts
-end
-
-puts "Monitor v#{MONITOR_VERSION} - #{Time.now}", ''
-
-# use environment from .env if any
-Dotenv.load
-config = MonitoringConfig.new
-sla = MonitoringSLA.new(config)
-options = get_options(config, sla)
-feeds = [MonitoringDTC.new(config), MonitoringNCSC.new(config)]
-ticketer = DigiProcessTicketer.new(options)
-
-File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
-  report_tenants(report, config, options) if options[:tenants]
-  report_sources(report, config, options) if options[:sources]
-
-  customer_alerts = run_monitors(report, config, options)
-
-  # create ticket
-  puts '[*] Processing alerts and creating tickets...'
-  last = ''
-  tickets_created = 0
-  sorted = customer_alerts.values.sort_by { |cl| cl.customer.description.upcase }
-  sorted.each do |cl|
-    # we have alerts
-
-    cfg = config.by_description(cl.customer.description)
-    next unless cfg.create_ticket
-
-    # remove incidents reported last run(s)
-    puts cfg.description unless last.eql? cfg.description
-    last = cfg.description
-    cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
-    monitoring_report = cl.report
-
-    next unless monitoring_report && ticketer.create_ticket(
-      "Monitoring: #{cl.name}",
-      monitoring_report,
-      Ticketer::PRIO_NORMAL,
-      cl.source
-    )
-
-    tickets_created += 1
-  end
-
-  puts "\n[*] Processing SLA notifications..."
-  sla_tickets = 0
-  a = sla.load_periodic_alerts
-  a.each do |notification|
-    next unless notification.config.create_ticket
-
-    next unless ticketer.create_ticket(
-      "#{notification.config.description}: #{notification.notification.task}",
-      notification.description, Ticketer::PRIO_NORMAL,
-      'SLA-task'
-    )
-
-    sla_tickets += 1
-  end
-  puts "    ✓ #{sla_tickets} SLA notifications" if sla_tickets.positive?
-
-  puts "\n[*] Processing security feeds (DTC/NCSC)..."
-  feed_tickets = 0
-  feeds.each do |feed|
-    puts "    → #{feed.source}"
-    a = feed.get_vulnerabilities_list
-    a.each do |vulnerability|
-      prio = if vulnerability.high_priority?
-               Ticketer::PRIO_HIGH
-             else
-               Ticketer::PRIO_NORMAL
-             end
-      ticket = ticketer.create_ticket(
-        "Monitoring: #{vulnerability.title}",
-        vulnerability.description,
-        prio,
-        feed.source
-      )
-      feed_tickets += 1 if ticket
-    end
-    puts "    ✓ #{a.length} vulnerabilities" if a.length.positive?
-  end
-
-  # update list of alerts
-  config.compact! if options[:compact]
-  config.save_config
-
-  puts "\n[✓] Monitoring complete!"
-  puts "    Alerts: #{customer_alerts.values.sum { |cl| cl.alerts.length }} total"
-  puts "    Tickets: #{tickets_created} monitoring + #{sla_tickets} SLA + #{feed_tickets} security feeds"
-  puts ''
-end
+Monitoring::CLI.run(ARGV) if __FILE__ == $PROGRAM_NAME
