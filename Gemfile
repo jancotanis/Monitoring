@@ -6,6 +6,10 @@ gem 'dotenv'
 gem 'optparse'
 gem 'faraday'
 
+gem 'sinatra'
+gem 'puma'
+gem 'json'
+
 gem 'rss'
 
 gem 'zammad_api'
