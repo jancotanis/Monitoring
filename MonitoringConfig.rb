@@ -14,7 +14,8 @@ MONITORING_REPORT = 'monitoring.md'
 # monitoring status and tracking if the object has been "touched" (modified).
 ConfigData = Struct.new(
   :id, :description, :source, :sla, :monitor_endpoints, :monitor_connectivity, :monitor_backup,
-  :monitor_dtc, :create_ticket, :notifications, :backup_domain, :last_backup, :reported_alerts, :endpoints
+  :monitor_dtc, :create_ticket, :notifications, :backup_domain, :last_backup, :reported_alerts, :endpoints,
+  :email
 ) do
   def initialize(*)
     super

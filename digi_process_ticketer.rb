@@ -6,6 +6,9 @@ require_relative 'utils'
 
 # Ticketer is a class that creates tickets in DigiProcess via the hooks API.
 class DigiProcessTicketer
+  PRIO_LOW    = 'Laag'
+  PRIO_NORMAL = 'Normaal'
+  PRIO_HIGH   = 'Hoog'
   TICKET_STATUS = 'Aangemaakt'
   attr_reader :client
 
@@ -16,11 +19,11 @@ class DigiProcessTicketer
     @secret         = ENV.fetch('DIGIPROCESS_SECRET')
     @web_hook       = ENV.fetch('DIGIPROCESS_WEBHOOK')
     @source         = ENV.fetch('DIGIPROCESS_SOURCE')
-    @customer_id    = ENV['DIGIPROCESS_RELATION_NUMBER']        # The customer associated with tickets
-    @customer_email = ENV['DIGIPROCESS_RELATION_EMAIL']         # The customer associated with tickets
+    @customer_id    = ENV.fetch('DIGIPROCESS_RELATION_NUMBER', nil)        # The customer associated with tickets
+    @customer_email = ENV.fetch('DIGIPROCESS_RELATION_EMAIL', nil)         # The customer associated with tickets
     @logger = Logger.new(FileUtil.daily_file_name('digi_process.log')) if options[:log]
     setup_connection
-    @debug = 'DEBUG'.eql? ENV.fetch('MONITORING')    # Enable debug mode
+    @debug = 'DEBUG'.eql? ENV.fetch('MONITORING', nil) # Enable debug mode
   end
 
   # Creates a new ticket in Zammad.
@@ -29,8 +32,10 @@ class DigiProcessTicketer
   # @param text [String] The body text of the ticket.
   # @param ticket_prio [String] The priority of the ticket, currently not used.
   # @param ticket_type [String, nil] (optional) A tag to categorize the ticket.
+  # @param ticket_template [String, nil] (optional) A ticket template to use.
+  # @param relation_email [String, nil] (optional) Email address for the relation.
   # @return The created ticket object, or nil if in debug mode.
-  def create_ticket(title, text, ticket_prio, ticket_type, ticket_template = nil)
+  def create_ticket(title, text, ticket_prio, ticket_type, relation_email = nil, ticket_template = nil)
     ticket = content = {
       ticket_type: ticket_type,
       ticket_source: @source,
@@ -38,7 +43,8 @@ class DigiProcessTicketer
       description: text
     }
     content[:relation_number] = @customer_id if @customer_id
-    content[:relation_email]  = @customer_email if  @customer_email
+    email = relation_email || @customer_email
+    content[:relation_email]  = email if email
     content[:ticket_template] = ticket_template if  ticket_template
 
     unless @debug

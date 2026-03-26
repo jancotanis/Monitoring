@@ -30,12 +30,12 @@
 # 1.9.2 Fix data issue in CloudAlly portal
 # 1.9.3 Compatible with ruby 3.2
 # 1.10  show ncsc affected products for companies
+#       use cfg email to get tickets on correct customer
 #
 MONITOR_VERSION = '1.10'
 
 require 'dotenv'
 require 'optparse'
-require_relative 'Ticketer'
 require_relative 'digi_process_ticketer'
 require_relative 'utils'
 require_relative 'MonitoringConfig'
@@ -227,8 +227,9 @@ module Monitoring
         next unless monitoring_report && @ticketer.create_ticket(
           "Monitoring: #{cl.name}",
           monitoring_report,
-          Ticketer::PRIO_NORMAL,
-          cl.source
+          DigiProcessTicketer::PRIO_NORMAL,
+          cl.source,
+          cfg.email
         )
 
         @tickets_created += 1
@@ -244,7 +245,7 @@ module Monitoring
 
         next unless @ticketer.create_ticket(
           "#{notification.config.description}: #{notification.notification.task}",
-          notification.description, Ticketer::PRIO_NORMAL,
+          notification.description, DigiProcessTicketer::PRIO_NORMAL,
           'SLA-task'
         )
 
@@ -260,7 +261,7 @@ module Monitoring
         puts "    -> #{feed.source}"
         a = feed.get_vulnerabilities_list
         a.each do |vulnerability|
-          prio = vulnerability.high_priority? ? Ticketer::PRIO_HIGH : Ticketer::PRIO_NORMAL
+          prio = vulnerability.high_priority? ? DigiProcessTicketer::PRIO_HIGH : DigiProcessTicketer::PRIO_NORMAL
           ticket = @ticketer.create_ticket(
             "Monitoring: #{vulnerability.title}",
             vulnerability.description,
