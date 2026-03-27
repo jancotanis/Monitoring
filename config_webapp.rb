@@ -2,13 +2,15 @@
 
 require 'sinatra'
 require 'json'
+require 'date'
+require_relative 'monitoring_notification'
 require_relative 'MonitoringConfig'
 
 set :port, 4567
 set :bind, '0.0.0.0'
 set :public_folder, File.join(Dir.pwd, 'public')
 
-before do
+before '/api/*' do
   content_type :json
 end
 
@@ -35,7 +37,8 @@ get '/api/entries' do
       monitor_connectivity: e.monitor_connectivity,
       monitor_backup: e.monitor_backup,
       monitor_dtc: e.monitor_dtc,
-      create_ticket: e.create_ticket
+      create_ticket: e.create_ticket,
+      notifications: e.notifications.map { |n| { task: n.task, interval: n.interval, triggered: n.triggered&.to_s } }
     }
   end.to_json
 end
@@ -46,7 +49,6 @@ put '/api/entries/:id' do
 
   entry = $config.by_id(id)
   if entry
-    entry.description = data['description'] if data['description']
     entry.email = data['email'] if data['email']
     entry.sla = data['sla'] || []
     entry.monitor_endpoints = data['monitor_endpoints']
@@ -54,6 +56,17 @@ put '/api/entries/:id' do
     entry.monitor_backup = data['monitor_backup']
     entry.monitor_dtc = data['monitor_dtc']
     entry.create_ticket = data['create_ticket']
+
+    if data['notifications']
+      entry.notifications = data['notifications'].map do |n|
+        Notification.new(
+          n['task'],
+          n['interval'],
+          n['triggered'] ? Date.parse(n['triggered']) : nil
+        )
+      end
+    end
+
     entry.touch
 
     { success: true }.to_json
