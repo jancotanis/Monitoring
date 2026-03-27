@@ -10,7 +10,6 @@ require_relative 'software_index'
 require_relative 'utils'
 
 module MonitoringSoftware
-
   class CLI
     def self.run(args)
       options = parse_options(args)
@@ -166,7 +165,6 @@ module MonitoringSoftware
 
       affected_products.each do |affected|
         vendor = affected[:vendor]
-        product = affected[:product]
         results = indexer.search(publisher: vendor)
         next if results.empty?
 
@@ -192,12 +190,11 @@ module MonitoringSoftware
       org_results.each do |org_id, data|
         org_name = get_org_name(client, org_id)
         puts "Organization: #{org_name} (id:#{org_id})"
-        data[:products].each do |prod_name, count|
+        data[:products].each do |prod_name, _count|
           puts "  - #{prod_name}"
         end
         puts
       end
-
     end
 
     def self.perform_ncsc_lookup(indexer, options)
@@ -236,7 +233,9 @@ module MonitoringSoftware
           vendor_results[vendor][:product_orgs][prod_name] ||= { count: 0, matched: matched, orgs: [] }
 
           r['organizations'].each do |org_id|
-            vendor_results[vendor][:product_orgs][prod_name][:orgs] << org_id unless vendor_results[vendor][:product_orgs][prod_name][:orgs].include?(org_id)
+            unless vendor_results[vendor][:product_orgs][prod_name][:orgs].include?(org_id)
+              vendor_results[vendor][:product_orgs][prod_name][:orgs] << org_id
+            end
             vendor_results[vendor][:product_orgs][prod_name][:count] += r['devices'].length
           end
         end

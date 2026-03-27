@@ -31,8 +31,9 @@
 # 1.9.3 Compatible with ruby 3.2
 # 1.10  show ncsc affected products for companies
 #       use cfg email to get tickets on correct customer
+# 1.10.1  use cfg email for SLA tasks
 #
-MONITOR_VERSION = '1.10'
+MONITOR_VERSION = '1.10.1'
 
 require 'dotenv'
 require 'optparse'
@@ -56,6 +57,7 @@ module Monitoring
   class CLI
     MONITOR_CLASSES = [SophosMonitor, NinjaOneMonitor, HuntressMonitor, VeeamMonitor,
                        SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor].freeze
+#    MONITOR_CLASSES = [VeeamMonitor].freeze
 
     def self.run(args)
       new.run(args)
@@ -246,7 +248,8 @@ module Monitoring
         next unless @ticketer.create_ticket(
           "#{notification.config.description}: #{notification.notification.task}",
           notification.description, DigiProcessTicketer::PRIO_NORMAL,
-          'SLA-task'
+          'SLA-task',
+          notification.config.email
         )
 
         @sla_tickets += 1
