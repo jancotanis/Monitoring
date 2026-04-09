@@ -119,9 +119,10 @@
   </div>
 
   <script>
-    const ALL_SOURCES = ['CloudAlly', 'Huntress', 'Integra365', 'NinjaOne', 'Skykick', 'Sophos', 'Veeam', 'Zabbix'];
     let entries = [];
     let selectedSources = [];
+    let searchTimeout = null;
+    let sourceGroups = null;
 
     const sourceColors = {
       CloudAlly: 'bg-blue-100 text-blue-800',
@@ -142,14 +143,23 @@
       applyFilters();
     }
 
-    function renderTable() {
-      const tbody = document.getElementById('entries-body');
-      tbody.innerHTML = entries.map(e => `
+    async function loadMeta() {
+      try {
+        const res = await fetch('/api/meta');
+        const data = await res.json();
+        sourceGroups = data.source_groups;
+      } catch (e) {
+        console.error('Failed to load meta', e);
+      }
+    }
+
+    function renderRows(data) {
+      return data.map(e => `
         <tr class="hover:bg-slate-50 cursor-pointer" onclick="openPanel('${e.id}')">
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${e.description}</td>
           <td class="px-6 py-4">
             <div class="flex flex-wrap gap-1">
-              ${e.source.map(s => `<span class="px-2 py-1 rounded-full text-xs font-medium ${sourceColors[s] || 'bg-gray-100'}">${s}</span>`).join('')}
+              ${(e.source || []).map(s => `<span class="px-2 py-1 rounded-full text-xs font-medium ${sourceColors[s] || 'bg-gray-100'}">${s}</span>`).join('')}
             </div>
           </td>
           <td class="px-6 py-4 text-sm text-slate-700">${(e.notifications || []).length}</td>
@@ -158,19 +168,17 @@
     }
 
     function filterEntries() {
-      loadEntries();
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => loadEntries(), 300);
     }
 
     function renderSourceFilters() {
       const container = document.getElementById('source-filters');
       const allSources = [...new Set(entries.flatMap(e => e.source || []))].sort();
 
-      // grouping rules
-      const groups = {
-        Backup: ['Veeam', 'Skykick', 'CloudAlly', 'Integra365'],
-        Monitoring: ['Zabbix', 'NinjaOne'],
-        Vulnerability: ['Huntress', 'Sophos'],
-        Other: []
+      // grouping rules (can be moved to backend later)
+      const groups = sourceGroups || {
+        Backup: [], Monitoring: [], Vulnerability: [], Other: []
       };
 
       const grouped = {
@@ -224,17 +232,7 @@
       }
 
       const tbody = document.getElementById('entries-body');
-      tbody.innerHTML = filtered.map(e => `
-        <tr class="hover:bg-slate-50 cursor-pointer" onclick="openPanel('${e.id}')">
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${e.description}</td>
-          <td class="px-6 py-4">
-            <div class="flex flex-wrap gap-1">
-              ${(e.source || []).map(s => `<span class="px-2 py-1 rounded-full text-xs font-medium ${sourceColors[s] || 'bg-gray-100'}">${s}</span>`).join('')}
-            </div>
-          </td>
-          <td class="px-6 py-4 text-sm text-slate-700">${(e.notifications || []).length}</td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = renderRows(filtered);
     }
 
     async function openPanel(id) {
@@ -385,7 +383,10 @@
     }
 
     // Initial load
-    loadEntries();
+    (async () => {
+      await loadMeta();
+      await loadEntries();
+    })();
   </script>
 </body>
 </html>

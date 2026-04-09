@@ -43,6 +43,18 @@ get '/api/entries' do
   end.to_json
 end
 
+# Meta endpoint for UI configuration
+get '/api/meta' do
+  {
+    source_groups: {
+      Backup: %w[Veeam Skykick CloudAlly Integra365],
+      Monitoring: %w[Zabbix NinjaOne],
+      Vulnerability: %w[Huntress Sophos],
+      Other: []
+    }
+  }.to_json
+end
+
 put '/api/entries/:id' do
   id = params[:id]
   data = JSON.parse(request.body.read)
