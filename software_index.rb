@@ -12,6 +12,7 @@ module MonitoringSoftware
 
     def initialize(client = nil)
       @index = nil
+      @devices = nil
       @client = client
     end
 
@@ -28,11 +29,12 @@ module MonitoringSoftware
       puts 'Fetching software from NinjaOne API...'
 
       puts 'Fetching device organization mapping...'
-      device_org_map = fetch_device_org_mapping(client)
-      puts "Found #{device_org_map.keys.count} devices"
+      device_map = fetch_device_map(client)
+      puts "Found #{device_map.keys.count} devices"
       raw = client.api.queries_software
       puts "Retrieved #{raw.count} software entries"
-      @index = build_index(raw, device_org_map)
+      @index = build_index(raw, device_map)
+      @devices = device_map
       save_index
 
       puts "Index saved to #{CACHE_FILE}"
@@ -41,43 +43,56 @@ module MonitoringSoftware
       @index
     end
 
-    def fetch_device_org_mapping(client)
+    # Returns device_id => { id, hostname, organization_id }
+    def fetch_device_map(client)
       devices = client.api.devices
 
       mapping = {}
 
       devices.each do |device|
-        device_id = get_property(device, :id)
-        org_id = get_property(device, :organizationId)
-        mapping[device_id] = org_id unless device_id.nil?
+        device_id = device.id
+        org_id = device.organizationId
+        next if device_id.nil?
+
+        mapping[device_id] = {
+          'id' => device_id,
+          'hostname' => device.systemName,
+          'organization_id' => org_id
+        }
       end
 
       mapping
     end
 
-    def build_index(raw_software, device_org_map = {})
+    def build_index(raw_software, device_map = {})
       indexed = {}
 
+
       raw_software.each do |sw|
-        pub = normalize_string(get_property(sw, :publisher))
-        name = normalize_string(get_property(sw, :name))
-        device_id = get_property(sw, :deviceId)
+        pub = name = normalize_string(sw.name)
+        begin
+          pub = normalize_string(sw.publisher)
+        rescue => e
+          # sometimes publisher not available, in that case keep software name as publisher
+        end
+        device_id = sw.deviceId
 
         indexed[pub] ||= {}
         indexed[pub][name] ||= {
-          'publisher' => get_property(sw, :publisher),
-          'name' => get_property(sw, :name),
+          'publisher' => pub,
+          'name' => name,
           'devices' => [],
           'organizations' => []
         }
-        indexed[pub][name]['devices'] << device_id
+        indexed[pub][name]['devices'] << device_id if device_id
       end
 
       indexed.each_value do |products|
         products.each_value do |data|
+          data['devices'].compact!
           data['devices'].uniq!
           data['devices'].sort!
-          data['organizations'] = data['devices'].map { |d| device_org_map[d] }.compact.uniq.sort
+          data['organizations'] = data['devices'].map { |d| device_map[d] && device_map[d]['organization_id'] }.compact.uniq.sort
         end
       end
 
@@ -100,15 +115,23 @@ module MonitoringSoftware
         exit 1
       end
 
-      @index = JSON.parse(File.read(CACHE_FILE))
+      parsed = JSON.parse(File.read(CACHE_FILE))
+      @devices = parsed['devices'] || {}
+      @index = parsed['software'] || {}
     end
 
     def save_index
-      index_to_save = @index.dup
-      index_to_save['__metadata'] = {
-        'updated_at' => Time.now.iso8601
+      require 'time'
+
+      payload = {
+        'devices' => @devices || {},
+        'software' => @index || {},
+        '__metadata' => {
+          'updated_at' => Time.now.iso8601
+        }
       }
-      File.write(CACHE_FILE, JSON.pretty_generate(index_to_save))
+
+      File.write(CACHE_FILE, JSON.pretty_generate(payload))
     end
 
     def search(publisher: nil, product: nil)
@@ -134,6 +157,19 @@ module MonitoringSoftware
       end
 
       results
+    end
+
+    # Returns device objects for matching software
+    def devices_for(publisher: nil, product: nil)
+      load_index
+
+      results = search(publisher: publisher, product: product)
+
+      results.flat_map do |r|
+        (r['devices'] || []).map do |id|
+          @devices[id.to_s] || @devices[id]
+        end
+      end.compact.uniq { |d| d['id'] }
     end
 
     def tenant_software(tenant_names, vendor_products, client = nil)
