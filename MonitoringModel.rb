@@ -191,6 +191,20 @@ end
 #   puts tenant.description
 #
 module MonitoringTenant
+  # Returns a normalized tenant name by stripping a trailing numeric ID.
+  #
+  # Handles formats such as:
+  #   - 'This is company name 12345'      => 'This is company name'
+  #   - 'This is other company (12345)'   => 'This is other company'
+  #
+  # @param name [String, nil] the raw tenant name
+  # @return [String] the normalized name with trailing id removed
+  def self.normalize_name(name)
+    return '' if name.nil?
+
+    name.to_s.sub(/\s*\(?\d+\)?\s*\z/, '').strip
+  end
+
   # Clears alerts for all endpoints associated with the tenant.
   #
   # This method iterates over all available endpoints and calls `clear_alerts`
@@ -301,9 +315,11 @@ class AbstractMonitor
       customer.clear_endpoint_alerts
       cfg = @config.by_description(customer.description)
 
-      yield(customer, cfg) if monitor_tenant?(cfg)
+      yield(customer, cfg) if cfg && monitor_tenant?(cfg)
       # throttle api
       sleep(0.05)
+    rescue
+      puts "* Error customer '#{customer.description}' not found"
     end
   end
 

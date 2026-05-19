@@ -32,8 +32,9 @@
 # 1.10  show ncsc affected products for companies
 #       use cfg email to get tickets on correct customer
 # 1.10.1  use cfg email for SLA tasks
+# 1.10.2  Fix naming issues in Huntress/CloudAlly and strip trailing tenant ids
 #
-MONITOR_VERSION = '1.10.1'
+MONITOR_VERSION = '1.10.2'
 
 require 'dotenv'
 require 'optparse'

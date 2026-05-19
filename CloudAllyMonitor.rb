@@ -38,7 +38,7 @@ class CloudAllyMonitor < AbstractMonitor
 
   # Monitor when backup is on
   def monitor_tenant?(cfg)
-    cfg.monitor_backup
+    cfg&.monitor_backup
   end
 
   def collect_data
@@ -72,7 +72,7 @@ class CloudAllyMonitor < AbstractMonitor
   def process_customer_alerts(customer, all_alerts)
     description = customer.description
     cfg = @config.by_description(description)
-    return unless cfg.monitor_backup
+    return unless cfg&.monitor_backup
 
     all_alerts[customer.id] = customer_alerts = CustomerAlerts.new(description, customer.alerts)
     customer_alerts.customer = customer

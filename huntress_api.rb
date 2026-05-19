@@ -128,7 +128,8 @@ module Huntress
         @tenants = {}
         data = @api.organizations
         data.each do |item|
-          @tenants[item.id] = TenantData.new(item.id, item.name, item.incident_reports_count.positive?, item.attributes)
+          name = MonitoringTenant.normalize_name(item.name)
+          @tenants[item.id] = TenantData.new(item.id, name, item.incident_reports_count.positive?, item.attributes)
         end
       end
       @tenants.values
