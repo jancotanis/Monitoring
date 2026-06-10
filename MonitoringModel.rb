@@ -152,6 +152,28 @@ CustomerAlerts = Struct.new(:name, :alerts, :devices) do
     rpt
   end
 
+  # Generates a report title, e.g. description of first incident.
+  #
+  # @return [String, nil] description of first incident
+  def report_title
+    title = "Monitoring report"
+    return title unless devices&.any?
+
+    device_id, incidents = devices.first
+    return title unless incidents&.any?
+
+    incident = incidents.values.first
+    return title unless incident
+
+    endpoint = incident.endpoint_to_s
+
+    # Extract first line and strip "Description: "
+    title = incident.to_s.lines
+                         .find { |l| l.include?('Description:') }
+                         &.sub(/Description:\s*/, '')
+                         &.strip
+  end
+
   # Removes reported incidents from the customer alerts.
   #
   # @param [Array] reported_alerts The list of reported alerts.

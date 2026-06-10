@@ -33,8 +33,9 @@
 #       use cfg email to get tickets on correct customer
 # 1.10.1  use cfg email for SLA tasks
 # 1.10.2  Fix naming issues in Huntress/CloudAlly and strip trailing tenant ids
+# 1.10.3  More information in ticket title
 #
-MONITOR_VERSION = '1.10.2'
+MONITOR_VERSION = '1.10.3'
 
 require 'dotenv'
 require 'optparse'
@@ -58,7 +59,6 @@ module Monitoring
   class CLI
     MONITOR_CLASSES = [SophosMonitor, NinjaOneMonitor, HuntressMonitor, VeeamMonitor,
                        SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor].freeze
-#    MONITOR_CLASSES = [VeeamMonitor].freeze
 
     def self.run(args)
       new.run(args)
@@ -226,9 +226,8 @@ module Monitoring
         last = cfg.description
         cfg.reported_alerts = cl.remove_reported_incidents(cfg.reported_alerts || [])
         monitoring_report = cl.report
-
         next unless monitoring_report && @ticketer.create_ticket(
-          "Monitoring: #{cl.name}",
+          "Monitoring (#{cl.source}): #{cl.report_title}",
           monitoring_report,
           DigiProcessTicketer::PRIO_NORMAL,
           cl.source,
