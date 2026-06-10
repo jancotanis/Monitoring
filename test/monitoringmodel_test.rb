@@ -269,6 +269,28 @@ describe MonitoringTenant do
       _(tenant.description).must_equal 'Tenant1'
     end
   end
+
+  describe '.normalize_name' do
+    it 'removes a trailing numeric id' do
+      _(MonitoringTenant.normalize_name('This is company name 12345')).must_equal 'This is company name'
+    end
+
+    it 'removes a trailing parenthesized id' do
+      _(MonitoringTenant.normalize_name('This is other company (12345)')).must_equal 'This is other company'
+    end
+
+    it 'returns the name unchanged when no trailing id is present' do
+      _(MonitoringTenant.normalize_name('Plain Company Name')).must_equal 'Plain Company Name'
+    end
+
+    it 'returns an empty string for nil input' do
+      _(MonitoringTenant.normalize_name(nil)).must_equal ''
+    end
+
+    it 'strips surrounding whitespace' do
+      _(MonitoringTenant.normalize_name('  Acme Corp 42  ')).must_equal 'Acme Corp'
+    end
+  end
 end
 
 describe MonitoringAlert do

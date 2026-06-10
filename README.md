@@ -1,246 +1,197 @@
 # Monitoring
 
-Monitoring scripts for saas solutions
+Ruby-based multi-vendor SaaS monitoring aggregator that collects security and backup alerts from multiple vendors and auto-creates tickets in Zammad helpdesk.
+
+## Quick Start
+
+```bash
+# Install dependencies
+bundle install
+
+# Run monitoring
+ruby Monitoring.rb
+
+# Run tests
+rake test
+
+# Run linter
+rake rubocop
+```
+
+## Supported Services
+
+| Category | Services |
+|----------|----------|
+| Security | Sophos, Huntress, Zabbix |
+| Backup | Veeam, CloudAlly, Skykick, Integra365 |
+| Threat Intel | Digital Trust Center (DTC), NCSC |
+| ticketing | Zammad, DigiProcess |
 
 ## System Configuration
 
-Use environment variables to setup various SAAS connection parameters.
-These can also be put on the filesystem using a `.env` file.
+Environment variables are used to configure API connections. See the detailed configuration section below.
 
-### Cloudally
+### Environment Variables
 
-Connection to [CloudAlly partner portal api](https://api.cloudally.com/)...
+#### CloudAlly
+```bash
+CLOUDALLY_CLIENT_ID=your_client_id
+CLOUDALLY_CLIENT_SECRET=your_client_secret
+CLOUDALLY_USER=your_email
+CLOUDALLY_PASSWORD=your_password
+```
 
-````console
-CLOUDALLY_CLIENT_ID=7685b144-fe1b-4795-b38f-9a7ec6c7a1f8
-CLOUDALLY_CLIENT_SECRET=BdaonZti8jn_i8jn
-CLOUDALLY_USER=john.doe@acme.com
-CLOUDALLY_PASSWORD=your_password_here
-````
+#### Skykick
+```bash
+SKYKICK_CLIENT_ID=your_client_id
+SKYKICK_CLIENT_SECRET=your_client_secret
+```
 
-### Skykick
+#### Sophos
+```bash
+SOPHOS_CLIENT_ID=your_client_id
+SOPHOS_CLIENT_SECRET=your_client_secret
+```
 
-Connection to [Skykick partner portal](https://backup.skykick.com/partner/cloud-backup/manager#/)
+#### Veeam
+```bash
+VEEAM_API_HOST=https://your-veeam-host.com
+VEEAM_API_KEY=your_api_key
+```
 
-````console
-SKYKICK_CLIENT_ID=834hdfs-kgsj54rg-hkbvfiu-rve984
-SKYKICK_CLIENT_SECRET=834hdfskgsj54rghkbvfiurve984
-````
+#### Integra365
+```bash
+INTEGRA365_USER=your_email
+INTEGRA365_PASSWORD=your_password
+```
 
-### Sophos
+#### Zabbix
+```bash
+ZABBIX_API_HOST=https://your-zabbix-host.com
+ZABBIX_API_KEY=your_api_key
+```
 
-Connection to [Sophos partner portal](https://https://partners.sophos.com/)
+#### Huntress
+```bash
+HUNTRESS_API_KEY=your_api_key
+HUNTRESS_API_SECRET=your_api_secret
+```
 
-````console
-SOPHOS_CLIENT_ID=834hdfs-kgsj54rg-hkbvfiu-rve984
-SOPHOS_CLIENT_SECRET=834hdfskgsj54rghkbvfiurve984
-````
+#### NinjaOne
+```bash
+NINJA1_HOST=https://your-host.rmmservice.eu
+NINJA1_CLIENT_ID=your_client_id
+NINJA1_CLIENT_SECRET=your_client_secret
+```
 
-### VEEAM
-
-Connection to VEEAM service provider console. This is vendor specific.
-
-````console
-VEEAM_API_HOST=https://portal.host.com
-VEEAM_API_KEY=834hdfskgsj54rghkbvfiurve984
-````
-
-### Integra 365
-
-Connection to Integra 365 provider console.
-
-````console
-INTEGRA365_USER=john.doe@acme.com
-INTEGRA365_PASSWORD=your_password_here
-````
-
-### Zabbix
-
-Connection to Zabbix service api. This is location specific.
-
-````console
-ZABBIX_API_HOST=https://api.your-zabbix-host.com
-ZABBIX_API_KEY=d73e81e7e7e3b5f57f10539defe64c71fa
-````
-
-### Huntress
-
-Connection to Huntress portal api.
-
-````console
-HUNTRESS_API_KEY=<api key>
-HUNTRESS_API_SECRET=<api secret>
-````
-
-### NinjaOne
-
-Connection to NinjaOne portal api. Setup an API key under Administration|Apps|API and [[+ Add client app]].
-
-### NinjaOne configuration
-
-Use the following API settings in ninjaOne:
-
-|Setting|Value|
-|:--|:--|
-|Application platform|Application platform API Services (machine-to-machine)|
-|Name |name of the app using this api connect|
-|Redirect URIs|`https://localhost`|
-|Scopes|`Monitoring`, `Management`, `Control`|
-|Allowed granttypes|`Client credentials`|
-
-### Environment configuration or .env
-
-Add the following environment settings
-````console
-NINJA1_HOST=https://<yourhostname>.rmmservice.eu
-NINJA1_CLIENT_ID=<client_id>
-NINJA1_CLIENT_SECRET=<client_secret>
-````
-
-### Helpdesk system
-
-#### Zammad
- 
-Connection to Zammad, this is vendor specific.
-
-```console
-ZAMMAD_HOST=https://helpdesk.xxxx.nl/
-ZAMMAD_OAUTH_TOKEN=834hdfskgsj54rghkbvfiurve984
+#### Zammad (ticketing)
+```bash
+ZAMMAD_HOST=https://your-helpdesk.com/
+ZAMMAD_OAUTH_TOKEN=your_oauth_token
 ZAMMAD_GROUP=Monitoring
-ZAMMAD_CUSTOMER=john.doe@acme.com
+ZAMMAD_CUSTOMER=your_customer_email
 ```
 
-A ticket is created and the following fields are populated:
-
-|Field|Description|
-|:--|:--|
-|Title|`Monitoring <customer name>`|
-|State|`new`|
-|Group|`ZAMMAD_GROUP` environment setting|
-|Priority|Default prio `2 normal` for DTC alerts it can be `3 high` when certain keywords are within the text|
-|Customer|`ZAMMAD_CUSTOMER` environment setting|
-|Article|Text of the monitored system|
-|Tags|For DTC alerts the tag `DTC` is included|
-
-#### Digiprocess
- 
-Connection to Digiprocess ERP system
-
-```console
-DIGIPROCESS_SECRET=<secret>
-DIGIPROCESS_WEBHOOK=<webhook>
-DIGIPROCESS_RELATION_NUMBER=<id>
-DIGIPROCESS_RELATION_EMAIL=<or contact email>
-DIGIPROCESS_SOURCE=<Monitoring>
+#### DigiProcess (alternative ticketing)
+```bash
+DIGIPROCESS_SECRET=your_secret
+DIGIPROCESS_WEBHOOK=your_webhook
+DIGIPROCESS_RELATION_NUMBER=your_relation_id
+DIGIPROCESS_RELATION_EMAIL=your_email
+DIGIPROCESS_SOURCE=Monitoring
 ```
 
-A ticket is created and the following fields are populated:
+## Application Configuration
 
-|Field|Description|
-|:--|:--|
-|Title|`Monitoring <customer name>`|
-|State|Default state configured in digiprocess|
-|Customer|relation number of relation for email contact|
-|Article|Text of the monitored system|
-|Ticket type|One of the portal source or DTC alerts the tag `DTC` is included|
+Configuration is stored in `monitoring.cfg` (YAML format). The file is automatically populated as the system discovers tenants from each service.
 
-## Application configuration
+### Configuration Keys
 
-Application configuration is stored in `monitoring.cfg`. The document will be
-automatically extended based on the entries within the various SAAS services.
-The entries will be merged based on the account description. For each entry
-you may select if malware detection and/or backups needs to be checked.
+| Key | Description |
+|-----|-------------|
+| `id` | Unique identifier |
+| `description` | Customer name (unique) |
+| `source` | Array of source services |
+| `sla` | SLA configuration |
+| `monitor_endpoints` | Monitor endpoint issues |
+| `monitor_connectivity` | Monitor connectivity |
+| `monitor_backup` | Monitor backup failures |
+| `monitor_dtc` | Include in DTC alerts |
+| `create_ticket` | Create tickets for alerts |
+| `notifications` | Scheduled notifications |
+| `reported_alerts` | Track sent alerts (prevent duplicates) |
 
-Currently malware is only supported for Sophos portal. This also scans for
-connection issues in VPN tunnels. Backup checks are supported for VEEAM, 
-Skykick, Integra365 and CloudAlly.
+## Command-Line Options
 
-This is a yaml formatted file with the following structure:
-
-``` yaml
----
-- !ruby/struct:ConfigData
-  id: 6551ef50-2917-469d-b4ae-2fddc37d5688
-  description: Name of the client
-  source:
-  - Sophos
-  sla: []
-  monitor_endpoints: false
-  monitor_connectivity: false
-  monitor_backup: false
-  monitor_dtc: false
-  create_ticket: false
-  notifications:
-  - !ruby/struct:Notification
-    type: Check authorisations
-    period: Y
-    triggered: 2023-09-01
-  reported_alerts: []
-  endpoints: 5
-- !ruby/struct:ConfigData
-   :
-   :
-```
-
-### Keys
-
-|Key|Description|value|
-|:--|:--|:--|
-|id|Unique id of the entry|string|
-|description|Customer description of the setting, this is unique and used to find configuration for SAAS cleint|string|
-|source|Debugging: source where entry originates from|array|
-|sla|Used to report kind of SLA in place with customer. Entries in format `source-state`.|array|
-|monitor_endpoints|Monitor issues with Sophos endpoints (Sophos and Zabbix)|true/false|
-|monitor_connectivity|Monitor Zabbix issues|true/false|
-|monitor_backup|Monitor issues with VEEAM, CloudAlly, Skykick, Integra backups|true/false|
-|monitor_dtc|Client is included in [Digital Trust Center alerts](https://www.digitaltrustcenter.nl/cyberalerts)|true/false|
-|create_ticket|Create ticket within Zammad in case of monitored incidents|true/false|
-|reported_alerts|Alerts that have been created a ticket for||
-|endpoints|Debugging: Number of sophos endpoints found|output|
-|reported_alerts|Ids of alerts that have been reported to the ticket system. This to prevent duplicate entries.||
-
-### Notifications
-
-Each customer entry can have a number of notifications. These are triggered on specific
-interval. Notifications can be added using the command line using `-n <customer>,`
-
-|Key|Description|value|example|
-|:--|:--|:--|:--|
-|customer|Customer identifier, this should match description in application configuration file|Text, use quotes '"' when customer name has spaces|`"Ford Motor Company"`|
-|task|Task identifier what to do|Text, use quotes '"' when task name has spaces|`"Monitor XYZ backup"`|
-|interval|What interval do the notifications be triggered. Select from Once, Weekly, Monthly, Quarterly,Yearly,Two yearly|O,W,M,Q,Y,T| |
-|triggered|Last time it was triggered, this date can be in the future| YYYY-MM-DD| `2023-01-01` |
-
-## Script run options
-
-Script can be run with ruby interpreter.
-
-````console
-ruby Monitoring.rb [options]
-````
-
-Some additional options apply
-
-|Parameter|Description|
-|:--|:--|
-|-s --sla|Report SLA options in configuration.md file (markdown format) |
-|-l --log|Log all http api requests, used for debugging connection issues|
-|-n customer,interval[,date] --notification customer,task,interval[,date]|Add customer notification weekly, monthly, quarterly, yearly or once. Interval is one of 'W', 'M', 'Q', 'Y' or 'O'|
-|-g[N] --garbagecollect[=N]|Remove all log files older than N days where N is 90 days if not given|
-|-? -h --help|Explanation of script options|
+| Option | Description |
+|--------|-------------|
+| `-s, --sla` | Generate SLA report |
+| `-l, --log` | Log all HTTP API requests |
+| `-n customer,task,interval[,date]` | Add notification |
+| `-g[N], --garbagecollect[=N]` | Clean old files (default 90 days) |
+| `-h, --help` | Show help |
 
 ### Examples
 
-Add weekly reminder for backup check for customer COAS. This is triggered next
-time the monitoring runs.
+```bash
+# Add weekly backup check notification
+ruby Monitoring.rb -n "CustomerName","Check backup",W
 
-````console
-ruby Monitoring.rb -n COAS,"Check week backup",W
-````
+# Add one-time task with specific date
+ruby Monitoring.rb -n "CustomerName","Task name",O,2024-12-31
 
-Add reminder to destroy backup tapes for COAS. This is triggered once
-on/after 31 December 2023.
+# Generate SLA report
+ruby Monitoring.rb --sla
 
-````console
-ruby Monitoring.rb -n COAS,"Destroy old backup tapes",O,2023-12-31
-````
+# Enable API logging
+ruby Monitoring.rb --log
+
+# Cleanup files older than 30 days
+ruby Monitoring.rb -g 30
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# All tests
+rake test
+
+# Single test file
+ruby -Itest test/config_test.rb
+
+# Single test
+rake test TEST=test/config_test.rb TESTOPTS="-n /test_0001/"
+```
+
+### Code Style
+
+The project uses RuboCop for linting. Run before committing:
+
+```bash
+rake rubocop
+```
+
+## File Organization
+
+```
+├── *.rb                 # Main source files
+├── test/                # Test files
+│   └── *_test.rb
+├── docs/                # Documentation
+├── monitoring.cfg       # Customer configuration (git-ignored)
+├── .env                 # Environment variables (git-ignored)
+└── *.log               # Log files
+```
+
+## Architecture
+
+- **Abstract Monitor Pattern**: Each service has an API wrapper (`*API.rb`) and monitor (`*Monitor.rb`)
+- **Configuration**: Managed via `ConfigData` struct in `monitoring.cfg`
+- **ticketing**: Zammad (primary) or DigiProcess (alternative)
+- **Deduplication**: Uses `reported_alerts` to prevent duplicate tickets
+
+## License
+
+Internal use only.
