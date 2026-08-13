@@ -34,8 +34,9 @@
 # 1.10.1  use cfg email for SLA tasks
 # 1.10.2  Fix naming issues in Huntress/CloudAlly and strip trailing tenant ids
 # 1.10.3  More information in ticket title
+# 1.10.4  Check max length for digiprocess ticket content
 #
-MONITOR_VERSION = '1.10.3'
+MONITOR_VERSION = '1.10.4'
 
 require 'dotenv'
 require 'optparse'

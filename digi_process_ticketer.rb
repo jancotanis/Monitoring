@@ -10,6 +10,9 @@ class DigiProcessTicketer
   PRIO_NORMAL = 'Normaal'
   PRIO_HIGH   = 'Hoog'
   TICKET_STATUS = 'Aangemaakt'
+  MAX_TITLE_LENGTH = 255
+  MAX_DESCRIPTION_LENGTH = 60_000
+  ELLIPSIS = '...'
   attr_reader :client
 
   # Initializes a new Ticketer instance.
@@ -39,8 +42,8 @@ class DigiProcessTicketer
     ticket = content = {
       ticket_type: ticket_type,
       ticket_source: @source,
-      title: title,
-      description: text
+      title: sanitize(title, MAX_TITLE_LENGTH),
+      description: sanitize(text, MAX_DESCRIPTION_LENGTH)
     }
     content[:relation_number] = @customer_id if @customer_id
     email = relation_email || @customer_email
@@ -55,6 +58,22 @@ class DigiProcessTicketer
     puts "Ticket created: #{title}/#{ticket_prio}"
     puts text
     ticket
+  end
+
+  # Trims a string to the given maximum length, appending '...' when truncated.
+  #
+  # When the text is longer than `max_length`, it is cut so that the result
+  # (including the trailing '...') fits within `max_length`.
+  #
+  # @param text [String, nil] The string to sanitize.
+  # @param max_length [Integer] The maximum allowed length of the result.
+  # @return [String] The sanitized string, at most `max_length` characters long.
+  def sanitize(text, max_length)
+    text = text.to_s
+    return text if text.length <= max_length
+
+    cut = [max_length - ELLIPSIS.length, 0].max
+    "#{text[0, cut]}#{ELLIPSIS}"
   end
 
   def setup_connection
