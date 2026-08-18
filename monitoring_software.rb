@@ -63,7 +63,7 @@ module MonitoringSoftware
           options[:ncsc] = num
         end
 
-        opts.on('-h', '--help', 'Show this help') do
+        opts.on('-?', '--help', 'Show this help') do
           puts opts
           puts
           puts 'Examples:'
