@@ -128,6 +128,7 @@ module Monitoring
         end
         opts.on('-g[N]', '--garbagecollect[=N]', Float, 'Remove all files older than N days, default is 90 days') do |arg|
           garbage_collect(arg)
+          exit(0)
         end
         opts.on('-n [customer,task,interval[,date]]', '--notification [customer,task,interval[,date]]', Array,
                 "Add customer notification. Interval types: #{INTERVALS.keys.join(', ')}; When no parametrers given, notifications are listed.") do |arg|
@@ -159,7 +160,7 @@ module Monitoring
       Dir.glob(['*.json', '*.txt', '*.yml', '.log']).each do |filename|
         if file_age(filename) > days
           puts "  #{filename}"
-          File.delete(filename)
+          File.delete(filename) unless MonitoringSoftware::CACHE_FILE.eql? filename
         end
       end
     end
