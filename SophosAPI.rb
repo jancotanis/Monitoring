@@ -131,6 +131,7 @@ module Sophos
     #
     def initialize(client_id, client_secret, log = true)
       @tenants = nil
+      @tenant_clients = {}
       Sophos.configure do |config|
         config.client_id = client_id
         config.client_secret = client_secret
@@ -170,6 +171,16 @@ module Sophos
     end
 
     ##
+    # Returns a cached tenant-specific client for the given customer.
+    #
+    # @param [TenantData] customer The tenant to get a client for.
+    # @return [Object] The cached tenant client.
+    #
+    def tenant_client(customer)
+      @tenant_clients[customer.id] ||= @api.client(customer)
+    end
+
+    ##
     # Retrieves all endpoints associated with a specific customer.
     #
     # @param [TenantData] customer The customer object for which endpoints are being fetched.
@@ -178,7 +189,7 @@ module Sophos
     #
     def endpoints(customer)
       endp = {}
-      data = @api.client(customer).endpoints
+      data = tenant_client(customer).endpoints
       data.each do |item|
         status = item.health.overall if item.attributes.key? 'health'
         group_name = item.group.name if item.attributes.key? 'group'
@@ -199,7 +210,7 @@ module Sophos
     def alerts(customer)
       @alerts = {}
       customer.clear_endpoint_alerts
-      data = @api.client(customer).alerts
+      data = tenant_client(customer).alerts
       data.each do |item|
         managed_agent = item.managedAgent
         alert = AlertData.new(
@@ -222,7 +233,7 @@ module Sophos
     def siem(customer)
       @alerts = {}
 
-      data = @api.client(customer).get('/siem/v1/alerts')
+      data = tenant_client(customer).get('/siem/v1/alerts')
       # :id, :description, :severity, :category, :product, :actions
       data.each do |item|
         alert = AlertData.new(
