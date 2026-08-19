@@ -227,6 +227,23 @@ module MonitoringTenant
     name.to_s.sub(/\s*\(?\d+\)?\s*\z/, '').strip
   end
 
+  # Returns a fingerprint of a customer name by removing all non-alphanumeric
+  # characters and downcasing. Used for fuzzy matching of customer names that
+  # differ in punctuation, spacing, or legal entity suffixes.
+  #
+  # @param name [String, nil] the customer name
+  # @return [String] the alphanumeric lowercase fingerprint
+  #
+  # @example
+  #   MonitoringTenant.fingerprint('Voogd Meelhandel B.V.')  #=> 'voogdmeelhandelbv'
+  #   MonitoringTenant.fingerprint('Voogd Meelhandel bv')    #=> 'voogdmeelhandelbv'
+  #   MonitoringTenant.fingerprint('A.C.K. Belastingadvies') #=> 'ackbelastingadvies'
+  def self.fingerprint(name)
+    return '' if name.nil?
+
+    name.to_s.gsub(/[^a-zA-Z0-9]/, '').downcase
+  end
+
   # Clears alerts for all endpoints associated with the tenant.
   #
   # This method iterates over all available endpoints and calls `clear_alerts`

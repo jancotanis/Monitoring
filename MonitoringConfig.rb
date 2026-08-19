@@ -2,6 +2,7 @@
 
 require 'yaml'
 require_relative 'utils'
+require_relative 'MonitoringModel'
 require_relative 'monitoring_notification'
 
 MONITORING_CFG = 'monitoring.cfg'
@@ -111,7 +112,9 @@ class MonitoringConfig
 
   # Returns the first matching configuration entry by its description.
   #
-  # Searches the configuration for an entry with the specified description.
+  # Searches the configuration for an exact case-insensitive match first.
+  # If no exact match is found, falls back to fingerprint matching which
+  # ignores punctuation, spacing, and legal entity suffixes.
   #
   # @param desc [String] The description to search for.
   #
@@ -119,6 +122,26 @@ class MonitoringConfig
   def by_description(desc)
     desc = desc.strip.upcase
     result = @config.select { |cfg| cfg.description.upcase.strip.eql?(desc) }
+    match = MonitoringConfig.first_result(result)
+    return match if match
+
+    by_fingerprint(desc)
+  end
+
+  # Returns the first matching configuration entry by its fingerprint.
+  #
+  # A fingerprint is a lowercase alphanumeric representation of a name,
+  # stripping all non-alphanumeric characters. This allows matching names
+  # that differ only in punctuation, spacing, or legal entity suffixes.
+  #
+  # @param desc [String] The description to fingerprint and match.
+  #
+  # @return [ConfigData, nil] The matching configuration entry, or nil if not found
+  def by_fingerprint(desc)
+    fp = MonitoringTenant.fingerprint(desc)
+    return nil if fp.empty?
+
+    result = @config.select { |cfg| MonitoringTenant.fingerprint(cfg.description).eql?(fp) }
     MonitoringConfig.first_result(result)
   end
 
@@ -155,10 +178,51 @@ class MonitoringConfig
     FileUtil.write_file(MONITORING_CFG, YAML.dump(@config.sort_by { |tenant| tenant.description.upcase }))
   end
 
+  # Finds groups of entries that share the same fingerprint.
+  #
+  # @return [Array<Array<ConfigData>>] groups of duplicate entries (size >= 2)
+  def find_duplicates
+    groups = Hash.new { |h, k| h[k] = [] }
+    @config.each do |cfg|
+      fp = MonitoringTenant.fingerprint(cfg.description)
+      groups[fp] << cfg if fp.length.positive?
+    end
+    groups.values.select { |entries| entries.size > 1 }
+  end
+
+  # Merges a group of duplicate entries into a single canonical entry.
+  #
+  # The canonical entry is chosen by most sources, then longest description, then first found.
+  # All sources, monitoring flags, reported_alerts, notifications, and SLA entries are merged.
+  #
+  # @param entries [Array<ConfigData>] the group of duplicates to merge
+  # @return [ConfigData] the canonical entry after merging
+  def merge_group(entries)
+    canonical = select_canonical(entries)
+    duplicates = entries - [canonical]
+
+    duplicates.each do |dup|
+      canonical.source = (canonical.source + dup.source).uniq
+      canonical.monitor_endpoints = canonical.monitor_endpoints || dup.monitor_endpoints
+      canonical.monitor_connectivity = canonical.monitor_connectivity || dup.monitor_connectivity
+      canonical.monitor_backup = canonical.monitor_backup || dup.monitor_backup
+      canonical.monitor_dtc = canonical.monitor_dtc || dup.monitor_dtc
+      canonical.create_ticket = canonical.create_ticket || dup.create_ticket
+      canonical.reported_alerts = ((canonical.reported_alerts || []) + (dup.reported_alerts || [])).uniq
+      canonical.sla = ((canonical.sla || []) + (dup.sla || [])).uniq
+      canonical.email ||= dup.email
+      merge_notifications(canonical, dup)
+      @config.delete(dup)
+    end
+    canonical.touch
+    canonical
+  end
+
   # Loads new tenant configuration entries and adds them to the existing configuration.
   #
   # For each tenant, if the configuration entry is missing, it is created and added to the list.
-  # Existing entries are updated with new source information if needed.
+  # Existing entries are updated with new source information if needed. Uses fingerprint
+  # matching as fallback when exact name match fails.
   #
   # @param source [String] The source associated with the tenants.
   # @param tenants [Array] The array of tenant objects to load into the configuration.
@@ -170,7 +234,7 @@ class MonitoringConfig
       id = tenant.id
       description = tenant.description
 
-      # not found by description
+      # not found by description (exact or fingerprint)
       unless (cfg = by_description(description))
         cfg = ConfigData.new(id, description, [source])
         # check if we have a record with same id (and a different name)
@@ -227,6 +291,37 @@ class MonitoringConfig
   end
 
   private
+
+  # Selects the canonical entry from a group of duplicates.
+  #
+  # Priority: most sources > longest description > first found.
+  #
+  # @param entries [Array<ConfigData>] the group of duplicates
+  # @return [ConfigData] the canonical entry
+  def select_canonical(entries)
+    entries.max_by { |e| [e.source.size, e.description.length] }
+  end
+
+  # Merges notifications from a duplicate into the canonical entry.
+  #
+  # Notifications are deduplicated by task+interval. The earliest triggered date wins.
+  #
+  # @param canonical [ConfigData] the canonical entry
+  # @param dup [ConfigData] the duplicate entry
+  # @return [void]
+  def merge_notifications(canonical, dup)
+    return unless dup.notifications&.any?
+
+    canonical.notifications ||= []
+    dup.notifications.each do |n|
+      existing = canonical.notifications.find { |cn| cn.task.eql?(n.task) && cn.interval.eql?(n.interval) }
+      if existing
+        existing.triggered = [existing.triggered, n.triggered].compact.min
+      else
+        canonical.notifications << n
+      end
+    end
+  end
 
   # Retrieves the SLA documentation for a given service key in the configuration.
   #
