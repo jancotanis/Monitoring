@@ -3,6 +3,7 @@
 require 'json'
 
 require_relative 'ninjaone_api'
+require_relative 'MonitoringModel'
 
 module MonitoringSoftware
   CACHE_FILE = 'software-index.json'
@@ -177,12 +178,8 @@ module MonitoringSoftware
 
       client ||= self.client
 
-      tenant_map = {}
-      client.tenants.each do |tenant|
-        tenant_map[tenant.name] = tenant.id
-      end
-
       result = {}
+      device_counts = {}
 
       vendor_products.each do |vendor, _products|
         results = search(publisher: vendor)
@@ -190,16 +187,31 @@ module MonitoringSoftware
 
         results.each do |r|
           prod_name = r['name']
+          dev_count = (r['devices'] || []).size
           org_ids = r['organizations'] || []
 
           org_ids.each do |org_id|
             tenant = client.tenant_by_id(org_id)
-            next unless tenant && tenant_names.include?(tenant.name)
+            next unless tenant
 
-            result[tenant.name] ||= {}
-            result[tenant.name][vendor] ||= []
-            result[tenant.name][vendor] << prod_name unless result[tenant.name][vendor].include?(prod_name)
+            matched_name = tenant_names.find { |name| MonitoringTenant.fingerprint(name) == MonitoringTenant.fingerprint(tenant.name) }
+            next unless matched_name
+
+            result[matched_name] ||= {}
+            result[matched_name][vendor] ||= []
+            unless result[matched_name][vendor].include?(prod_name)
+              result[matched_name][vendor] << prod_name
+              device_counts[[matched_name, vendor]] ||= {}
+              device_counts[[matched_name, vendor]][prod_name] = dev_count
+            end
           end
+        end
+      end
+
+      result.each do |tenant_name, vendors|
+        vendors.each do |vendor_name, products|
+          counts = device_counts[[tenant_name, vendor_name]] || {}
+          products.sort_by! { |p| -(counts[p] || 0) }
         end
       end
 

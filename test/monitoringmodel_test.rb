@@ -291,6 +291,40 @@ describe MonitoringTenant do
       _(MonitoringTenant.normalize_name('  Acme Corp 42  ')).must_equal 'Acme Corp'
     end
   end
+
+  describe '.fingerprint' do
+    it 'removes dots and compares case-insensitive' do
+      _(MonitoringTenant.fingerprint('Voogd Meelhandel B.V.')).must_equal 'voogdmeelhandelbv'
+      _(MonitoringTenant.fingerprint('Voogd Meelhandel bv')).must_equal 'voogdmeelhandelbv'
+    end
+
+    it 'removes spaces, dots, and hyphens' do
+      _(MonitoringTenant.fingerprint('A.C.K. Belastingadvies')).must_equal 'ackbelastingadvies'
+      _(MonitoringTenant.fingerprint('ACK Belastingadvies')).must_equal 'ackbelastingadvies'
+    end
+
+    it 'handles extra whitespace' do
+      _(MonitoringTenant.fingerprint('Test  Company  Name')).must_equal 'testcompanyname'
+    end
+
+    it 'returns empty string for nil input' do
+      _(MonitoringTenant.fingerprint(nil)).must_equal ''
+    end
+
+    it 'returns empty string for empty input' do
+      _(MonitoringTenant.fingerprint('')).must_equal ''
+    end
+
+    it 'returns empty string for non-alphanumeric only input' do
+      _(MonitoringTenant.fingerprint('... ---')).must_equal ''
+    end
+
+    it 'returns different fingerprints for different names' do
+      fp1 = MonitoringTenant.fingerprint('Company A')
+      fp2 = MonitoringTenant.fingerprint('Company B')
+      _(fp1).wont_equal fp2
+    end
+  end
 end
 
 describe MonitoringAlert do

@@ -462,7 +462,7 @@ describe '#7 MonitoringSoftware' do
       assert_equal({}, result)
     end
 
-    it '#7.14.2 tenant_software filters by tenant names' do
+    it '#7.14.2 tenant_software filters by tenant names and sorts by device count' do
       index_with_orgs = {
         'Microsoft Corporation' => {
           'Microsoft Edge' => {
@@ -470,6 +470,12 @@ describe '#7 MonitoringSoftware' do
             'name' => 'Microsoft Edge',
             'devices' => [1, 2, 3],
             'organizations' => [1, 2]
+          },
+          'Microsoft SQL Server' => {
+            'publisher' => 'Microsoft Corporation',
+            'name' => 'Microsoft SQL Server',
+            'devices' => [1],
+            'organizations' => [1]
           }
         }
       }
@@ -489,15 +495,21 @@ describe '#7 MonitoringSoftware' do
 
       assert_equal 1, result.keys.count
       assert result.key?('Org A')
-      assert_equal({ 'Microsoft Corporation' => ['Microsoft Edge'] }, result['Org A'])
+      assert_equal ['Microsoft Edge', 'Microsoft SQL Server'], result['Org A']['Microsoft Corporation']
     end
 
-    it '#7.14.3 tenant_software returns multiple vendors per tenant' do
+    it '#7.14.3 tenant_software returns multiple vendors per tenant sorted by device count' do
       index_with_orgs = {
         'Microsoft Corporation' => {
           'Microsoft Edge' => {
             'publisher' => 'Microsoft Corporation',
             'name' => 'Microsoft Edge',
+            'devices' => [1, 2],
+            'organizations' => [1]
+          },
+          'Microsoft Word' => {
+            'publisher' => 'Microsoft Corporation',
+            'name' => 'Microsoft Word',
             'devices' => [1],
             'organizations' => [1]
           }
@@ -530,6 +542,34 @@ describe '#7 MonitoringSoftware' do
       assert_equal 2, result['Org A'].keys.count
       assert_includes result['Org A'], 'Microsoft Corporation'
       assert_includes result['Org A'], 'Adobe Inc'
+      assert_equal ['Microsoft Edge', 'Microsoft Word'], result['Org A']['Microsoft Corporation']
+    end
+
+    it '#7.14.4 tenant_software matches tenants by fingerprint' do
+      index_with_orgs = {
+        'Microsoft Corporation' => {
+          'Microsoft Edge' => {
+            'publisher' => 'Microsoft Corporation',
+            'name' => 'Microsoft Edge',
+            'devices' => [1, 2],
+            'organizations' => [1]
+          }
+        }
+      }
+      mock_tenant1 = OpenStruct.new(id: 1, name: 'Acme Corp B.V.')
+
+      mock_client = Object.new.tap do |c|
+        c.define_singleton_method(:tenants) { [mock_tenant1] }
+        c.define_singleton_method(:tenant_by_id) { |id| mock_tenant1 if id == 1 }
+      end
+
+      @indexer.instance_variable_set(:@index, index_with_orgs)
+
+      result = @indexer.tenant_software(['Acme Corp bv'], { 'Microsoft Corporation' => ['Edge'] }, mock_client)
+
+      assert_equal 1, result.keys.count
+      assert result.key?('Acme Corp bv')
+      assert_equal ['Microsoft Edge'], result['Acme Corp bv']['Microsoft Corporation']
     end
   end
 

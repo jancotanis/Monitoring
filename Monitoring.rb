@@ -35,8 +35,10 @@
 # 1.10.2  Fix naming issues in Huntress/CloudAlly and strip trailing tenant ids
 # 1.10.3  More information in ticket title
 # 1.10.4  Check max length for digiprocess ticket content
+# 1.10.5  Merge company names when smal ldifferences 'bv' vs 'B.V.', duplicate spaces etc...
+#         NCSC issues show large number of software entries per publisher, show max 15 entries, indien meer dan aanvullen met '...'
 #
-MONITOR_VERSION = '1.10.4'
+MONITOR_VERSION = '1.10.5'
 
 require 'dotenv'
 require 'optparse'
