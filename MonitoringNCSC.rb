@@ -251,6 +251,8 @@ class NCSCTextAdvisory
 end
 
 class NCSCVulnerability < Vulnerability
+  MAX_PRODUCTS_PER_PUBLISHER = 15
+
   # Define software products which can be returned as company list
   attr_writer :products
 
@@ -260,7 +262,13 @@ class NCSCVulnerability < Vulnerability
   def companies_list
     if @products&.any?
       @products.map do |company, publishers|
-        "#{company}\n" + publishers.map { |publisher, software| "  - Publisher '#{publisher}': #{software.join(', ')}" }.join("\n")
+        "#{company}\n" + publishers.map { |publisher, software|
+          if software.length > MAX_PRODUCTS_PER_PUBLISHER
+            "  - Publisher '#{publisher}': #{software.first(MAX_PRODUCTS_PER_PUBLISHER).join(', ')} (>15 products)..."
+          else
+            "  - Publisher '#{publisher}': #{software.join(', ')}"
+          end
+        }.join("\n")
       end.join("\n- ")
     elsif @products
       'Geen software gevonden voor deze producent.'
