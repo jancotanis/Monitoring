@@ -37,8 +37,12 @@
 # 1.10.4  Check max length for digiprocess ticket content
 # 1.10.5  Merge company names when smal ldifferences 'bv' vs 'B.V.', duplicate spaces etc...
 #         NCSC issues show large number of software entries per publisher, show max 15 entries, indien meer dan aanvullen met '...'
+# 1.10.6  Fix NCSC CVE id parsing for numeric suffixes longer than 5 digits (e.g. CVE-2026-109618)
+#         Remove DTC feed monitoring, superseded by NCSC advisories
+# 1.11.0  Add -m/--monitor option to run only selected monitor(s), e.g. -m sophos,veeam (default: all monitors)
+#         --compact is ignored when a monitor selection is active to avoid dropping tenants of skipped monitors
 #
-MONITOR_VERSION = '1.10.5'
+MONITOR_VERSION = '1.11.0'
 
 require 'dotenv'
 require 'optparse'
@@ -61,6 +65,17 @@ module Monitoring
   class CLI
     MONITOR_CLASSES = [SophosMonitor, NinjaOneMonitor, HuntressMonitor, VeeamMonitor,
                        SkykickMonitor, CloudAllyMonitor, ZabbixMonitor, Integra365Monitor].freeze
+
+    # @return [Array<String>] lowercase monitor names usable with --monitor (e.g. 'sophos')
+    def self.monitor_names
+      MONITOR_CLASSES.map { |klass| monitor_name(klass) }
+    end
+
+    # @param klass [Class] monitor class
+    # @return [String] lowercase name without 'Monitor' suffix
+    def self.monitor_name(klass)
+      klass.name.delete_suffix('Monitor').downcase
+    end
 
     def self.run(args)
       new.run(args)
@@ -86,7 +101,7 @@ module Monitoring
         process_sla_notifications
         process_security_feeds
 
-        @config.compact! if @options[:compact]
+        compact_config if @options[:compact]
         @config.save_config
 
         puts "\n[✓] Monitoring complete!"
@@ -135,6 +150,11 @@ module Monitoring
                 "Add customer notification. Interval types: #{INTERVALS.keys.join(', ')}; When no parametrers given, notifications are listed.") do |arg|
           handle_notification_arg(sla, arg)
         end
+        # Run only the selected monitor(s); when omitted all monitors are run
+        opts.on('-m', '--monitor NAME[,NAME]', Array,
+                "Run only selected monitor(s): #{self.class.monitor_names.join(', ')}. Default: all") do |names|
+          options[:monitors] = parse_monitor_names(names)
+        end
         opts.on('-l', '--log', 'Log http requests') do |log|
           puts '- API logging turned on'
           options[:log] = log
@@ -143,6 +163,30 @@ module Monitoring
           puts opts
           exit(0)
         end
+      end
+    end
+
+    def parse_monitor_names(names)
+      selected = names.map { |n| n.to_s.strip.downcase }.reject(&:empty?).uniq
+      unknown = selected - self.class.monitor_names
+      raise OptionParser::InvalidArgument, "unknown monitor(s): #{unknown.join(', ')}" if unknown.any? || selected.empty?
+
+      puts "- running selected monitor(s): #{selected.join(', ')}"
+      selected
+    end
+
+    # @return [Array<Class>] monitor classes to run; all when no selection given
+    def selected_monitor_classes
+      return MONITOR_CLASSES unless @options[:monitors]
+
+      MONITOR_CLASSES.select { |klass| @options[:monitors].include?(self.class.monitor_name(klass)) }
+    end
+
+    def compact_config
+      if @options[:monitors]
+        puts '- WARNING: --compact ignored because only selected monitors were run'
+      else
+        @config.compact!
       end
     end
 
@@ -172,9 +216,10 @@ module Monitoring
 
     def create_monitors(report)
       @created_monitors ||= begin
-        puts "\n[*] Initializing #{MONITOR_CLASSES.length} monitors..."
+        classes = selected_monitor_classes
+        puts "\n[*] Initializing #{classes.length} monitors..."
 
-        MONITOR_CLASSES.map do |klass|
+        classes.map do |klass|
           puts "    ✓ #{klass.name.gsub('Monitor', '')}"
           klass.new(report, @config, @options[:log])
         rescue Faraday::Error => e
