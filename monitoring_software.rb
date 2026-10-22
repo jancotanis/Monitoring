@@ -95,7 +95,7 @@ module MonitoringSoftware
     end
 
     def self.validate_cve_options(options)
-      return if options[:cve] =~ /^CVE-\d{4}-\d{4,5}$/i
+      return if CVEAlert.valid_id?(options[:cve])
 
       puts "Error: Invalid CVE format: #{options[:cve]}"
       puts 'CVE format should be like: CVE-2025-1234'

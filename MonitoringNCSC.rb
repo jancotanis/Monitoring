@@ -18,7 +18,28 @@ require_relative 'software_index'
 class CVEAlert
   attr_reader :data, :score
 
+  # CVE ID pattern: CVE-YYYY-NNNN with a numeric suffix of 4 or more digits
+  CVE_ID_PATTERN = /CVE-\d{4}-\d{4,}/i.freeze
+
   @cache = {}
+
+  # Checks whether the given string is a valid CVE ID.
+  #
+  # @param id [String] The CVE ID
+  # @return [Boolean] true if the ID is a valid CVE ID
+  def self.valid_id?(id)
+    id.is_a?(String) && id.match?(/\A#{CVE_ID_PATTERN}\z/o)
+  end
+
+  # Extracts unique, uppercased CVE IDs from text.
+  #
+  # @param text [String] The text to scan
+  # @return [Array<String>] List of CVE IDs
+  def self.scan_ids(text)
+    return [] unless text
+
+    text.scan(/\b#{CVE_ID_PATTERN}\b/o).map(&:upcase).uniq
+  end
 
   def self.get(id)
     @cache[id.upcase] ||= new(id)
@@ -223,9 +244,7 @@ class NCSCTextAdvisory
   # @param text [String] The advisory text
   # @return [Array<String>] List of CVE IDs
   def self.parse_cve_ids(text)
-    return [] unless text
-
-    text.scan(/CVE-\d{4}-\d{4,5}/).uniq
+    CVEAlert.scan_ids(text)
   end
 
   # Removes PGP signature wrappers from the advisory text.
