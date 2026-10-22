@@ -318,7 +318,7 @@ class MonitoringNCSC < MonitoringFeed
   #   feed = MonitoringNCSC.new(config)
   def initialize(config)
     @cve_cache = PersistentCache.new('./cve-scores.yml')
-    @ncsc_cache = PersistentCache.new('./ncsv-scores.yml')
+    @ncsc_cache = PersistentCache.new('./ncsc-scores.yml')
     @software_index = MonitoringSoftware::SoftwareIndexer.new
     super(config, 'https://advisories.ncsc.nl/rss/advisories', 'NCSC')
   end
