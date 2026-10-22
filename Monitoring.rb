@@ -55,7 +55,6 @@ require_relative 'ninjaone_monitor'
 require_relative 'Integra365Monitor'
 require_relative 'MonitoringModel'
 require_relative 'MonitoringSLA'
-require_relative 'MonitoringDTC'
 require_relative 'MonitoringNCSC'
 
 module Monitoring
@@ -74,7 +73,7 @@ module Monitoring
       @config = MonitoringConfig.new
       @sla = MonitoringSLA.new(@config)
       @options = parse_options(@config, @sla)
-      @feeds = [MonitoringDTC.new(@config), MonitoringNCSC.new(@config)]
+      @feeds = [MonitoringNCSC.new(@config)]
       @ticketer = DigiProcessTicketer.new(@options)
 
       File.open(FileUtil.daily_file_name('report.txt'), 'w') do |report|
@@ -262,7 +261,7 @@ module Monitoring
     end
 
     def process_security_feeds
-      puts "\n[*] Processing security feeds (DTC/NCSC)..."
+      puts "\n[*] Processing security feeds (NCSC)..."
       @feed_tickets = 0
       @feeds.each do |feed|
         puts "    -> #{feed.source}"
