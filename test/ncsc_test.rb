@@ -27,6 +27,21 @@ describe '#1 CVEAlert' do
     cve = CVEAlert.new('XXX-2025-27364')
     assert cve.score.nil?, '1.2. cve xxx does not exist'
   end
+  it '#1.3 validates CVE ids with long numeric suffix' do
+    assert CVEAlert.valid_id?('CVE-2026-1234'), '1.3.1 4 digits'
+    assert CVEAlert.valid_id?('CVE-2026-75595'), '1.3.2 5 digits'
+    assert CVEAlert.valid_id?('cve-2026-109618'), '1.3.3 6 digits, lowercase'
+    refute CVEAlert.valid_id?('CVE-2026-123'), '1.3.4 3 digits invalid'
+    refute CVEAlert.valid_id?('xCVE-2026-1234x'), '1.3.5 surrounding chars invalid'
+    refute CVEAlert.valid_id?(nil), '1.3.6 nil invalid'
+  end
+  it '#1.4 scans CVE ids from text' do
+    text = 'CVE-2026-1234, CVE-2026-75595 and CVE-2026-109618; cve-2026-1234 CVE-2026-1097183.'
+    expected = %w[CVE-2026-1234 CVE-2026-75595 CVE-2026-109618 CVE-2026-1097183]
+    assert _(CVEAlert.scan_ids(text)).must_equal expected, '1.4.1 all lengths, deduplicated'
+    assert _(NCSCTextAdvisory.parse_cve_ids(text)).must_equal expected, '1.4.2 advisory delegates'
+    assert _(CVEAlert.scan_ids(nil)).must_equal [], '1.4.3 nil text'
+  end
 end
 describe '#2 NCSCTextAdvisory' do
   it '#2.1 test NCSC Advisory' do
