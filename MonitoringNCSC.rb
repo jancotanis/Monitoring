@@ -305,7 +305,7 @@ end
 #
 # @see MonitoringFeed
 class MonitoringNCSC < MonitoringFeed
-  CUTOFF_SCORE = 9
+  CUTOFF_SCORE = 8
 
   # Initializes a new `MonitoringNCSC` instance.
   #
